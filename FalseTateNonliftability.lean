@@ -1,0 +1,50 @@
+module
+
+public import FontaineWintenberger
+public import FalseTateExtension
+public import FalseTateNonliftability.PowerSeries.PrincipalUnitIntegerPowers
+public import FalseTateNonliftability.PowerSeries.PrincipalUnitPowers
+public import FalseTateNonliftability.PowerSeries.UnitCompactness
+public import FalseTateNonliftability.PowerSeries.UnitRigidity
+public import FalseTateNonliftability.LaurentSeries.CharacteristicP
+public import FalseTateNonliftability.LaurentSeries.FrobeniusKernel
+public import FalseTateNonliftability.LaurentSeries.PrimitiveNormalization
+public import FalseTateNonliftability.LaurentSeries.PrincipalQuotient
+public import FalseTateNonliftability.CoefficientRing.Quotient
+public import FalseTateNonliftability.LaurentSeries.NilpotentPower
+public import FalseTateNonliftability.LaurentSeries.PowerSeriesEval
+public import FalseTateNonliftability.LaurentSeries.Evaluation
+public import FalseTateNonliftability.LaurentSeries.OrderTopology
+public import FalseTateNonliftability.LaurentSeries.EvaluationContinuity
+public import FalseTateNonliftability.LaurentSeries.TruncationDensity
+public import FalseTateNonliftability.LaurentSeries.Derivative
+public import FalseTateNonliftability.LaurentSeries.Taylor
+public import FalseTateNonliftability.LaurentSeries.NormalForm
+public import FalseTateNonliftability.LaurentSeries.IterateGrowth
+public import FalseTateNonliftability.LaurentSeries.ApproximateInvariants
+public import FalseTateNonliftability.LaurentSeries.ExactDifferentialLimit
+public import FalseTateNonliftability.LaurentSeries.InvariantExactDifferential
+public import FalseTateNonliftability.LaurentSeries.CoefficientMap
+public import FalseTateNonliftability.LaurentSeries.Admissible
+public import FalseTateNonliftability.LaurentSeries.Substitution
+public import FalseTateNonliftability.CoefficientRing.Truncation
+public import FalseTateNonliftability.CoefficientRing.LocalRing
+public import FalseTateNonliftability.CoefficientRing.DiscreteValuation
+public import FalseTateNonliftability.CoefficientRing.Substitution
+public import FalseTateNonliftability.CoefficientRing.Graded
+public import FalseTateNonliftability.CoefficientRing.NormalizedDerivative
+public import FalseTateNonliftability.CoefficientRing.CoordinateChange
+public import FalseTateNonliftability.CoefficientRing.ValuationBound
+public import FalseTateNonliftability.CoefficientRing.TopLevelObstruction
+public import FalseTateNonliftability.CoefficientRing.FiniteObstruction
+public import FalseTateNonliftability.FieldOfNorms.Liftability
+public import FalseTateNonliftability.FieldOfNorms.CoordinateChange
+public import FalseTateNonliftability.FalseTate.TheoremA
+public import FalseTateNonliftability.FalseTate.DerivativeLevel
+
+/-!
+# Nonliftability of the false Tate field of norms
+
+This is the project public import interface. No mathematical theorem is asserted here.
+See blueprint/src/content.tex for the source-facing mathematical specification.
+-/
