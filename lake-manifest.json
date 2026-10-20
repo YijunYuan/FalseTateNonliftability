@@ -7,10 +7,10 @@
       "type": "git",
       "subDir": null,
       "scope": "",
-      "rev": "7d6876cbe08865a452911fdf43e4d0728e1ce903",
+      "rev": "817737a678ff4b7e4917c0a8aeea7075f69d8092",
       "name": "FalseTateExtension",
       "manifestFile": "lake-manifest.json",
-      "inputRev": "7d6876cbe08865a452911fdf43e4d0728e1ce903",
+      "inputRev": "817737a678ff4b7e4917c0a8aeea7075f69d8092",
       "inherited": false,
       "configFile": "lakefile.toml"
     },
@@ -19,11 +19,11 @@
       "type": "git",
       "subDir": null,
       "scope": "",
-      "rev": "7a8d63c3033279942684e03643d50153caf2bf6d",
+      "rev": "b7d6a187de05e9b8a326abbe59332033f69f64bc",
       "name": "FontaineWintenberger",
       "manifestFile": "lake-manifest.json",
-      "inputRev": "7a8d63c3033279942684e03643d50153caf2bf6d",
-      "inherited": true,
+      "inputRev": "b7d6a187de05e9b8a326abbe59332033f69f64bc",
+      "inherited": false,
       "configFile": "lakefile.toml"
     },
     {
@@ -31,11 +31,11 @@
       "type": "git",
       "subDir": null,
       "scope": "",
-      "rev": "f0b4c8150aa0dbc758aff1291410c5ae335aff3a",
+      "rev": "1e75e9dd53d483fa01eff9ac7d4ea0472ce9d1fa",
       "name": "mathlib",
       "manifestFile": "lake-manifest.json",
-      "inputRev": "f0b4c8150aa0dbc758aff1291410c5ae335aff3a",
-      "inherited": true,
+      "inputRev": "1e75e9dd53d483fa01eff9ac7d4ea0472ce9d1fa",
+      "inherited": false,
       "configFile": "lakefile.lean"
     },
     {

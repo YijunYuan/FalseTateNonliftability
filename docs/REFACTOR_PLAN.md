@@ -94,7 +94,15 @@ FTE 侧：
 | `padicCyclotomicCharacter p π g` | 同名（`Coordinates/Padic`，现为 `abbrev`，对任意特征 0 的 K） |
 | `kummerRamificationBreak p k`（+ `_growth hp`、`_succ_dvd`） | 同名，`FalseTate/Viviani/TauRamification` |
 
-### A3. 升级顺序与验证
+### A3. 升级顺序与验证　【已定稿 2026-10-20】
+
+**决定**：
+- A-1：**不设单独的"最小改动"升级阶段**。升级依赖与重构一起做（R1–R3 直接在新上游上重写），中途 master 允许不编译；最后统一修复。§I 的 U1 取消，U0 之后直接进入 R1。
+- A-2：δ 的**定义保留**为论文 Lemma 1.2 (3) 的对象——`Gal(K_FT/K_Kum) ≅ ℤ_p^×` 的挠子群的生成元（`δ` 的阶为 `p − 1`，`χ(δ)` 是 `ℤ_p^×` 的 `(p−1)` 阶元，即 Teichmüller 代表），以便与论文对齐；但本项目**只证明并使用**较弱的性质 `χ(δ) mod p` 生成 `𝔽_p^×`（Lemma 5.3 所需）。旧 FTE `TameUnits` 的 Teichmüller 构造按此重做（可用 Mathlib 的 `ZMod.unitsEquivRootsOfUnity`/Hensel 或 FW 的 `residueTeichmuller`）。Prop 5.1 的 `d_k` 走 FW Transfer ↔ FTE `ramificationOrder_tauPowRestrict` 的对接路线。
+- A-3：`p` 的写法分层：`Liftability/` 一般 `K` 用 `residueChar K`；`FalseTate/` 用显式 `(p : ℕ) [Fact p.Prime]`，边界 `residueChar_padic`；`CoefficientRing/` 对抽象 DVR `O` 用显式 `p`（只作 `CharP` 参数）。
+
+原文：
+
 
 1. 先只改 `lakefile.toml`/`lake-manifest.json` 到目标版本，`lake build` 看破坏面（预计：上表全部 + Mathlib 的零星改名）。这一步不修代码，只记录错误清单，作为 §I 阶段 U1 的输入。
 2. FW 目标 `b7d6a18` 是 merge commit，树与 `6c9e973` 相同；FTE 的 manifest 已钉 `b7d6a18`，本项目 manifest 要与之一致，否则 lake 报 "dependency mismatch"。
@@ -216,7 +224,40 @@ theorem not_isLiftable_falseTate (ε : 𝓀_F ≃+* 𝓀[ℚ_[p]]) :
 
 （`𝓀[ℚ_[p]] ≃+* ZMod p` 下 `ε` 唯一，所以 `∀ ε` 与 `∃ ε` 在这里等价；按 B3 问题 1 的决定，Theorem A 的陈述可能干脆不带 `ε`。）
 
-### B3. 需要作者拍板的问题
+### B3. 决定　【已定稿 2026-10-20】
+
+1. **三个对象的类型**（取代 B2 草案里的 `(K) (L : Type*) (F : Type*) ε`）：
+   ```lean
+   variable (p : ℕ) [Fact p.Prime]
+   variable (K : Type*) [NontriviallyNormedField K] [IsCompleteDiscreteValuedField K]
+     [Algebra ℚ_[p] K] [FiniteDimensional ℚ_[p] K]                      -- FTE 的 p 进基域约定；放弃等特征 K
+   variable (L : IntermediateField K (AlgebraicClosure K))               -- 与 FTE 的 falseTateExtension 同型
+     [IsGalois K L] [IsAPF K L] [Fact (¬ Module.Finite K L)] [IsTotallyRamified K L]
+   variable (F : IntermediateField ℚ_[p] (AlgebraicClosure K)) [FiniteDimensional ℚ_[p] F]
+     [HasSameResidueField K F]
+   def IsLiftable : Prop := …      -- 只依赖 (K, L, F)；无 ε、无 ϖ、无 htotal
+   ```
+   不采用"`K` 也是 `IntermediateField ℚ_[p] Ω`"：FW/FTE 的 API 都以抽象基域 `K` 为参数，`K := ⊥` 会在主定理里引入 `Gal(L/⊥) ≅ Gal(L/ℚ_[p])` 的搬运层。
+2. **新 Prop class（放 FW，需在 FW 开分支）**：
+   - `IsTotallyRamified K L`（`K` 完备离散赋值域，`L/K` 任意代数扩张）：`algebraMap 𝓀[K] (ResidueField (integralClosure 𝒪[K] L))` 满射。有限时给出 `inertiaDeg = 1 ↔`、`ramificationIdx = finrank ↔` 两条等价刻画（经 `integralClosureSpectralResidueEquiv`）；实例：中间域继承。FTE：`IsTotallyRamified ℚ_[p] (falseTateExtension p π)`（由 `falseTateExtension_residue_algebraMap_surjective` 改装），目标 (5) 的两条定理用 class 重述。它同时承担原 B-6 的 `IsResidueTrivial`。
+   - `HasSameResidueField K F`（`F ⊆ K^alg` 为 `ℚ_[p]` 上的中间域）：`𝓀[K]` 与 `𝓀_F` 在 `ResidueField (integralClosure 𝒪[K] K^alg)` 中的像相等（Berger "same residue field" 的典范形式）；给出 `residueEquivOfSameResidueField : 𝓀[K] ≃+* 𝓀_F`，代替 ε。性质：`F ⊇ K` 时 `↔ IsTotallyRamified K F`；`K = ℚ_[p]` 时 `↔ IsTotallyRamified ℚ_[p] F`（instance）。
+   - 这样 Def 1.1 的全部一般性（`F` 不必包含 `K`）都保留。
+3. **`A_K` 用极大理想完备化**：`CoefficientRing O := AdicCompletion (𝔪_O.map C) (O((T)))`，截断 `O ⧸ 𝔪^(r+1)` 用 `r+1` 索引；`ϖ`、`Irreducible ϖ`、`1 ≤ r` 从签名消失。
+4. 抽象层保留抽象群 `Γ`；`CoefficientRing/` 与 `Liftability/Defs` 不依赖 FW/FTE。
+5. `FiniteLiftable S r` 的子集参数用 `S : Set Γ`。
+6. **Theorem A 的形状**：
+   ```lean
+   /-- Theorem A for an arbitrary uniformizer `π` of `ℚ_p`. -/
+   theorem not_isLiftable_falseTateExtension [Fact (p ≠ 2)] (π : 𝒪[ℚ_[p]]) [Fact (Irreducible π)]
+       (F : IntermediateField ℚ_[p] (AlgebraicClosure ℚ_[p])) [FiniteDimensional ℚ_[p] F]
+       [IsTotallyRamified ℚ_[p] F] : ¬ IsLiftable ℚ_[p] (falseTateExtension p π) F
+   /-- **Theorem A.** -/
+   theorem not_isLiftable_falseTate [Fact (p ≠ 2)] (F …) [IsTotallyRamified ℚ_[p] F] :
+       ¬ IsLiftable ℚ_[p] (falseTateExtension p (p : 𝒪[ℚ_[p]])) F
+   ```
+   需要实例 `Fact (Irreducible (p : 𝒪[ℚ_[p]]))`（FTE `Padic/Basic`，由 `padicValuationSubring_valuation_p` + FW `irreducible_of_valuation_exp_neg_one`）。Prop 1.3 同样给一般 `π` 版本 + `π = p` 的论文版本。
+
+### B4. 原讨论记录（已由 B3 取代）
 
 1. **剩余域等同 `ε` 的量词**。(a) 作为 `IsLiftable` 的显式参数（最忠实于"同一个剩余域"；Theorem A 对所有 `ε` 陈述）；(b) 定义里 `∃ ε`（现状；`¬` 最强，但定义偏弱）；(c) 把 `𝓀_F` 与 `𝓀[K]` 的等同做成 instance `[Algebra 𝓀[K] 𝓀_F] [IsScalarTower …]`——过重。**建议 (a)**。
 2. **"`L/K` 完全分歧"的表达**。现状 `Fact (Surjective (algebraMap 𝓀[K] κL))`。建议新 Prop class `IsResidueTrivial K L`（或叫 `HasTrivialResidueExtension`），实例 `[IsResidueTrivial ℚ_[p] (falseTateExtension p π)]` 由 FTE `falseTateExtension_residue_algebraMap_surjective` 给出。替代：把它并进 Def 1.1 的前提列表里显式写。**建议 class**。
@@ -227,7 +268,7 @@ theorem not_isLiftable_falseTate (ε : 𝓀_F ≃+* 𝓀[ℚ_[p]]) :
 
 ---
 
-## C. 全局设计决策（影响全库）
+## C. 全局设计决策（影响全库）　【C1–C5 全部已定稿 2026-10-20，按下文"建议"执行】
 
 ### C1. 替换 `subst` 的接口
 
@@ -270,7 +311,9 @@ theorem not_isLiftable_falseTate (ε : 𝓀_F ≃+* 𝓀[ℚ_[p]]) :
 
 ---
 
-## D. 目录结构（建议）
+## D. 目录结构　【已定稿 2026-10-20】
+
+**决定**：D-1 目录树与七层分层按下文；D-2 死代码**直接删除**（git 保留，不设 Attic）；D-3 "`A_K` 是完备 DVR"保留，改写为 `CoefficientRing O` 上的干净实例（`IsLocalRing`、`IsDiscreteValuationRing`、`IsAdicComplete`），文档注明是 Def 1.1 的陈述部分、证明未用；D-4 `Mathlib/` 上游候选**留在本项目**（不推到 FW/FTE）。
 
 原则与 FW/FTE 相同：按数学分层，每层一个聚合文件，脚本检查分层 import 与覆盖；`Mathlib/` 上游候选零项目依赖；40 → 约 22 个文件。
 
@@ -436,3 +479,24 @@ U1 与 R1–R6 之间可以合并一次，确保 GitHub 上的本项目先有一
 | Lemma 5.3 | 旧 FTE `NormFieldAction` 后半（已被上游删除） | **须重做**（§A2） |
 | §6 情形 1 / 情形 2 | `derivativeLevel_lt_of_iterate_growth` / `not_commuting_finite_lifts_of_numerical_ramification` | 忠实；后者 24 个前提待打包 |
 | Thm A | `falseTate_not_bergerLiftable` | 见 §B |
+
+---
+
+## 决策补记与实施细化（2026-10-20，开始执行时）
+
+作者在讨论 §E–§I 时回复"开始做吧"，以下按讨论稿中的建议执行：
+
+- **E-1** 主谓词名 `IsLiftable`（Berger 在 docstring 中引用）；Theorem A 名 `not_isLiftable_falseTate`，一般 `π` 版本 `not_isLiftable_falseTateExtension`；Prop 1.3 同样两版。
+- **E-2** δ 的定义名 `tameGenerator`，scoped 记号 `δ`，与 FTE 的 `τ` 同一命名空间风格。δ 的**定义**按论文 Lemma 1.2 (3)：`Gal(K_FT/K_Kum) ≅ ℤ_p^×` 的挠子群的生成元（χ(δ) 为 Teichmüller 代表）；只证明并使用"χ(δ) mod p 生成 𝔽_p^×"。
+- **E-3** 填充词与 section 名全删（脚本 + 人工）。
+- **F** 目标线：单文件 < 30 s，全量（本项目）< 2 min CPU，`set_option` 归零；每阶段末记 `docs/BUILD_TIMES.md`；CI 不做时间检查。
+- **G-1** 不恢复 blueprint；README 目标表 + 根文件 docstring 代替。**G-2**（fw-workspace 里的旧拷贝）未获答复，**不动**，结束时提醒作者。
+- **I** U1 已取消（A-1）。实际执行：FW/FTE 分支（`nonliftability-upstream`，在本项目 `.lake/packages/*` 的克隆里提交，再推送到本地仓库 `~/FontaineWintenberger`、`~/FalseTateExtension` 作为新分支，**不推送 GitHub**，不切换作者的工作副本）→ 核心迁移（三条并行链：LaurentSeries/PowerSeries/Differential；CoefficientRing/Liftability 抽象层；field-of-norms 与 FalseTate 新代码）→ 汇合（`IsLiftable`、Theorem A）→ 目录重组、死代码、重命名 → 性能 → 文档 → 终验。
+
+实施细化（不改变已定稿的数学决定）：
+
+1. **subst 的系数环**：`[CommRing R] [IsLocalRing R] [IsArtinianRing R] [IsPrincipalIdealRing R]`（均为 Mathlib 类）。域自动满足；截断 `O ⧸ 𝔪^(r+1)` 的三个实例在 `CoefficientRing/Truncation` 给出（`isArtinianRing_iff_isNilpotent_maximalIdeal`、`IsPrincipalIdealRing.of_surjective`）。内部构造仍以 `𝔪` 的一个生成元 `δ` 进行，不出现在公开签名中。`IsAdmissible G :⇔ G` 在剩余域上的约化有有限正阶。`subst G`、`substEquiv P` 对所有输入定义（否则取恒等）。
+2. **Liftability 层的文件**：`CoordinateFamily`（抽象坐标族，仅依赖 PowerSeries）、`Defs`（`Lift`/`Liftable`/`FiniteLiftable`）、`CoordinateChange`（Prop 2.3 抽象版）、`FieldOfNorms`（Lemma 2.2：`X_K(L)` 的坐标族）、`IsLiftable`（Def 1.1、`HasSameResidueField` 在本项目形状下的特化、Prop 2.3 的 field-of-norms 版本）。比 §D 多拆两个文件，使 FalseTate 的算术输入不依赖抽象提升理论。
+3. **一般层的 `K`**：`[NontriviallyNormedField K] [IsCompleteDiscreteValuedField K] [NormedAlgebra ℚ_[p] K] [FiniteDimensional ℚ_[p] K]`。比 B3.1 多一个 `NormedAlgebra`（`K` 的范数延拓 `ℚ_p` 的范数），使 `𝓀[K]` 与 `K` 在 `K^alg` 中的剩余域像典范等同；`K = ℚ_[p]` 时由 `NormedAlgebra.id` 自动给出。
+4. **FW 新增**：`IsTotallyRamified K L`（`algebraMap 𝓀[K] → 𝓀(integralClosure 𝒪[K] L)` 满射，`L/K` 代数即可）及有限时与 `e = [L:K]`、`f = 1` 的等价；`HasSameResidueField` 的一般形式（基域 `K₀` 上代数扩张 `Ω` 的两个中间域，剩余域在 `𝓀(integralClosure 𝒪[K₀] Ω)` 中像相等）及其诱导的剩余域同构。**FTE 新增**：`Fact (Irreducible (p : 𝒪[ℚ_[p]]))`、`IsTotallyRamified ℚ_[p] (falseTateExtension p π)`，目标 (5) 用 class 重述。
+5. C4（拓扑 scoped instance）与"Leibniz 改系数证明"放到目录重组阶段与 `Mathlib/` 层一起做，不阻塞迁移。

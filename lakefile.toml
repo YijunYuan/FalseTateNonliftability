@@ -12,12 +12,17 @@ maxSynthPendingDepth = 3
 [[require]]
 name = "mathlib"
 git = "https://github.com/leanprover-community/mathlib4.git"
-rev = "f0b4c8150aa0dbc758aff1291410c5ae335aff3a"
+rev = "1e75e9dd53d483fa01eff9ac7d4ea0472ce9d1fa"
+
+[[require]]
+name = "FontaineWintenberger"
+git = "https://github.com/YijunYuan/FontaineWintenberger"
+rev = "b7d6a187de05e9b8a326abbe59332033f69f64bc"
 
 [[require]]
 name = "FalseTateExtension"
 git = "https://github.com/YijunYuan/FalseTateExtension"
-rev = "7d6876cbe08865a452911fdf43e4d0728e1ce903"
+rev = "817737a678ff4b7e4917c0a8aeea7075f69d8092"
 
 [[lean_lib]]
 name = "FalseTateNonliftability"
