@@ -5,408 +5,374 @@ Authors: Yijun Yuan
 -/
 module
 
-public import FalseTateNonliftability.CoefficientRing.NormalizedDerivative
+public import FalseTateNonliftability.CoefficientRing.Substitution
 
 /-!
-# Lifting coordinates and transporting commuting substitutions
+# Coordinate changes
 
-Residue-field power-series coordinates lift to actual coordinates over the
-original discrete valuation ring. Simultaneous coordinate conjugation on the
-actual coefficient quotients preserves substitution and commutation, and its
-compatible coordinates give the same laws on the canonical principal completion.
+Let `R` be a local Artinian ring with principal maximal ideal, and let `H` be a power series over
+`R` with `H(0) = 0` and `H'(0)` a unit, with compositional inverse `H^{∘-1}`. The conjugate of a
+Laurent series `P` by `H` is `H ∘ P ∘ H^{∘-1}`, where `f ∘ G` denotes substitution of `G` in `f`.
+On the coefficient ring `A` the conjugate of `P ∈ A` by a power series `H` over `O` is defined in
+the same way, and it reduces modulo every `𝔪 ^ (r + 1)` to the conjugate by the reduction of `H`.
 
-This supplies the coefficient-ring part of `nl:uniformizer-independence`.
-The identification with coordinates of an actual field-of-norms action is
-a separate producer.
+Conjugation by `H` fixes the variable, preserves admissibility, is inverted by conjugation by
+`H^{∘-1}`, preserves composition (`H ∘ (P ∘ G) ∘ H^{∘-1}` is the composite of the conjugates of
+`P` and `G`) and hence commutation, and it commutes with coefficient maps. On power series over
+the residue field it is `PowerSeries.conj`. Every power series `w` over the residue field `κ` of
+`O` with `w(0) = 0` and `w'(0) ≠ 0` lifts coefficientwise to a power series `H` over `O` with
+`H(0) = 0` and `H'(0)` a unit. These are the ingredients of Yuan, Proposition 2.3: if
+`π' = ev_π(w)` is another uniformizer of the field of norms, conjugation by such a lift `H`
+transports lifts with respect to `π` to lifts with respect to `π'`, in `A` and modulo every power
+of `𝔪`.
+
+## Main definitions
+
+* `LaurentSeries.conj H P`: the conjugate `H ∘ P ∘ H^{∘-1}` of a Laurent series `P`.
+* `CoefficientRing.conj H P`: the conjugate `H ∘ P ∘ H^{∘-1}` of `P ∈ A`.
+
+## Main results
+
+* `LaurentSeries.conj_eq_iff_subst`: `H ∘ P ∘ H^{∘-1} = Q` if and only if `H ∘ P = Q ∘ H`.
+* `LaurentSeries.conj_subst`, `LaurentSeries.conj_commute_iff`: conjugation preserves
+  composition, and preserves and reflects commutation of admissible series.
+* `LaurentSeries.mapRingHom_conj`, `LaurentSeries.conj_ofPowerSeries`: conjugation commutes with
+  coefficient maps and is `PowerSeries.conj` on power series.
+* `CoefficientRing.reduction_conj`, `CoefficientRing.residue_conj`: conjugation in `A` reduces to
+  conjugation over `O ⧸ 𝔪 ^ (r + 1)` and over `κ`.
+* `CoefficientRing.conj_subst`, `CoefficientRing.conj_commute_iff`: the same laws in `A`.
+* `CoefficientRing.exists_map_residue_eq`, `Truncation.exists_map_residue_eq`: coefficientwise
+  lifts of coordinate changes over `κ`.
+
+## References
+
+* Yuan, Lemma 2.1 (3) and Proposition 2.3.
 -/
 
-@[expose] public section
+public section
 
 noncomputable section
 
-namespace FalseTateNonliftability.CoefficientRing
+private theorem constantCoeff_map_eq_zero {R S : Type*} [CommRing R] [CommRing S] (φ : R →+* S)
+    {H : PowerSeries R} (hH : H.constantCoeff = 0) : (H.map φ).constantCoeff = 0 := by
+  rw [← PowerSeries.coeff_zero_eq_constantCoeff_apply, PowerSeries.coeff_map,
+    PowerSeries.coeff_zero_eq_constantCoeff_apply, hH, map_zero]
 
-open LaurentSeries
+private theorem isUnit_coeff_one_map {R S : Type*} [CommRing R] [CommRing S] (φ : R →+* S)
+    {H : PowerSeries R} (hl : IsUnit (H.coeff 1)) : IsUnit ((H.map φ).coeff 1) := by
+  rw [PowerSeries.coeff_map]
+  exact hl.map φ
 
-variable {O : Type*} [CommRing O] [IsDomain O] [IsDiscreteValuationRing O]
+namespace LaurentSeries
 
-/-- An actual residue coordinate lifts over the original DVR, with exactly
-zero constant coefficient and an actual unit linear coefficient. -/
-theorem exists_powerSeries_residue_coordinate
-    (w : PowerSeries (IsLocalRing.ResidueField O)) (hw : w.constantCoeff = 0)
-    (hwlinear : IsUnit (w.coeff 1)) :
-    ∃ H : PowerSeries O, H.constantCoeff = 0 ∧ IsUnit (H.coeff 1) ∧
-      H.map (IsLocalRing.residue O) = w := by
-  obtain ⟨H, hH⟩ := PowerSeries.map_surjective (IsLocalRing.residue O)
-    IsLocalRing.residue_surjective w
-  have hc : IsLocalRing.residue O H.constantCoeff = 0 := by
-    have h := congrArg (fun f : PowerSeries (IsLocalRing.ResidueField O) ↦ f.coeff 0) hH
-    simpa only [PowerSeries.coeff_map, PowerSeries.coeff_zero_eq_constantCoeff_apply, hw] using h
-  have hlinear : IsUnit (H.coeff 1) := by
-    apply (IsLocalRing.residue_ne_zero_iff_isUnit _).mp
-    have h := congrArg (fun f : PowerSeries (IsLocalRing.ResidueField O) ↦ f.coeff 1) hH
-    change IsLocalRing.residue O (H.coeff 1) = w.coeff 1 at h
-    exact h.trans_ne hwlinear.ne_zero
-  refine ⟨H - PowerSeries.C H.constantCoeff, by simp, ?_, ?_⟩
-  · simpa using hlinear
-  · simpa only [map_sub, PowerSeries.map_C, hc, map_zero, sub_zero] using hH
+variable {R S : Type*} [CommRing R] [IsLocalRing R] [IsArtinianRing R] [IsPrincipalIdealRing R]
+  [CommRing S] [IsLocalRing S] [IsArtinianRing S] [IsPrincipalIdealRing S]
 
-variable (π : O) (hπ : Irreducible π)
+/-- The conjugate `H ∘ P ∘ H^{∘-1}` of a Laurent series `P` by a power series `H`, where
+`H^{∘-1}` is the compositional inverse of `H` (`PowerSeries.compInv`). -/
+@[expose] def conj (H : PowerSeries R) (P : LaurentSeries R) : LaurentSeries R :=
+  subst (HahnSeries.ofPowerSeries ℤ R H.compInv) (subst P (HahnSeries.ofPowerSeries ℤ R H))
 
-/-- A coordinate over the DVR has the same actual residue through every
-positive coefficient quotient. -/
-theorem residue_map_quotient_powerSeries (r : ℕ) (hr : 1 ≤ r) (H : PowerSeries O) :
-    (H.map (Ideal.Quotient.mk (Ideal.span {π ^ r}))).map (residue π hπ r hr) =
-      H.map (IsLocalRing.residue O) := by
-  ext n
-  simp only [PowerSeries.coeff_map, residue_mk]
+variable {H : PowerSeries R}
 
-/-- Every actual residue coordinate has an actual coordinate lift in each
-positive coefficient quotient. The lift is obtained over the original DVR. -/
-theorem exists_truncated_residue_coordinate (r : ℕ) (hr : 1 ≤ r)
-    (w : PowerSeries (IsLocalRing.ResidueField O)) (hw : w.constantCoeff = 0)
-    (hwlinear : IsUnit (w.coeff 1)) :
-    ∃ H : PowerSeries (Truncation π r), H.constantCoeff = 0 ∧ IsUnit (H.coeff 1) ∧
-      H.map (residue π hπ r hr) = w := by
-  obtain ⟨H, hzero, hlinear, hres⟩ := exists_powerSeries_residue_coordinate w hw hwlinear
-  refine ⟨H.map (Ideal.Quotient.mk _), ?_, ?_, ?_⟩
-  · change Ideal.Quotient.mk _ H.constantCoeff = 0
-    rw [hzero, map_zero]
-  · simpa only [PowerSeries.coeff_map] using hlinear.map (Ideal.Quotient.mk _)
-  · exact (residue_map_quotient_powerSeries π hπ r hr H).trans hres
+omit [IsArtinianRing R] [IsPrincipalIdealRing R] in
+private theorem isAdmissible_ofPowerSeries_compInv (H : PowerSeries R) :
+    IsAdmissible (HahnSeries.ofPowerSeries ℤ R H.compInv) :=
+  isAdmissible_ofPowerSeries (PowerSeries.constantCoeff_compInv H)
+    (PowerSeries.isUnit_coeff_one_compInv H)
 
-/-- Actual coordinate conjugation preserves admissibility on the same
-finite Laurent carrier. Both constituent substitutions are already defined. -/
-theorem isAdmissible_coordinateConjugate (r : ℕ) (hr : 1 ≤ r)
-    (G : LaurentSeries (Truncation π r)) (hG : IsAdmissible (parameter π r) G)
-    (H : PowerSeries (Truncation π r)) (hzero : H.constantCoeff = 0)
-    (hlinear : IsUnit (H.coeff 1)) :
-    IsAdmissible (parameter π r) (coordinateConjugate π hπ r hr G hG H hzero hlinear) := by
-  let := parameter_isMaximal π hπ r hr
-  let hδ : IsNilpotent (parameter π r) := ⟨r, parameter_pow_eq_zero π r⟩
-  have hH := isAdmissible_ofPowerSeries (parameter π r) H hzero hlinear
-  have hQ := isAdmissible_ofPowerSeries (parameter π r) (H.substInvOfIsUnit hlinear)
-    (PowerSeries.constantCoeff_substInvOfIsUnit H hlinear)
-    (by rw [PowerSeries.coeff_one_substInvOfIsUnit]; exact Units.isUnit _)
-  change IsAdmissible (parameter π r)
-    ((powerSeriesSubstEquiv (parameter π r) hδ H hzero hlinear).symm
-      (truncatedSubst π hπ r hr G hG (HahnSeries.ofPowerSeries ℤ _ H)))
-  rw [powerSeriesSubstEquiv_symm_apply]
-  exact (hH.substitution (parameter π r) hδ hG).substitution (parameter π r) hδ hQ
+private theorem subst_ofPowerSeries_compInv (hH : H.constantCoeff = 0)
+    (hl : IsUnit (H.coeff 1)) (f : LaurentSeries R) :
+    subst (HahnSeries.ofPowerSeries ℤ R H.compInv) f = (substEquiv H).symm f := by
+  rw [substEquiv_symm_apply hH hl, PowerSeries.compInv_eq_substInvOfIsUnit hl]
 
-/-- Substitution at the actual coordinate conjugate is conjugation of the
-actual substitution homomorphism, on every Laurent input. -/
-theorem truncatedSubst_coordinateConjugate (r : ℕ) (hr : 1 ≤ r)
-    (G : LaurentSeries (Truncation π r)) (hG : IsAdmissible (parameter π r) G)
-    (H : PowerSeries (Truncation π r)) (hzero : H.constantCoeff = 0)
-    (hlinear : IsUnit (H.coeff 1)) :
-    let E : LaurentSeries (Truncation π r) ≃ₐ[Truncation π r]
-        LaurentSeries (Truncation π r) := by
-      let := parameter_isMaximal π hπ r hr
-      exact powerSeriesSubstEquiv (parameter π r) ⟨r, parameter_pow_eq_zero π r⟩ H hzero hlinear
-    truncatedSubst π hπ r hr (coordinateConjugate π hπ r hr G hG H hzero hlinear)
-      (isAdmissible_coordinateConjugate π hπ r hr G hG H hzero hlinear) =
-        E.symm.toAlgHom.comp ((truncatedSubst π hπ r hr G hG).comp E.toAlgHom) := by
-  let := parameter_isMaximal π hπ r hr
-  let := orderTopology (Truncation π r)
-  let hδ : IsNilpotent (parameter π r) := ⟨r, parameter_pow_eq_zero π r⟩
-  dsimp only
-  symm
-  apply subst_unique (parameter π r) ⟨r, parameter_pow_eq_zero π r⟩
-  · exact (continuous_powerSeriesSubstEquiv_symm _ _ H hzero hlinear).comp
-      ((continuous_subst _ _ G hG).comp
-        (continuous_powerSeriesSubstEquiv _ _ H hzero hlinear))
-  · change (powerSeriesSubstEquiv (parameter π r) hδ
-      H hzero hlinear).symm
-        (truncatedSubst π hπ r hr G hG
-          (powerSeriesSubstEquiv (parameter π r) hδ H hzero hlinear
-            (HahnSeries.single (1 : ℤ) 1))) = _
-    rw [powerSeriesSubstEquiv_apply, subst_X]
-    rfl
+/-- `H ∘ P ∘ H^{∘-1}` is the image of `H ∘ P` under the inverse of `f ↦ f(H)`. -/
+theorem conj_eq_substEquiv_symm (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    (P : LaurentSeries R) :
+    conj H P = (substEquiv H).symm (subst P (HahnSeries.ofPowerSeries ℤ R H)) :=
+  subst_ofPowerSeries_compInv hH hl _
 
-/-- Coordinate conjugation preserves the actual composition of admissible
-parameters. This transports every prescribed composition identity. -/
-theorem coordinateConjugate_substitution (r : ℕ) (hr : 1 ≤ r)
-    (P G : LaurentSeries (Truncation π r))
-    (hP : IsAdmissible (parameter π r) P) (hG : IsAdmissible (parameter π r) G)
-    (H : PowerSeries (Truncation π r)) (hzero : H.constantCoeff = 0)
-    (hlinear : IsUnit (H.coeff 1)) :
-    coordinateConjugate π hπ r hr (truncatedSubst π hπ r hr P hP G)
-      (by let := parameter_isMaximal π hπ r hr
-          exact hG.substitution (parameter π r) ⟨r, parameter_pow_eq_zero π r⟩ hP)
-      H hzero hlinear =
-    truncatedSubst π hπ r hr (coordinateConjugate π hπ r hr P hP H hzero hlinear)
-      (isAdmissible_coordinateConjugate π hπ r hr P hP H hzero hlinear)
-      (coordinateConjugate π hπ r hr G hG H hzero hlinear) := by
-  let := parameter_isMaximal π hπ r hr
-  let hδ : IsNilpotent (parameter π r) := ⟨r, parameter_pow_eq_zero π r⟩
-  let E := powerSeriesSubstEquiv (parameter π r) hδ H hzero hlinear
-  have hformula := AlgHom.congr_fun
-    (truncatedSubst_coordinateConjugate π hπ r hr P hP H hzero hlinear)
-    (coordinateConjugate π hπ r hr G hG H hzero hlinear)
-  change truncatedSubst π hπ r hr (coordinateConjugate π hπ r hr P hP H hzero hlinear) _
-      (coordinateConjugate π hπ r hr G hG H hzero hlinear) =
-    E.symm (truncatedSubst π hπ r hr P hP
-      (E (coordinateConjugate π hπ r hr G hG H hzero hlinear))) at hformula
-  rw [hformula]
-  change E.symm (truncatedSubst π hπ r hr (truncatedSubst π hπ r hr P hP G) _
-      (HahnSeries.ofPowerSeries ℤ _ H)) =
-    E.symm (truncatedSubst π hπ r hr P hP
-      (E (coordinateConjugate π hπ r hr G hG H hzero hlinear)))
-  apply congrArg E.symm
-  rw [show E (coordinateConjugate π hπ r hr G hG H hzero hlinear) =
-      truncatedSubst π hπ r hr G hG (HahnSeries.ofPowerSeries ℤ _ H) from
-        coordinateConjugate_identity π hπ r hr G hG H hzero hlinear]
-  exact (subst_assoc (parameter π r) hδ G P hG hP (HahnSeries.ofPowerSeries ℤ _ H)).symm
+/-- `H ∘ P ∘ H^{∘-1} = Q` if and only if `H ∘ P = Q ∘ H`. -/
+theorem conj_eq_iff_subst (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    {P Q : LaurentSeries R} :
+    conj H P = Q ↔
+      subst P (HahnSeries.ofPowerSeries ℤ R H) = subst (HahnSeries.ofPowerSeries ℤ R H) Q := by
+  rw [conj_eq_substEquiv_symm hH hl, AlgEquiv.symm_apply_eq, substEquiv_apply hH hl]
 
-/-- The existing coordinate conjugation is injective on actual admissible
-parameters. Agreement on the coordinate is extended using continuity. -/
-theorem coordinateConjugate_injective (r : ℕ) (hr : 1 ≤ r)
-    (P G : LaurentSeries (Truncation π r))
-    (hP : IsAdmissible (parameter π r) P) (hG : IsAdmissible (parameter π r) G)
-    (H : PowerSeries (Truncation π r)) (hzero : H.constantCoeff = 0)
-    (hlinear : IsUnit (H.coeff 1))
-    (heq : coordinateConjugate π hπ r hr P hP H hzero hlinear =
-      coordinateConjugate π hπ r hr G hG H hzero hlinear) : P = G := by
-  let := parameter_isMaximal π hπ r hr
-  let := orderTopology (Truncation π r)
-  have := orderTopology_t2Space (R := Truncation π r)
-  let hδ : IsNilpotent (parameter π r) := ⟨r, parameter_pow_eq_zero π r⟩
-  let E := powerSeriesSubstEquiv (parameter π r) hδ H hzero hlinear
-  have hH : truncatedSubst π hπ r hr P hP (HahnSeries.ofPowerSeries ℤ _ H) =
-      truncatedSubst π hπ r hr G hG (HahnSeries.ofPowerSeries ℤ _ H) := by
-    rw [← coordinateConjugate_identity π hπ r hr P hP H hzero hlinear,
-      ← coordinateConjugate_identity π hπ r hr G hG H hzero hlinear, heq]
-  have hmaps : (truncatedSubst π hπ r hr P hP).comp E.toAlgHom =
-      (truncatedSubst π hπ r hr G hG).comp E.toAlgHom := by
-    apply continuous_algHom_ext_X
-    · exact (continuous_subst _ hδ P hP).comp
-        (continuous_powerSeriesSubstEquiv _ hδ H hzero hlinear)
-    · exact (continuous_subst _ hδ G hG).comp
-        (continuous_powerSeriesSubstEquiv _ hδ H hzero hlinear)
-    · change truncatedSubst π hπ r hr P hP (E (HahnSeries.single (1 : ℤ) 1)) =
-        truncatedSubst π hπ r hr G hG (E (HahnSeries.single (1 : ℤ) 1))
-      have hEX : E (HahnSeries.single (1 : ℤ) 1) = HahnSeries.ofPowerSeries ℤ _ H :=
-        subst_X (parameter π r) hδ _ _
-      rw [hEX]
-      exact hH
-  have hx := AlgHom.congr_fun hmaps (E.symm (HahnSeries.single (1 : ℤ) 1))
-  simpa only [AlgHom.comp_apply, AlgEquiv.coe_toAlgHom, E.apply_symm_apply,
-    truncatedSubst_X] using hx
+/-- `(H ∘ P ∘ H^{∘-1}) ∘ H = H ∘ P`. -/
+theorem subst_ofPowerSeries_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    (P : LaurentSeries R) :
+    subst (HahnSeries.ofPowerSeries ℤ R H) (conj H P) =
+      subst P (HahnSeries.ofPowerSeries ℤ R H) :=
+  ((conj_eq_iff_subst hH hl).mp rfl).symm
 
-/-- Simultaneous actual coordinate conjugation preserves and reflects the
-commutation identity. No group-law identities or transport certificate are assumed. -/
-theorem coordinateConjugate_commute_iff (r : ℕ) (hr : 1 ≤ r)
-    (P G : LaurentSeries (Truncation π r))
-    (hP : IsAdmissible (parameter π r) P) (hG : IsAdmissible (parameter π r) G)
-    (H : PowerSeries (Truncation π r)) (hzero : H.constantCoeff = 0)
-    (hlinear : IsUnit (H.coeff 1)) :
-    truncatedSubst π hπ r hr (coordinateConjugate π hπ r hr P hP H hzero hlinear)
-        (isAdmissible_coordinateConjugate π hπ r hr P hP H hzero hlinear)
-        (coordinateConjugate π hπ r hr G hG H hzero hlinear) =
-      truncatedSubst π hπ r hr (coordinateConjugate π hπ r hr G hG H hzero hlinear)
-        (isAdmissible_coordinateConjugate π hπ r hr G hG H hzero hlinear)
-        (coordinateConjugate π hπ r hr P hP H hzero hlinear) ↔
-      truncatedSubst π hπ r hr P hP G = truncatedSubst π hπ r hr G hG P := by
-  let := parameter_isMaximal π hπ r hr
-  rw [← coordinateConjugate_substitution π hπ r hr P G hP hG H hzero hlinear,
-    ← coordinateConjugate_substitution π hπ r hr G P hG hP H hzero hlinear]
-  constructor
-  · exact coordinateConjugate_injective π hπ r hr _ _ _ _ H hzero hlinear
-  · intro heq
-    simp only [heq]
+/-- Conjugation fixes the variable. -/
+theorem conj_X_right (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) :
+    conj H (HahnSeries.single (1 : ℤ) (1 : R)) = HahnSeries.single 1 1 := by
+  rw [conj_eq_iff_subst hH hl, subst_X_left_apply, subst_X (isAdmissible_ofPowerSeries hH hl)]
 
-/-- The actual coordinate automorphism commutes with every positive quotient
-transition, on arbitrary Laurent inputs. -/
-theorem factor_powerSeriesSubstEquiv {s r : ℕ} (hsr : s ≤ r) (hs : 1 ≤ s)
-    (H : PowerSeries (Truncation π r)) (hzero : H.constantCoeff = 0)
-    (hlinear : IsUnit (H.coeff 1)) (f : LaurentSeries (Truncation π r)) :
-    letI := parameter_isMaximal π hπ r (hs.trans hsr)
-    letI := parameter_isMaximal π hπ s hs
-    mapRingHom (factor π hsr)
-        (powerSeriesSubstEquiv (parameter π r) ⟨r, parameter_pow_eq_zero π r⟩ H hzero hlinear f) =
-      powerSeriesSubstEquiv (parameter π s) ⟨s, parameter_pow_eq_zero π s⟩ (H.map (factor π hsr))
-        (by change factor π hsr H.constantCoeff = 0; rw [hzero, map_zero])
-        (by simpa only [PowerSeries.coeff_map] using hlinear.map (factor π hsr))
-        (mapRingHom (factor π hsr) f) := by
-  let := parameter_isMaximal π hπ r (hs.trans hsr)
-  let := parameter_isMaximal π hπ s hs
-  change mapRingHom (factor π hsr)
-      (truncatedSubst π hπ r (hs.trans hsr) (HahnSeries.ofPowerSeries ℤ _ H) _ f) =
-    truncatedSubst π hπ s hs (HahnSeries.ofPowerSeries ℤ _ (H.map (factor π hsr))) _
-      (mapRingHom (factor π hsr) f)
-  simpa only [mapRingHom_ofPowerSeries] using
-    factor_truncatedSubst π hπ hsr hs (HahnSeries.ofPowerSeries ℤ _ H)
-      (isAdmissible_ofPowerSeries _ H hzero hlinear) f
+/-- Conjugation by the variable is the identity on admissible series. -/
+theorem conj_X {P : LaurentSeries R} (hP : IsAdmissible P) : conj PowerSeries.X P = P := by
+  rw [conj, PowerSeries.compInv_X, HahnSeries.ofPowerSeries_X, subst_X hP, subst_X_left_apply]
 
-/-- Actual simultaneous conjugation is compatible with all positive
-coefficient transitions, using the same original quotient maps. -/
-theorem factor_coordinateConjugate {s r : ℕ} (hsr : s ≤ r) (hs : 1 ≤ s)
-    (G : LaurentSeries (Truncation π r)) (hG : IsAdmissible (parameter π r) G)
-    (H : PowerSeries (Truncation π r)) (hzero : H.constantCoeff = 0)
-    (hlinear : IsUnit (H.coeff 1)) :
-    mapRingHom (factor π hsr)
-      (coordinateConjugate π hπ r (hs.trans hsr) G hG H hzero hlinear) =
-    coordinateConjugate π hπ s hs (mapRingHom (factor π hsr) G)
-      ((isAdmissible_factor_iff π hπ hsr hs G).mpr hG) (H.map (factor π hsr))
-      (by change factor π hsr H.constantCoeff = 0; rw [hzero, map_zero])
-      (by simpa only [PowerSeries.coeff_map] using hlinear.map (factor π hsr)) := by
-  let := parameter_isMaximal π hπ r (hs.trans hsr)
-  let := parameter_isMaximal π hπ s hs
-  let q := factor π hsr
-  let Hs := H.map q
-  have hz : Hs.constantCoeff = 0 := by change q H.constantCoeff = 0; rw [hzero, map_zero]
-  have hl : IsUnit (Hs.coeff 1) := by
-    simpa only [Hs, PowerSeries.coeff_map] using hlinear.map q
-  let E := powerSeriesSubstEquiv (parameter π s) ⟨s, parameter_pow_eq_zero π s⟩ Hs hz hl
-  apply E.injective
-  change E (mapRingHom q (coordinateConjugate π hπ r (hs.trans hsr) G hG H hzero hlinear)) =
-    E (coordinateConjugate π hπ s hs (mapRingHom q G) _ Hs hz hl)
-  rw [show E (coordinateConjugate π hπ s hs (mapRingHom q G) _ Hs hz hl) =
-      truncatedSubst π hπ s hs (mapRingHom q G) _ (HahnSeries.ofPowerSeries ℤ _ Hs) from
-        coordinateConjugate_identity π hπ s hs _ _ Hs hz hl]
-  calc
-    E (mapRingHom q (coordinateConjugate π hπ r (hs.trans hsr) G hG H hzero hlinear)) =
-        mapRingHom q (truncatedSubst π hπ r (hs.trans hsr) (HahnSeries.ofPowerSeries ℤ _ H)
-          (isAdmissible_ofPowerSeries _ H hzero hlinear)
-          (coordinateConjugate π hπ r (hs.trans hsr) G hG H hzero hlinear)) :=
-      (factor_powerSeriesSubstEquiv π hπ hsr hs H hzero hlinear _).symm
-    _ = mapRingHom q (truncatedSubst π hπ r (hs.trans hsr) G hG
-        (HahnSeries.ofPowerSeries ℤ _ H)) :=
-      congrArg (mapRingHom q)
-        (coordinateConjugate_identity π hπ r (hs.trans hsr) G hG H hzero hlinear)
-    _ = _ := by rw [factor_truncatedSubst, mapRingHom_ofPowerSeries]
+/-- Conjugation preserves admissibility. -/
+theorem IsAdmissible.conj {P : LaurentSeries R} (hP : IsAdmissible P)
+    (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) : IsAdmissible (LaurentSeries.conj H P) :=
+  ((isAdmissible_ofPowerSeries hH hl).subst hP).subst (isAdmissible_ofPowerSeries_compInv H)
 
-/-- On the same canonical completion, the explicit conjugated element has
-exactly the already constructed finite coordinate conjugates. -/
-theorem completedPrincipalReduction_coordinateConjugate
-    (G : PrincipalCompletion π) (hG : CompletedIsAdmissible π hπ G)
-    (H : PowerSeries O) (hzero : H.constantCoeff = 0) (hlinear : IsUnit (H.coeff 1))
-    (r : ℕ) (hr : 1 ≤ r) :
-    completedPrincipalReduction π r
-      ((completedPowerSeriesSubstEquiv π hπ H hzero hlinear).symm
-        (completedSubst π hπ G hG (completedPowerSeries π H))) =
-    coordinateConjugate π hπ r hr (completedPrincipalReduction π r G)
-      ((completedIsAdmissible_iff π hπ r hr G).mp hG)
-      (H.map (Ideal.Quotient.mk (Ideal.span {π ^ r})))
-      (by change Ideal.Quotient.mk _ H.constantCoeff = 0; rw [hzero, map_zero])
-      (by simpa only [PowerSeries.coeff_map] using
-        hlinear.map (Ideal.Quotient.mk (Ideal.span {π ^ r}))) := by
-  let := parameter_isMaximal π hπ r hr
-  rw [completedPrincipalReduction_powerSeriesSubstEquiv_symm π hπ H hzero hlinear r hr,
-    completedPrincipalReduction_completedSubst π hπ G hG r hr,
-    completedPrincipalReduction_powerSeries]
+/-- Substitution of `H ∘ P ∘ H^{∘-1}` is substitution of `P` conjugated by `f ↦ f(H)`:
+`f ∘ (H ∘ P ∘ H^{∘-1}) = ((f ∘ H) ∘ P) ∘ H^{∘-1}`. -/
+theorem subst_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) (P : LaurentSeries R) :
+    subst (conj H P) =
+      ((substEquiv H).symm.toAlgHom.comp (subst P)).comp (substEquiv H).toAlgHom := by
+  by_cases hP : IsAdmissible P
+  · let := orderTopology R
+    refine (subst_unique (hP.conj hH hl) _ ((continuous_substEquiv_symm H).comp
+      ((continuous_subst P).comp (continuous_substEquiv H))) ?_).symm
+    change (substEquiv H).symm (subst P (substEquiv H (HahnSeries.single 1 1))) = _
+    rw [substEquiv_X hH hl, conj_eq_substEquiv_symm hH hl]
+  · rw [conj_eq_substEquiv_symm hH hl, subst_of_not_isAdmissible hP, AlgHom.id_apply,
+      ← substEquiv_X hH hl, AlgEquiv.symm_apply_apply, subst_X_left]
+    exact AlgHom.ext fun f ↦ ((substEquiv H).symm_apply_apply f).symm
+
+theorem subst_conj_apply (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    (P f : LaurentSeries R) :
+    subst (conj H P) f = (substEquiv H).symm (subst P (substEquiv H f)) :=
+  AlgHom.congr_fun (subst_conj hH hl P) f
+
+/-- Conjugation preserves composition: `H ∘ (P ∘ G) ∘ H^{∘-1}` is the composite of
+`H ∘ P ∘ H^{∘-1}` and `H ∘ G ∘ H^{∘-1}`. -/
+theorem conj_subst (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) {G P : LaurentSeries R}
+    (hG : IsAdmissible G) (hP : IsAdmissible P) :
+    conj H (subst G P) = subst (conj H G) (conj H P) := by
+  rw [subst_conj_apply hH hl, substEquiv_apply hH hl, subst_ofPowerSeries_conj hH hl,
+    subst_comp_subst_apply hP hG, conj_eq_substEquiv_symm hH hl]
+
+/-- Conjugating by `H` and then by `H^{∘-1}` is the identity on admissible series. -/
+theorem conj_compInv_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    {P : LaurentSeries R} (hP : IsAdmissible P) : conj H.compInv (conj H P) = P := by
+  rw [conj_eq_iff_subst (PowerSeries.constantCoeff_compInv H)
+      (PowerSeries.isUnit_coeff_one_compInv H), subst_conj_apply hH hl,
+    substEquiv_ofPowerSeries hH hl, PowerSeries.subst_compInv_left hH hl,
+    HahnSeries.ofPowerSeries_X, subst_X hP, subst_ofPowerSeries_compInv hH hl]
+
+/-- Conjugating by `H^{∘-1}` and then by `H` is the identity on admissible series. -/
+theorem conj_conj_compInv (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    {P : LaurentSeries R} (hP : IsAdmissible P) : conj H (conj H.compInv P) = P := by
+  have h := conj_compInv_conj (PowerSeries.constantCoeff_compInv H)
+    (PowerSeries.isUnit_coeff_one_compInv H) hP
+  rwa [PowerSeries.compInv_compInv hH hl] at h
+
+theorem conj_inj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) {P G : LaurentSeries R}
+    (hP : IsAdmissible P) (hG : IsAdmissible G) : conj H P = conj H G ↔ P = G :=
+  ⟨fun h ↦ by rw [← conj_compInv_conj hH hl hP, h, conj_compInv_conj hH hl hG],
+    fun h ↦ h ▸ rfl⟩
+
+/-- Conjugation preserves and reflects commutation: `H ∘ P ∘ H^{∘-1}` and `H ∘ G ∘ H^{∘-1}`
+commute if and only if `P` and `G` commute. -/
+theorem conj_commute_iff (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    {P G : LaurentSeries R} (hP : IsAdmissible P) (hG : IsAdmissible G) :
+    subst (conj H P) (conj H G) = subst (conj H G) (conj H P) ↔ subst P G = subst G P := by
+  rw [← conj_subst hH hl hP hG, ← conj_subst hH hl hG hP,
+    conj_inj hH hl (hG.subst hP) (hP.subst hG)]
+
+/-- Conjugation commutes with coefficient maps. -/
+theorem mapRingHom_conj (φ : R →+* S) (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    (P : LaurentSeries R) : mapRingHom φ (conj H P) = conj (H.map φ) (mapRingHom φ P) := by
+  rw [conj, conj, mapRingHom_subst', mapRingHom_subst', mapRingHom_ofPowerSeries,
+    mapRingHom_ofPowerSeries, PowerSeries.map_compInv φ hH hl]
+
+/-- On power series `f` with `f(0) = 0`, conjugation is `PowerSeries.conj`. -/
+theorem conj_ofPowerSeries {f : PowerSeries R} (hf : f.constantCoeff = 0)
+    (hfadm : IsAdmissible (HahnSeries.ofPowerSeries ℤ R f)) (H : PowerSeries R) :
+    conj H (HahnSeries.ofPowerSeries ℤ R f) =
+      HahnSeries.ofPowerSeries ℤ R (PowerSeries.conj H f) := by
+  rw [conj, subst_ofPowerSeries hf hfadm, subst_ofPowerSeries (PowerSeries.constantCoeff_compInv H)
+    (isAdmissible_ofPowerSeries_compInv H)]
   rfl
 
-/-- The explicit conjugated element in the original completion is admissible;
-its positive coordinates are the actual finite conjugates. -/
-theorem completedIsAdmissible_coordinateConjugate
-    (G : PrincipalCompletion π) (hG : CompletedIsAdmissible π hπ G)
-    (H : PowerSeries O) (hzero : H.constantCoeff = 0) (hlinear : IsUnit (H.coeff 1)) :
-    CompletedIsAdmissible π hπ
-      ((completedPowerSeriesSubstEquiv π hπ H hzero hlinear).symm
-        (completedSubst π hπ G hG (completedPowerSeries π H))) := by
-  rw [completedIsAdmissible_iff π hπ 1 le_rfl,
-    completedPrincipalReduction_coordinateConjugate π hπ G hG H hzero hlinear 1 le_rfl]
-  exact isAdmissible_coordinateConjugate π hπ 1 le_rfl _ _ _ _ _
+/-- If the image of an admissible `P` under a coefficient map `φ` is a power series `f`, then the
+image of `H ∘ P ∘ H^{∘-1}` is `PowerSeries.conj` of `f` by `φ H`. -/
+theorem mapRingHom_conj_of_mapRingHom_eq (φ : R →+* S) (hH : H.constantCoeff = 0)
+    (hl : IsUnit (H.coeff 1)) {P : LaurentSeries R} (hP : IsAdmissible P) {f : PowerSeries S}
+    (hf : f.constantCoeff = 0) (hres : mapRingHom φ P = HahnSeries.ofPowerSeries ℤ S f) :
+    mapRingHom φ (conj H P) = HahnSeries.ofPowerSeries ℤ S (PowerSeries.conj (H.map φ) f) := by
+  rw [mapRingHom_conj φ hH hl, hres, conj_ofPowerSeries hf (hres ▸ hP.map φ)]
 
-/-- Actual substitution on the same completion conjugates by the actual
-coordinate automorphism. Equality is proved in every positive coordinate,
-without inferring uniqueness from adic continuity and the variable alone. -/
-theorem completedSubst_coordinateConjugate
-    (G : PrincipalCompletion π) (hG : CompletedIsAdmissible π hπ G)
-    (H : PowerSeries O) (hzero : H.constantCoeff = 0) (hlinear : IsUnit (H.coeff 1)) :
-    let E := completedPowerSeriesSubstEquiv π hπ H hzero hlinear
-    completedSubst π hπ (E.symm (completedSubst π hπ G hG (completedPowerSeries π H)))
-      (completedIsAdmissible_coordinateConjugate π hπ G hG H hzero hlinear) =
-        E.symm.toAlgHom.comp ((completedSubst π hπ G hG).comp E.toAlgHom) := by
-  dsimp only
-  apply AlgHom.ext
-  intro f
-  apply completedPrincipalReduction_ext_pos π
-  intro r hr
-  let := parameter_isMaximal π hπ r hr
-  simp only [AlgHom.comp_apply, AlgEquiv.coe_toAlgHom,
-    completedPrincipalReduction_completedSubst π hπ _ _ r hr,
-    completedPrincipalReduction_coordinateConjugate π hπ G hG H hzero hlinear r hr,
-    completedPrincipalReduction_powerSeriesSubstEquiv_symm π hπ H hzero hlinear r hr,
-    completedPrincipalReduction_powerSeriesSubstEquiv π hπ H hzero hlinear r hr]
-  exact AlgHom.congr_fun
-    (truncatedSubst_coordinateConjugate π hπ r hr (completedPrincipalReduction π r G)
-      ((completedIsAdmissible_iff π hπ r hr G).mp hG)
-      (H.map (Ideal.Quotient.mk (Ideal.span {π ^ r}))) _ _) (completedPrincipalReduction π r f)
+end LaurentSeries
 
-/-- Simultaneous conjugation preserves and reflects actual completed
-commutation. The proof descends to each original positive coefficient quotient. -/
-theorem completed_coordinateConjugate_commute_iff
-    (P G : PrincipalCompletion π)
-    (hP : CompletedIsAdmissible π hπ P) (hG : CompletedIsAdmissible π hπ G)
-    (H : PowerSeries O) (hzero : H.constantCoeff = 0) (hlinear : IsUnit (H.coeff 1)) :
-    let E := completedPowerSeriesSubstEquiv π hπ H hzero hlinear
-    let PH := E.symm (completedSubst π hπ P hP (completedPowerSeries π H))
-    let GH := E.symm (completedSubst π hπ G hG (completedPowerSeries π H))
-    completedSubst π hπ PH (completedIsAdmissible_coordinateConjugate π hπ P hP H hzero hlinear) GH =
-      completedSubst π hπ GH (completedIsAdmissible_coordinateConjugate π hπ G hG H hzero hlinear) PH ↔
-    completedSubst π hπ P hP G = completedSubst π hπ G hG P := by
-  dsimp only
-  constructor <;> intro heq
-  · apply completedPrincipalReduction_ext_pos π
-    intro r hr
-    have hfinite := congrArg (completedPrincipalReduction π r) heq
-    simp only [completedPrincipalReduction_completedSubst π hπ _ _ r hr,
-      completedPrincipalReduction_coordinateConjugate π hπ P hP H hzero hlinear r hr,
-      completedPrincipalReduction_coordinateConjugate π hπ G hG H hzero hlinear r hr] at hfinite
-    rw [completedPrincipalReduction_completedSubst π hπ P hP r hr,
-      completedPrincipalReduction_completedSubst π hπ G hG r hr]
-    exact (coordinateConjugate_commute_iff π hπ r hr _ _ _ _ _ _ _).mp hfinite
-  · apply completedPrincipalReduction_ext_pos π
-    intro r hr
-    have hfinite := congrArg (completedPrincipalReduction π r) heq
-    simp only [completedPrincipalReduction_completedSubst π hπ _ _ r hr] at hfinite
-    simp only [completedPrincipalReduction_completedSubst π hπ _ _ r hr,
-      completedPrincipalReduction_coordinateConjugate π hπ P hP H hzero hlinear r hr,
-      completedPrincipalReduction_coordinateConjugate π hπ G hG H hzero hlinear r hr]
-    exact (coordinateConjugate_commute_iff π hπ r hr _ _ _ _ _ _ _).mpr hfinite
+namespace FalseTateNonliftability
 
-local instance coordinateChangeResidueZeroSpanIsMaximal :
-    (Ideal.span ({(0 : IsLocalRing.ResidueField O)} : Set (IsLocalRing.ResidueField O))).IsMaximal := by
-  rw [Ideal.span_singleton_zero]
-  exact Ideal.bot_isMaximal
+open LaurentSeries
+open IsLocalRing (ResidueField)
 
-/-- The actual conjugated parameter reduces to the same coordinate conjugate
-over the original residue field, for any admissible parameter. -/
-theorem residue_coordinateConjugate_apply (r : ℕ) (hr : 1 ≤ r)
-    (G : LaurentSeries (Truncation π r)) (hG : IsAdmissible (parameter π r) G)
-    (H : PowerSeries (Truncation π r)) (hzero : H.constantCoeff = 0)
-    (hlinear : IsUnit (H.coeff 1)) :
-    mapRingHom (residue π hπ r hr) (coordinateConjugate π hπ r hr G hG H hzero hlinear) =
-      (powerSeriesSubstEquiv 0 IsNilpotent.zero (H.map (residue π hπ r hr))
-        (by change residue π hπ r hr H.constantCoeff = 0; rw [hzero, map_zero])
-        (by simpa only [PowerSeries.coeff_map] using hlinear.map (residue π hπ r hr))).symm
-        (subst 0 IsNilpotent.zero (mapRingHom (residue π hπ r hr) G)
-          (isAdmissible_residue π hπ r hr G hG)
-          (HahnSeries.ofPowerSeries ℤ _ (H.map (residue π hπ r hr)))) := by
-  let := parameter_isMaximal π hπ r hr
-  let q := residue π hπ r hr
-  let Hbar := H.map q
-  have hz : Hbar.constantCoeff = 0 := by
-    change q H.constantCoeff = 0
-    rw [hzero, map_zero]
-  have hl : IsUnit (Hbar.coeff 1) := by
-    simpa only [Hbar, PowerSeries.coeff_map] using hlinear.map q
-  let E := powerSeriesSubstEquiv 0 IsNilpotent.zero Hbar hz hl
-  apply E.injective
-  change E (mapRingHom q (coordinateConjugate π hπ r hr G hG H hzero hlinear)) =
-    E (E.symm _)
-  rw [E.apply_symm_apply]
-  calc
-    E (mapRingHom q (coordinateConjugate π hπ r hr G hG H hzero hlinear)) =
-        mapRingHom q (truncatedSubst π hπ r hr (HahnSeries.ofPowerSeries ℤ _ H)
-          (isAdmissible_ofPowerSeries _ H hzero hlinear)
-          (coordinateConjugate π hπ r hr G hG H hzero hlinear)) :=
-      (residue_powerSeriesSubstEquiv π hπ r hr H hzero hlinear _).symm
-    _ = mapRingHom q (truncatedSubst π hπ r hr G hG (HahnSeries.ofPowerSeries ℤ _ H)) :=
-      congrArg (mapRingHom q) (coordinateConjugate_identity π hπ r hr G hG H hzero hlinear)
-    _ = _ := by rw [residue_truncatedSubst, mapRingHom_ofPowerSeries]
+variable {O : Type*} [CommRing O] [IsLocalRing O]
 
-end FalseTateNonliftability.CoefficientRing
+/-- A power series `w` over the residue field of `O` with `w(0) = 0` and `w'(0) ≠ 0` is the
+coefficientwise reduction of a power series `H` over `O` with `H(0) = 0` and `H'(0)` a unit. -/
+theorem CoefficientRing.exists_map_residue_eq (w : PowerSeries (ResidueField O))
+    (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :
+    ∃ H : PowerSeries O, H.constantCoeff = 0 ∧ IsUnit (H.coeff 1) ∧
+      H.map (IsLocalRing.residue O) = w := by
+  obtain ⟨H, hH⟩ := PowerSeries.map_surjective _ IsLocalRing.residue_surjective w
+  have hc : IsLocalRing.residue O H.constantCoeff = 0 := by
+    rw [← hw, ← hH, ← PowerSeries.coeff_zero_eq_constantCoeff_apply,
+      ← PowerSeries.coeff_zero_eq_constantCoeff_apply, PowerSeries.coeff_map]
+  have hl : IsUnit (H.coeff 1) := by
+    rw [← IsLocalRing.residue_ne_zero_iff_isUnit, ← PowerSeries.coeff_map, hH]
+    exact hw'.ne_zero
+  refine ⟨H - PowerSeries.C H.constantCoeff, by simp, by simpa using hl, ?_⟩
+  rw [map_sub, PowerSeries.map_C, hc, map_zero, sub_zero, hH]
+
+/-- A power series `w` over the residue field of `O` with `w(0) = 0` and `w'(0) ≠ 0` is the
+coefficientwise reduction of a power series `H` over `O ⧸ 𝔪 ^ (r + 1)` with `H(0) = 0` and
+`H'(0)` a unit. -/
+theorem Truncation.exists_map_residue_eq (r : ℕ) (w : PowerSeries (ResidueField O))
+    (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :
+    ∃ H : PowerSeries (Truncation O r), H.constantCoeff = 0 ∧ IsUnit (H.coeff 1) ∧
+      H.map (Truncation.residue O r) = w := by
+  obtain ⟨H, hH, hl, hres⟩ := CoefficientRing.exists_map_residue_eq w hw hw'
+  refine ⟨H.map (Truncation.mk O r), constantCoeff_map_eq_zero _ hH, isUnit_coeff_one_map _ hl,
+    ?_⟩
+  change PowerSeries.map ((Truncation.residue O r).comp (Truncation.mk O r)) H = w
+  rw [Truncation.residue_comp_mk, hres]
+
+namespace CoefficientRing
+
+variable [IsPrincipalIdealRing O]
+
+/-- The conjugate `H ∘ P ∘ H^{∘-1}` of `P ∈ A` by a power series `H` over `O`, where `H^{∘-1}` is
+the compositional inverse of `H` (`PowerSeries.compInv`). -/
+@[expose] def conj (H : PowerSeries O) (P : CoefficientRing O) : CoefficientRing O :=
+  subst (algebraMap (PowerSeries O) (CoefficientRing O) H.compInv)
+    (subst P (algebraMap (PowerSeries O) (CoefficientRing O) H))
+
+variable {H : PowerSeries O}
+
+/-- Conjugation commutes with reduction modulo `𝔪 ^ (r + 1)`. -/
+theorem reduction_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) (r : ℕ)
+    (P : CoefficientRing O) :
+    reduction O r (conj H P) =
+      LaurentSeries.conj (H.map (Truncation.mk O r)) (reduction O r P) := by
+  rw [conj, reduction_subst, reduction_subst, reduction_algebraMap_powerSeries,
+    reduction_algebraMap_powerSeries, PowerSeries.map_compInv _ hH hl]
+  rfl
+
+/-- Conjugation commutes with reduction to `κ((T))`. -/
+theorem residue_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    (P : CoefficientRing O) :
+    residue O (conj H P) =
+      LaurentSeries.conj (H.map (IsLocalRing.residue O)) (residue O P) := by
+  rw [conj, residue_subst, residue_subst, residue_algebraMap_powerSeries,
+    residue_algebraMap_powerSeries, PowerSeries.map_compInv _ hH hl]
+  rfl
+
+/-- If the image of an admissible `P ∈ A` in `κ((T))` is a power series `f`, then the image of
+`H ∘ P ∘ H^{∘-1}` is `PowerSeries.conj` of `f` by the reduction of `H`. -/
+theorem residue_conj_of_residue_eq (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    {P : CoefficientRing O} (hP : IsAdmissible P) {f : PowerSeries (ResidueField O)}
+    (hf : f.constantCoeff = 0) (hres : residue O P = HahnSeries.ofPowerSeries ℤ _ f) :
+    residue O (conj H P) =
+      HahnSeries.ofPowerSeries ℤ _ (PowerSeries.conj (H.map (IsLocalRing.residue O)) f) := by
+  rw [residue_conj hH hl, hres, conj_ofPowerSeries hf
+    (hres ▸ (isAdmissible_iff_isAdmissible_residue P).mp hP)]
+
+/-- Conjugation preserves admissibility. -/
+theorem IsAdmissible.conj {P : CoefficientRing O} (hP : IsAdmissible P)
+    (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) :
+    IsAdmissible (CoefficientRing.conj H P) := by
+  rw [isAdmissible_iff_isAdmissible_residue, residue_conj hH hl]
+  exact LaurentSeries.IsAdmissible.conj ((isAdmissible_iff_isAdmissible_residue P).mp hP)
+    (constantCoeff_map_eq_zero _ hH) (isUnit_coeff_one_map _ hl)
+
+/-- `H ∘ P ∘ H^{∘-1}` is the image of `H ∘ P` under the inverse of `f ↦ f(H)`. -/
+theorem conj_eq_substEquiv_symm (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    (P : CoefficientRing O) :
+    conj H P = (substEquiv H).symm (subst P (algebraMap (PowerSeries O) (CoefficientRing O) H)) :=
+  (substEquiv_symm_apply hH hl _).symm
+
+/-- `(H ∘ P ∘ H^{∘-1}) ∘ H = H ∘ P`. -/
+theorem subst_algebraMap_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    (P : CoefficientRing O) :
+    subst (algebraMap (PowerSeries O) (CoefficientRing O) H) (conj H P) =
+      subst P (algebraMap (PowerSeries O) (CoefficientRing O) H) := by
+  rw [conj_eq_substEquiv_symm hH hl, ← substEquiv_apply hH hl, AlgEquiv.apply_symm_apply]
+
+/-- `H ∘ P ∘ H^{∘-1} = Q` if and only if `H ∘ P = Q ∘ H`. -/
+theorem conj_eq_iff_subst (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    {P Q : CoefficientRing O} :
+    conj H P = Q ↔ subst P (algebraMap (PowerSeries O) (CoefficientRing O) H) =
+      subst (algebraMap (PowerSeries O) (CoefficientRing O) H) Q := by
+  rw [conj_eq_substEquiv_symm hH hl, AlgEquiv.symm_apply_eq, substEquiv_apply hH hl]
+
+/-- Conjugation fixes the variable. -/
+theorem conj_X_right (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) : conj H X = X :=
+  ext_reduction O fun r ↦ by
+    rw [reduction_conj hH hl, reduction_X, LaurentSeries.conj_X_right
+      (constantCoeff_map_eq_zero _ hH) (isUnit_coeff_one_map _ hl)]
+
+/-- Conjugation by the variable is the identity on admissible elements. -/
+theorem conj_X {P : CoefficientRing O} (hP : IsAdmissible P) : conj PowerSeries.X P = P :=
+  ext_reduction O fun r ↦ by
+    rw [reduction_conj PowerSeries.constantCoeff_X
+        (by rw [PowerSeries.coeff_one_X]; exact isUnit_one),
+      PowerSeries.map_X, LaurentSeries.conj_X ((isAdmissible_iff_reduction r P).mp hP)]
+
+/-- Substitution of `H ∘ P ∘ H^{∘-1}` is substitution of `P` conjugated by `f ↦ f(H)`. -/
+theorem subst_conj_apply (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    (P f : CoefficientRing O) :
+    subst (conj H P) f = (substEquiv H).symm (subst P (substEquiv H f)) :=
+  ext_reduction O fun r ↦ by
+    rw [reduction_subst, reduction_conj hH hl, LaurentSeries.subst_conj_apply
+      (constantCoeff_map_eq_zero _ hH) (isUnit_coeff_one_map _ hl),
+      reduction_substEquiv_symm hH hl, reduction_subst, reduction_substEquiv hH hl]
+
+theorem subst_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) (P : CoefficientRing O) :
+    subst (conj H P) =
+      ((substEquiv H).symm.toAlgHom.comp (subst P)).comp (substEquiv H).toAlgHom :=
+  AlgHom.ext (subst_conj_apply hH hl P)
+
+/-- Conjugation preserves composition: `H ∘ (P ∘ G) ∘ H^{∘-1}` is the composite of
+`H ∘ P ∘ H^{∘-1}` and `H ∘ G ∘ H^{∘-1}`. -/
+theorem conj_subst (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    {G P : CoefficientRing O} (hG : IsAdmissible G) (hP : IsAdmissible P) :
+    conj H (subst G P) = subst (conj H G) (conj H P) :=
+  ext_reduction O fun r ↦ by
+    rw [reduction_conj hH hl, reduction_subst, reduction_subst, reduction_conj hH hl,
+      reduction_conj hH hl, LaurentSeries.conj_subst (constantCoeff_map_eq_zero _ hH)
+        (isUnit_coeff_one_map _ hl) ((isAdmissible_iff_reduction r G).mp hG)
+        ((isAdmissible_iff_reduction r P).mp hP)]
+
+/-- Conjugating by `H` and then by `H^{∘-1}` is the identity on admissible elements. -/
+theorem conj_compInv_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    {P : CoefficientRing O} (hP : IsAdmissible P) : conj H.compInv (conj H P) = P :=
+  ext_reduction O fun r ↦ by
+    rw [reduction_conj (PowerSeries.constantCoeff_compInv H)
+        (PowerSeries.isUnit_coeff_one_compInv H), reduction_conj hH hl,
+      PowerSeries.map_compInv _ hH hl, LaurentSeries.conj_compInv_conj
+        (constantCoeff_map_eq_zero _ hH) (isUnit_coeff_one_map _ hl)
+        ((isAdmissible_iff_reduction r P).mp hP)]
+
+/-- Conjugating by `H^{∘-1}` and then by `H` is the identity on admissible elements. -/
+theorem conj_conj_compInv (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    {P : CoefficientRing O} (hP : IsAdmissible P) : conj H (conj H.compInv P) = P := by
+  have h := conj_compInv_conj (PowerSeries.constantCoeff_compInv H)
+    (PowerSeries.isUnit_coeff_one_compInv H) hP
+  rwa [PowerSeries.compInv_compInv hH hl] at h
+
+theorem conj_inj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) {P G : CoefficientRing O}
+    (hP : IsAdmissible P) (hG : IsAdmissible G) : conj H P = conj H G ↔ P = G :=
+  ⟨fun h ↦ by rw [← conj_compInv_conj hH hl hP, h, conj_compInv_conj hH hl hG],
+    fun h ↦ h ▸ rfl⟩
+
+/-- Conjugation preserves and reflects commutation: `H ∘ P ∘ H^{∘-1}` and `H ∘ G ∘ H^{∘-1}`
+commute if and only if `P` and `G` commute. -/
+theorem conj_commute_iff (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
+    {P G : CoefficientRing O} (hP : IsAdmissible P) (hG : IsAdmissible G) :
+    subst (conj H P) (conj H G) = subst (conj H G) (conj H P) ↔ subst P G = subst G P := by
+  rw [← conj_subst hH hl hP hG, ← conj_subst hH hl hG hP,
+    conj_inj hH hl (hG.subst hP) (hP.subst hG)]
+
+end CoefficientRing
+
+end FalseTateNonliftability

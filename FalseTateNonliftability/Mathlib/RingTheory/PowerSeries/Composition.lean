@@ -1,0 +1,361 @@
+/-
+Copyright (c) 2026 Yijun Yuan. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Yijun Yuan
+-/
+module
+
+public import Mathlib.RingTheory.PowerSeries.Order
+public import Mathlib.RingTheory.PowerSeries.Substitution
+
+/-!
+# Iterates, compositional inverses and conjugates of power series
+
+Let `R` be a commutative ring. For power series `g` and `f` over `R` with `f` of nilpotent
+constant coefficient, `g.subst f = g ∘ f` is the composition `g(f(X))`. Composition is
+associative (`PowerSeries.subst_comp_subst_apply`), `X` is a two-sided identity, and a series `w`
+with `w(0) = 0` and invertible linear coefficient has a two-sided compositional inverse
+(`PowerSeries.substInvOfIsUnit`).
+
+Let `σ` be a continuous automorphism of `k((T))` over a field `k` with `σ T = f(T)`, and let
+`T' = w(T)` with `w(0) = 0` and `w'(0) ≠ 0`. Then `σ T' = (w ∘ f ∘ w^{∘-1})(T')`: the conjugate
+`PowerSeries.conj w f` is the series of `σ` in the variable `T'` (Yuan, Lemma 2.2 (4)).
+Conjugation by `w` preserves composition and iterates.
+
+## Main definitions
+
+* `PowerSeries.iterate f n`: the `n`-fold composition `f^{∘n}`, with `f^{∘0} = X`.
+* `PowerSeries.compInv w`: the compositional inverse `w^{∘-1}`; it is `X` when the linear
+  coefficient of `w` is not a unit.
+* `PowerSeries.conj w f`: the conjugate `w ∘ f ∘ w^{∘-1}`.
+
+## Main results
+
+* `PowerSeries.iterate_add`, `PowerSeries.iterate_mul`: `f^{∘(m + n)} = f^{∘m} ∘ f^{∘n}` and
+  `f^{∘(m * n)} = (f^{∘m})^{∘n}`.
+* `PowerSeries.coeff_one_iterate`: the linear coefficient of `f^{∘n}` is the `n`-th power of the
+  linear coefficient of `f`.
+* `PowerSeries.subst_compInv_right`, `PowerSeries.subst_compInv_left`:
+  `w ∘ w^{∘-1} = w^{∘-1} ∘ w = X`.
+* `PowerSeries.map_iterate`, `PowerSeries.map_compInv`, `PowerSeries.map_conj`: compatibility
+  with ring homomorphisms applied to the coefficients (Yuan, Lemma 2.1 (3)).
+* `PowerSeries.conj_eq_iff_subst`: `w ∘ f ∘ w^{∘-1} = h` if and only if `w ∘ f = h ∘ w`.
+* `PowerSeries.conj_subst`, `PowerSeries.conj_iterate`, `PowerSeries.conj_conj`: conjugation by
+  `w` preserves composition and iterates, and conjugating by `w` and then by `v` is conjugating
+  by `v ∘ w`.
+
+## References
+
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Lemma 2.1, Lemma 2.2.
+-/
+
+@[expose] public section
+
+namespace PowerSeries
+
+variable {R S : Type*} [CommRing R] [CommRing S]
+
+section Subst
+
+/-- The composition of two series with nilpotent constant coefficients has nilpotent constant
+coefficient. -/
+protected theorem HasSubst.subst {f g : R⟦X⟧} (hg : HasSubst g) (hf : HasSubst f) :
+    HasSubst (g.subst f) := by
+  simpa only [coe_substAlgHom] using hg.comp hf
+
+/-- `(g ∘ f)(0) = g(0)` when `f(0) = 0`. -/
+theorem constantCoeff_subst_of_constantCoeff_zero' {f : R⟦X⟧} (hf : f.constantCoeff = 0)
+    (g : R⟦X⟧) : constantCoeff (g.subst f) = g.constantCoeff :=
+  constantCoeff_subst_of_constantCoeff_zero hf g
+
+/-- The chain rule at `0`: `(g ∘ f)'(0) = g'(0) f'(0)` when `f(0) = 0`. -/
+theorem coeff_one_subst {f : R⟦X⟧} (hf : f.constantCoeff = 0) (g : R⟦X⟧) :
+    coeff 1 (g.subst f) = g.coeff 1 * f.coeff 1 := by
+  rw [coeff_subst' (.of_constantCoeff_zero' hf), finsum_eq_single _ 1]
+  · simp
+  · intro d hd
+    rw [coeff_one_pow, hf, smul_eq_mul]
+    rcases d with _ | _ | d <;> simp_all
+
+end Subst
+
+section Iterate
+
+/-- The `n`-fold composition `f^{∘n} = f ∘ ⋯ ∘ f` of a power series with itself, with
+`f^{∘0} = X`. -/
+noncomputable def iterate (f : R⟦X⟧) (n : ℕ) : R⟦X⟧ :=
+  (subst f : R⟦X⟧ → R⟦X⟧)^[n] X
+
+variable {f : R⟦X⟧}
+
+@[simp]
+theorem iterate_zero (f : R⟦X⟧) : iterate f 0 = X := rfl
+
+theorem iterate_succ (f : R⟦X⟧) (n : ℕ) : iterate f (n + 1) = (iterate f n).subst f :=
+  Function.iterate_succ_apply' _ _ _
+
+/-- The iterates of a series with nilpotent constant coefficient have nilpotent constant
+coefficients. -/
+protected theorem HasSubst.iterate (hf : HasSubst f) (n : ℕ) : HasSubst (iterate f n) := by
+  induction n with
+  | zero => exact HasSubst.X'
+  | succ n ih =>
+    rw [iterate_succ]
+    exact ih.subst hf
+
+theorem iterate_one (hf : HasSubst f) : iterate f 1 = f := by
+  rw [iterate_succ, iterate_zero, subst_X hf]
+
+/-- `f^{∘(m + n)} = f^{∘m} ∘ f^{∘n}`. -/
+theorem iterate_add (hf : HasSubst f) (m n : ℕ) :
+    iterate f (m + n) = (iterate f m).subst (iterate f n) := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    rw [← add_assoc, iterate_succ, ih, iterate_succ f n,
+      subst_comp_subst_apply (hf.iterate n) hf]
+
+/-- `f^{∘(n + 1)} = f ∘ f^{∘n}`. -/
+theorem iterate_succ' (hf : HasSubst f) (n : ℕ) : iterate f (n + 1) = f.subst (iterate f n) := by
+  rw [add_comm, iterate_add hf, iterate_one hf]
+
+/-- `f^{∘(m * n)} = (f^{∘m})^{∘n}`. -/
+theorem iterate_mul (hf : HasSubst f) (m n : ℕ) :
+    iterate f (m * n) = iterate (iterate f m) n := by
+  induction n with
+  | zero => simp
+  | succ n ih => rw [Nat.mul_succ, iterate_add hf, ih, iterate_succ]
+
+/-- `g ∘ f^{∘n}` is obtained from `g` by composing with `f` on the right `n` times. -/
+theorem subst_iterate (hf : HasSubst f) (n : ℕ) (g : R⟦X⟧) :
+    g.subst (iterate f n) = (subst f : R⟦X⟧ → R⟦X⟧)^[n] g := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    rw [iterate_succ, ← subst_comp_subst_apply (hf.iterate n) hf, ih,
+      Function.iterate_succ_apply']
+
+theorem constantCoeff_iterate (hf : f.constantCoeff = 0) (n : ℕ) :
+    (iterate f n).constantCoeff = 0 := by
+  induction n with
+  | zero => simp
+  | succ n ih => rw [iterate_succ, constantCoeff_subst_of_constantCoeff_zero' hf, ih]
+
+/-- The linear coefficient of `f^{∘n}` is the `n`-th power of the linear coefficient of `f`. -/
+theorem coeff_one_iterate (hf : f.constantCoeff = 0) (n : ℕ) :
+    (iterate f n).coeff 1 = f.coeff 1 ^ n := by
+  induction n with
+  | zero => simp
+  | succ n ih => rw [iterate_succ, coeff_one_subst hf, ih, pow_succ]
+
+/-- If `f = X + O(X²)`, then `f^{∘n} = X + O(X²)`. -/
+theorem two_le_order_iterate_sub_X (hf : f.constantCoeff = 0) (hf' : f.coeff 1 = 1) (n : ℕ) :
+    2 ≤ (iterate f n - X).order := by
+  refine nat_le_order _ 2 fun i hi ↦ ?_
+  rcases i with _ | _ | i
+  · simp [coeff_zero_eq_constantCoeff_apply, constantCoeff_iterate hf]
+  · simp [coeff_one_iterate hf, hf']
+  · omega
+
+/-- `φ(f^{∘n}) = φ(f)^{∘n}` for a ring homomorphism `φ` applied to the coefficients. -/
+theorem map_iterate (φ : R →+* S) (hf : HasSubst f) (n : ℕ) :
+    (iterate f n).map φ = iterate (f.map φ) n := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    rw [iterate_succ, iterate_succ, ← ih]
+    exact map_subst hf _
+
+end Iterate
+
+section CompInv
+
+open scoped Classical in
+/-- The compositional inverse `w^{∘-1}` of a power series `w` with `w(0) = 0` and invertible
+linear coefficient: `w ∘ w^{∘-1} = w^{∘-1} ∘ w = X`. It is `X` when the linear coefficient of
+`w` is not a unit. -/
+noncomputable def compInv (w : R⟦X⟧) : R⟦X⟧ :=
+  if h : IsUnit (w.coeff 1) then w.substInvOfIsUnit h else X
+
+variable {w : R⟦X⟧}
+
+theorem compInv_eq_substInvOfIsUnit (hw' : IsUnit (w.coeff 1)) :
+    w.compInv = w.substInvOfIsUnit hw' :=
+  dite_eq_left hw'
+
+theorem compInv_of_not_isUnit (hw' : ¬IsUnit (w.coeff 1)) : w.compInv = X :=
+  dite_eq_right hw'
+
+@[simp]
+theorem constantCoeff_compInv (w : R⟦X⟧) : w.compInv.constantCoeff = 0 := by
+  unfold compInv
+  split_ifs <;> simp
+
+protected theorem HasSubst.compInv (w : R⟦X⟧) : HasSubst w.compInv :=
+  .of_constantCoeff_zero' (constantCoeff_compInv w)
+
+theorem coeff_one_compInv (hw' : IsUnit (w.coeff 1)) : w.compInv.coeff 1 = hw'.unit⁻¹ := by
+  rw [compInv_eq_substInvOfIsUnit hw', coeff_one_substInvOfIsUnit]
+
+theorem coeff_one_mul_coeff_one_compInv (hw' : IsUnit (w.coeff 1)) :
+    w.coeff 1 * w.compInv.coeff 1 = 1 := by
+  rw [coeff_one_compInv hw', hw'.mul_val_inv]
+
+theorem isUnit_coeff_one_compInv (w : R⟦X⟧) : IsUnit (w.compInv.coeff 1) := by
+  by_cases hw' : IsUnit (w.coeff 1)
+  · rw [coeff_one_compInv hw']
+    exact Units.isUnit _
+  · rw [compInv_of_not_isUnit hw', coeff_one_X]
+    exact isUnit_one
+
+/-- `w ∘ w^{∘-1} = X`. -/
+theorem subst_compInv_right (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :
+    w.subst w.compInv = X := by
+  rw [compInv_eq_substInvOfIsUnit hw', subst_substInvOfIsUnit_right w hw hw']
+
+/-- `w^{∘-1} ∘ w = X`. -/
+theorem subst_compInv_left (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :
+    w.compInv.subst w = X := by
+  rw [compInv_eq_substInvOfIsUnit hw', subst_substInvOfIsUnit_left w hw hw']
+
+/-- A right compositional inverse of `w` is `w^{∘-1}`. -/
+theorem eq_compInv_of_subst_eq_X (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1))
+    {v : R⟦X⟧} (hv : HasSubst v) (h : w.subst v = X) : v = w.compInv := by
+  rw [compInv_eq_substInvOfIsUnit hw']
+  exact eq_substInvOfIsUnit_of_subst_eq_X w hw hw' hv h
+
+@[simp]
+theorem compInv_X : (X : R⟦X⟧).compInv = X :=
+  (eq_compInv_of_subst_eq_X constantCoeff_X (by simp) HasSubst.X' (X_subst X)).symm
+
+theorem compInv_compInv (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :
+    w.compInv.compInv = w :=
+  (eq_compInv_of_subst_eq_X (constantCoeff_compInv w) (isUnit_coeff_one_compInv w)
+    (.of_constantCoeff_zero' hw) (subst_compInv_left hw hw')).symm
+
+/-- `(v ∘ w)^{∘-1} = w^{∘-1} ∘ v^{∘-1}`. -/
+theorem compInv_subst {v : R⟦X⟧} (hv : v.constantCoeff = 0) (hv' : IsUnit (v.coeff 1))
+    (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :
+    compInv (v.subst w) = w.compInv.subst v.compInv := by
+  refine (eq_compInv_of_subst_eq_X (by rwa [constantCoeff_subst_of_constantCoeff_zero' hw])
+    (by simpa only [coeff_one_subst hw] using hv'.mul hw')
+    ((HasSubst.compInv w).subst (HasSubst.compInv v)) ?_).symm
+  rw [← subst_comp_subst_apply (HasSubst.compInv w) (HasSubst.compInv v),
+    subst_comp_subst_apply (.of_constantCoeff_zero' hw) (HasSubst.compInv w),
+    subst_compInv_right hw hw', X_subst, subst_compInv_right hv hv']
+
+/-- `φ(w^{∘-1}) = φ(w)^{∘-1}` for a ring homomorphism `φ` applied to the coefficients
+(Yuan, Lemma 2.1 (3)). -/
+theorem map_compInv (φ : R →+* S) (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :
+    w.compInv.map φ = (w.map φ).compInv := by
+  have hmap {u : R⟦X⟧} (hu : u.constantCoeff = 0) : (u.map φ).constantCoeff = 0 := by
+    rw [← coeff_zero_eq_constantCoeff_apply, coeff_map, coeff_zero_eq_constantCoeff_apply, hu,
+      map_zero]
+  refine eq_compInv_of_subst_eq_X (hmap hw) (by rw [coeff_map]; exact hw'.map φ)
+    (.of_constantCoeff_zero' (hmap (constantCoeff_compInv w))) ?_
+  refine (map_subst (HasSubst.compInv w) (h := φ) w).symm.trans ?_
+  rw [subst_compInv_right hw hw']
+  exact map_X φ
+
+end CompInv
+
+section Conj
+
+/-- The conjugate `w ∘ f ∘ w^{∘-1}` of `f` by `w`. Let `w(0) = 0` with invertible linear
+coefficient. If a continuous automorphism of `k((T))` over a field `k` sends `T` to `f(T)`, then
+it sends `T' = w(T)` to `(conj w f)(T')` (Yuan, Lemma 2.2 (4)). -/
+noncomputable def conj (w f : R⟦X⟧) : R⟦X⟧ :=
+  subst w.compInv (w.subst f)
+
+variable {v w f g : R⟦X⟧}
+
+/-- `w ∘ f ∘ w^{∘-1}` has nilpotent constant coefficient if `w` and `f` do. -/
+protected theorem HasSubst.conj (hw : HasSubst w) (hf : HasSubst f) : HasSubst (conj w f) :=
+  (hw.subst hf).subst (HasSubst.compInv w)
+
+theorem conj_X (hf : HasSubst f) : conj X f = f := by
+  rw [conj, compInv_X, subst_X hf, X_subst]
+
+theorem conj_X_right (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) : conj w X = X := by
+  rw [conj, X_subst, subst_compInv_right hw hw']
+
+theorem constantCoeff_conj (hw : w.constantCoeff = 0) (hf : f.constantCoeff = 0) :
+    (conj w f).constantCoeff = 0 := by
+  rw [conj, constantCoeff_subst_of_constantCoeff_zero' (constantCoeff_compInv w),
+    constantCoeff_subst_of_constantCoeff_zero' hf, hw]
+
+/-- Conjugation preserves the linear coefficient. -/
+theorem coeff_one_conj (hw' : IsUnit (w.coeff 1)) (hf : f.constantCoeff = 0) :
+    (conj w f).coeff 1 = f.coeff 1 := by
+  rw [conj, coeff_one_subst (constantCoeff_compInv w), coeff_one_subst hf, mul_right_comm,
+    coeff_one_mul_coeff_one_compInv hw', one_mul]
+
+theorem isUnit_coeff_one_conj (hw' : IsUnit (w.coeff 1)) (hf : f.constantCoeff = 0)
+    (hf' : IsUnit (f.coeff 1)) : IsUnit ((conj w f).coeff 1) := by
+  rwa [coeff_one_conj hw' hf]
+
+/-- The conjugate intertwines: `(w ∘ f ∘ w^{∘-1}) ∘ w = w ∘ f`. -/
+theorem subst_conj (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :
+    (conj w f).subst w = w.subst f := by
+  rw [conj, subst_comp_subst_apply (HasSubst.compInv w) (.of_constantCoeff_zero' hw),
+    subst_compInv_left hw hw', X_subst]
+
+/-- `w ∘ f ∘ w^{∘-1} = h` if and only if `w ∘ f = h ∘ w`. -/
+theorem conj_eq_iff_subst (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) {h : R⟦X⟧} :
+    conj w f = h ↔ w.subst f = h.subst w := by
+  refine ⟨fun hconj ↦ hconj ▸ (subst_conj hw hw').symm, fun hsubst ↦ ?_⟩
+  rw [conj, hsubst, subst_comp_subst_apply (.of_constantCoeff_zero' hw) (HasSubst.compInv w),
+    subst_compInv_right hw hw', X_subst]
+
+/-- Conjugation preserves composition: `w ∘ (f ∘ g) ∘ w^{∘-1}` is the composition of
+`w ∘ f ∘ w^{∘-1}` and `w ∘ g ∘ w^{∘-1}`. -/
+theorem conj_subst (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) (hf : HasSubst f)
+    (hg : HasSubst g) : conj w (f.subst g) = (conj w f).subst (conj w g) := by
+  have hw₀ : HasSubst w := .of_constantCoeff_zero' hw
+  rw [conj_eq_iff_subst hw hw', subst_comp_subst_apply (hw₀.conj hg) hw₀, subst_conj hw hw',
+    ← subst_comp_subst_apply hw₀ hg, subst_conj hw hw', subst_comp_subst_apply hf hg]
+
+/-- Conjugation preserves iterates: `w ∘ f^{∘n} ∘ w^{∘-1} = (w ∘ f ∘ w^{∘-1})^{∘n}`. -/
+theorem conj_iterate (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) (hf : HasSubst f)
+    (n : ℕ) : conj w (iterate f n) = iterate (conj w f) n := by
+  induction n with
+  | zero => exact conj_X_right hw hw'
+  | succ n ih => rw [iterate_succ, conj_subst hw hw' (hf.iterate n) hf, ih, iterate_succ]
+
+/-- Conjugating by `w` and then by `v` is conjugating by `v ∘ w`. -/
+theorem conj_conj (hv : v.constantCoeff = 0) (hv' : IsUnit (v.coeff 1))
+    (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) (hf : HasSubst f) :
+    conj v (conj w f) = conj (v.subst w) f := by
+  have hv₀ : HasSubst v := .of_constantCoeff_zero' hv
+  have hw₀ : HasSubst w := .of_constantCoeff_zero' hw
+  refine ((conj_eq_iff_subst (by rwa [constantCoeff_subst_of_constantCoeff_zero' hw])
+    (by simpa only [coeff_one_subst hw] using hv'.mul hw')).mpr ?_).symm
+  rw [← subst_comp_subst_apply hv₀ hw₀, subst_conj hv hv',
+    subst_comp_subst_apply (hw₀.conj hf) hw₀, subst_conj hw hw',
+    ← subst_comp_subst_apply hw₀ hf]
+
+/-- Conjugating by `w` and then by `w^{∘-1}` is the identity. -/
+theorem conj_compInv_conj (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1))
+    (hf : HasSubst f) : conj w.compInv (conj w f) = f := by
+  rw [conj_conj (constantCoeff_compInv w) (isUnit_coeff_one_compInv w) hw hw' hf,
+    subst_compInv_left hw hw', conj_X hf]
+
+/-- Conjugating by `w^{∘-1}` and then by `w` is the identity. -/
+theorem conj_conj_compInv (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1))
+    (hf : HasSubst f) : conj w (conj w.compInv f) = f := by
+  rw [conj_conj hw hw' (constantCoeff_compInv w) (isUnit_coeff_one_compInv w) hf,
+    subst_compInv_right hw hw', conj_X hf]
+
+/-- `φ(w ∘ f ∘ w^{∘-1}) = φ(w) ∘ φ(f) ∘ φ(w)^{∘-1}` for a ring homomorphism `φ` applied to the
+coefficients. -/
+theorem map_conj (φ : R →+* S) (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1))
+    (hf : HasSubst f) : (conj w f).map φ = conj (w.map φ) (f.map φ) := by
+  rw [conj, conj, ← map_compInv φ hw hw']
+  refine (map_subst (HasSubst.compInv w) _).trans ?_
+  congr 1
+  exact map_subst hf w
+
+end Conj
+
+end PowerSeries

@@ -8,12 +8,24 @@ module
 public import FalseTateNonliftability.LaurentSeries.CharacteristicP
 
 /-!
-# Normalizing Laurent primitives in characteristic p
+# Normalized primitives of Laurent series in characteristic `p`
 
-Deleting the terms whose exponents are divisible by the characteristic preserves
-the derivative. If the derivative is nonzero, the resulting primitive has order
-one larger than its derivative and order prime to the characteristic.
-This is the normalization clause of `nl:characteristic-p-differentiation`.
+Let `κ` be a field of characteristic `p` and `U ∈ κ((T))`. Deleting from `U` the terms whose
+exponents are divisible by `p` gives the primitive `coefficientPrimitive U'` of `U'`. If `U' ≠ 0`,
+this primitive has order `v_T(U') + 1`, which is not divisible by `p`.
+
+## Main results
+
+* `LaurentSeries.derivative_coefficientPrimitive_derivative`: `(coefficientPrimitive U')' = U'`.
+* `LaurentSeries.order_coefficientPrimitive_derivative`:
+  `v_T(coefficientPrimitive U') = v_T(U') + 1` for `U' ≠ 0`.
+* `LaurentSeries.not_dvd_order_coefficientPrimitive_derivative`:
+  `p ∤ v_T(coefficientPrimitive U')` for `U' ≠ 0`.
+
+## References
+
+* Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Proposition 4.3.
 -/
 
 @[expose] public section
@@ -22,67 +34,64 @@ namespace LaurentSeries
 
 noncomputable section
 
-variable {F : Type*} [Field F]
+variable {κ : Type*} [Field κ]
 
-local instance : DecidableEq F := Classical.decEq F
-
-/-- Normalizing a primitive deletes exactly the exponents whose integer image
-vanishes in the coefficient field. -/
-theorem coefficientPrimitive_derivative_coeff (U : LaurentSeries F) (n : ℤ) :
-    (coefficientPrimitive (derivative F U)).coeff n =
-      if (n : F) = 0 then 0 else U.coeff n := by
+/-- `coefficientPrimitive U'` is obtained from `U` by deleting the terms in the degrees `n` with
+`(n : κ) = 0`. -/
+theorem coefficientPrimitive_derivative_coeff [DecidableEq κ] (U : LaurentSeries κ) (n : ℤ) :
+    (coefficientPrimitive (derivative κ U)).coeff n =
+      if (n : κ) = 0 then 0 else U.coeff n := by
   rw [coefficientPrimitive_coeff, derivative_coeff]
   simp only [sub_add_cancel]
-  by_cases hn : (n : F) = 0 <;> simp [hn]
+  by_cases hn : (n : κ) = 0 <;> simp [hn]
 
-/-- In characteristic `p`, normalization deletes exactly the terms with
-exponent divisible by `p`, retaining every other coefficient. -/
-theorem coefficientPrimitive_derivative_coeff_charP (p : ℕ) [CharP F p]
-    (U : LaurentSeries F) (n : ℤ) :
-    (coefficientPrimitive (derivative F U)).coeff n =
+/-- In characteristic `p`, `coefficientPrimitive U'` is obtained from `U` by deleting the terms
+whose exponents are divisible by `p`. -/
+theorem coefficientPrimitive_derivative_coeff_charP (p : ℕ) [CharP κ p]
+    (U : LaurentSeries κ) (n : ℤ) :
+    (coefficientPrimitive (derivative κ U)).coeff n =
       if (p : ℤ) ∣ n then 0 else U.coeff n := by
-  simp only [coefficientPrimitive_derivative_coeff, CharP.intCast_eq_zero_iff F p n]
+  classical
+  simp only [coefficientPrimitive_derivative_coeff, CharP.intCast_eq_zero_iff κ p n]
 
-/-- Deleting the terms killed by differentiation preserves the derivative. -/
-theorem derivative_coefficientPrimitive_derivative (U : LaurentSeries F) :
-    derivative F (coefficientPrimitive (derivative F U)) = derivative F U := by
+/-- `coefficientPrimitive U'` is a primitive of `U'`. -/
+theorem derivative_coefficientPrimitive_derivative (U : LaurentSeries κ) :
+    derivative κ (coefficientPrimitive (derivative κ U)) = derivative κ U := by
+  classical
   ext n
   rw [derivative_coeff, coefficientPrimitive_derivative_coeff, derivative_coeff]
-  by_cases hn : ((n + 1 : ℤ) : F) = 0
+  by_cases hn : ((n + 1 : ℤ) : κ) = 0
   · rw [ite_eq_left hn, hn]
     simp
   · rw [ite_eq_right hn]
 
-/-- A nonzero Laurent derivative has normalized primitive of order one larger
-than the derivative. The nonvanishing hypothesis is essential because the
-canonical Hahn-series order of zero is zero. -/
-theorem order_coefficientPrimitive_derivative (U : LaurentSeries F)
-    (hU : derivative F U ≠ 0) :
-    (coefficientPrimitive (derivative F U)).order = (derivative F U).order + 1 := by
-  have hc : (derivative F U).coeff (derivative F U).order ≠ 0 := by
-    exact fun hz ↦ hU (HahnSeries.coeff_order_eq_zero.mp hz)
-  have hn : (((derivative F U).order + 1 : ℤ) : F) ≠ 0 := by
+/-- If `U' ≠ 0`, then `v_T(coefficientPrimitive U') = v_T(U') + 1`. -/
+theorem order_coefficientPrimitive_derivative (U : LaurentSeries κ)
+    (hU : derivative κ U ≠ 0) :
+    (coefficientPrimitive (derivative κ U)).order = (derivative κ U).order + 1 := by
+  have hc : (derivative κ U).coeff (derivative κ U).order ≠ 0 :=
+    fun hz ↦ hU (HahnSeries.coeff_order_eq_zero.mp hz)
+  have hn : (((derivative κ U).order + 1 : ℤ) : κ) ≠ 0 := by
     intro hz
     apply hc
     rw [derivative_coeff, hz, zero_mul]
-  have hcp : (coefficientPrimitive (derivative F U)).coeff
-      ((derivative F U).order + 1) ≠ 0 := by
+  have hcp : (coefficientPrimitive (derivative κ U)).coeff
+      ((derivative κ U).order + 1) ≠ 0 := by
     rw [coefficientPrimitive_coeff, add_sub_cancel_right]
     exact div_ne_zero hc hn
   apply le_antisymm (HahnSeries.order_le_of_coeff_ne_zero hcp)
   apply (HahnSeries.le_order_iff_forall (HahnSeries.ne_zero_of_coeff_ne_zero hcp)).mpr
   intro j hj
   rw [coefficientPrimitive_coeff,
-    HahnSeries.coeff_eq_zero_of_lt_order (by omega : j - 1 < (derivative F U).order),
+    HahnSeries.coeff_eq_zero_of_lt_order (by omega : j - 1 < (derivative κ U).order),
     zero_div]
 
-/-- The lowest exponent of a normalized primitive of a nonzero derivative is
-not divisible by the characteristic. -/
-theorem not_dvd_order_coefficientPrimitive_derivative (p : ℕ) [CharP F p]
-    (U : LaurentSeries F) (hU : derivative F U ≠ 0) :
-    ¬ (p : ℤ) ∣ (coefficientPrimitive (derivative F U)).order := by
+/-- In characteristic `p`, if `U' ≠ 0`, then `p ∤ v_T(coefficientPrimitive U')`. -/
+theorem not_dvd_order_coefficientPrimitive_derivative (p : ℕ) [CharP κ p]
+    (U : LaurentSeries κ) (hU : derivative κ U ≠ 0) :
+    ¬ (p : ℤ) ∣ (coefficientPrimitive (derivative κ U)).order := by
   intro hd
-  have hP : coefficientPrimitive (derivative F U) ≠ 0 := by
+  have hP : coefficientPrimitive (derivative κ U) ≠ 0 := by
     intro hzero
     apply hU
     rw [← derivative_coefficientPrimitive_derivative U, hzero, map_zero]

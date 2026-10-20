@@ -9,14 +9,25 @@ public import Mathlib.RingTheory.LaurentSeries
 public import Mathlib.Algebra.CharP.Defs
 
 /-!
-# The image of Laurent-series differentiation in characteristic p
+# The image of differentiation of Laurent series in characteristic `p`
 
-Over a field of characteristic `p`, a Laurent series is a derivative exactly
-when its coefficients in degrees `p * ℓ - 1` vanish. The primitive is constructed
-by dividing the coefficient in degree `j - 1` by the image of the integer `j`.
+Let `κ` be a field of characteristic `p`. A Laurent series `h ∈ κ((T))` is the derivative of a
+Laurent series if and only if its coefficients in all degrees `p * ℓ - 1`, `ℓ ∈ ℤ`, vanish.
 
-This is the coefficient argument used in Yuan, Lemma 2.3, and the image clause
-of blueprint lemma `nl:characteristic-p-differentiation`.
+## Main definitions
+
+* `LaurentSeries.coefficientPrimitive h`: the Laurent series `∑ⱼ (h_{j - 1} / j) T ^ j`, whose
+  coefficient is zero in every degree `j` with `(j : κ) = 0`.
+
+## Main results
+
+* `LaurentSeries.exists_derivative_iff`: `h = A'` for some `A ∈ κ((T))` if and only if
+  `h_{p * ℓ - 1} = 0` for all `ℓ ∈ ℤ`.
+
+## References
+
+* Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Lemma 2.4 (3).
 -/
 
 @[expose] public section
@@ -25,34 +36,30 @@ namespace LaurentSeries
 
 noncomputable section
 
-variable {F : Type*} [Field F]
+variable {κ : Type*} [Field κ]
 
-/-- The coefficientwise primitive with zero coefficients at integer exponents
-whose image in the coefficient field vanishes. -/
-def coefficientPrimitive (h : LaurentSeries F) : LaurentSeries F :=
-  HahnSeries.ofSuppBddBelow (fun j : ℤ ↦ h.coeff (j - 1) / (j : F)) <| by
+/-- The Laurent series `∑ⱼ (h_{j - 1} / j) T ^ j`; its coefficient in every degree `j` with
+`(j : κ) = 0` is zero. -/
+def coefficientPrimitive (h : LaurentSeries κ) : LaurentSeries κ :=
+  HahnSeries.ofSuppBddBelow (fun j : ℤ ↦ h.coeff (j - 1) / (j : κ)) <| by
     refine ⟨h.order + 1, fun j hj ↦ ?_⟩
     contrapose! hj
     rw [Function.notMem_support,
       HahnSeries.coeff_eq_zero_of_lt_order (by omega : j - 1 < h.order), zero_div]
 
 @[simp]
-theorem coefficientPrimitive_coeff (h : LaurentSeries F) (j : ℤ) :
-    (coefficientPrimitive h).coeff j = h.coeff (j - 1) / (j : F) := rfl
+theorem coefficientPrimitive_coeff (h : LaurentSeries κ) (j : ℤ) :
+    (coefficientPrimitive h).coeff j = h.coeff (j - 1) / (j : κ) := rfl
 
-/-- The coefficient formula for the canonical Laurent-series derivative. -/
-theorem derivative_coeff (h : LaurentSeries F) (n : ℤ) :
-    (derivative F h).coeff n = ((n + 1 : ℤ) : F) * h.coeff (n + 1) := by
+/-- The coefficient of `T ^ n` in `f'` is `(n + 1) f_{n + 1}`. -/
+theorem derivative_coeff (f : LaurentSeries κ) (n : ℤ) :
+    (derivative κ f).coeff n = ((n + 1 : ℤ) : κ) * f.coeff (n + 1) := by
   simp [derivative, hasseDeriv_coeff, zsmul_eq_mul]
 
-/-- A Laurent series over a field of characteristic `p` has a primitive if
-and only if its coefficients in all degrees `p * ℓ - 1` vanish.
-
-The criterion includes negative degrees and the zero series. In positive
-characteristic these are exactly the degrees congruent to `-1` modulo `p`.
-See Yuan, Lemma 2.3, proof of assertion (3). -/
-theorem exists_derivative_iff (p : ℕ) [CharP F p] (h : LaurentSeries F) :
-    (∃ A : LaurentSeries F, derivative F A = h) ↔
+/-- Over a field of characteristic `p`, a Laurent series `h` is a derivative if and only if its
+coefficients in all degrees `p * ℓ - 1`, `ℓ ∈ ℤ`, vanish. -/
+theorem exists_derivative_iff (p : ℕ) [CharP κ p] (h : LaurentSeries κ) :
+    (∃ A : LaurentSeries κ, derivative κ A = h) ↔
       ∀ ℓ : ℤ, h.coeff ((p : ℤ) * ℓ - 1) = 0 := by
   constructor
   · rintro ⟨A, rfl⟩ ℓ
@@ -62,8 +69,8 @@ theorem exists_derivative_iff (p : ℕ) [CharP F p] (h : LaurentSeries F) :
     refine ⟨coefficientPrimitive h, ?_⟩
     ext n
     rw [derivative_coeff, coefficientPrimitive_coeff, add_sub_cancel_right]
-    by_cases hn : ((n + 1 : ℤ) : F) = 0
-    · obtain ⟨ℓ, hℓ⟩ := (CharP.intCast_eq_zero_iff F p (n + 1)).mp hn
+    by_cases hn : ((n + 1 : ℤ) : κ) = 0
+    · obtain ⟨ℓ, hℓ⟩ := (CharP.intCast_eq_zero_iff κ p (n + 1)).mp hn
       have hzero : h.coeff n = 0 := by
         have hnℓ : n = (p : ℤ) * ℓ - 1 := by omega
         simpa only [hnℓ] using hh ℓ

@@ -5,21 +5,35 @@ Authors: Yijun Yuan
 -/
 module
 
-public import FalseTateNonliftability.LaurentSeries.PrimitiveNormalization
-public import FalseTateNonliftability.LaurentSeries.FrobeniusKernel
-public import FalseTateNonliftability.LaurentSeries.IterateGrowth
 public import FalseTateNonliftability.LaurentSeries.ApproximateInvariants
-public import Mathlib.NumberTheory.Padics.ProperSpace
-public import Mathlib.Topology.Separation.Hausdorff
+public import FalseTateNonliftability.LaurentSeries.FrobeniusKernel
+public import FalseTateNonliftability.LaurentSeries.PrimitiveNormalization
 
 /-!
-# The p-adic ramification limit of an exact invariant differential
+# The `p`-adic limit of ramification numbers and invariant exact differentials
 
-An invariant nonzero exact differential for an actual infinite-order
-substitution over the prime field determines the p-adic limit of the
-ramification numbers. The proof uses actual finite orbit sums of a
-Frobenius root and the original Laurent coefficients, allowing negative
-primitive orders. This is Yuan, Proposition 4.2 (`nl:exact-differential-limit`).
+Let `κ` be a finite field of characteristic `p` and let `f ∈ T + T ^ 2 κ⟦T⟧` be such that the
+automorphism `σ : x ↦ x(f)` of `κ((T))` has infinite order. Suppose that the ramification numbers
+`d_n = i(σ ^ (p ^ n))` converge in `ℤ_p` to `b`. If `σ` fixes a nonzero exact differential
+`ω = a dT`, that is, `a(f) f' = a` and `a = U'` for some `U ∈ κ((T))`, then
+`b = -v_T(a) - 1 ∈ ℤ`.
+
+If `p ∤ v_T(U)`, then `σ(U) - U = B ^ p` for some `B`, and the orbit sums
+`x_n = ∑_{j < p ^ n} σ ^ j (B)` satisfy `x_n ^ p = σ ^ (p ^ n) (U) - U` and
+`σ(x_n) - x_n = σ ^ (p ^ n) (B) - B`; they are approximate invariants of `σ` with
+`p v_T(x_n) = v_T(U) + d_n`.
+
+## Main results
+
+* `PadicInt.exists_tendsto_of_prime_mul_tendsto`: if `p x_n → b` in `ℤ_p`, then `x_n → c` with
+  `p c = b`.
+* `LaurentSeries.padic_ramification_limit_eq_of_invariant_exact_differential`: Yuan,
+  Proposition 4.3.
+
+## References
+
+* Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Proposition 4.3.
 -/
 
 @[expose] public section
@@ -27,39 +41,29 @@ primitive orders. This is Yuan, Proposition 4.2 (`nl:exact-differential-limit`).
 noncomputable section
 
 open Filter Topology
-open scoped Topology
 
 namespace PadicInt
 
-/-- Division by the prime is continuous on its actual closed image: a
-convergent sequence of prime multiples has a convergent sequence of factors. -/
-theorem exists_tendsto_of_prime_mul_tendsto {p : ℕ} [Fact p.Prime]
-    (x : ℕ → PadicInt p) (b : PadicInt p)
-    (h : Tendsto (fun n ↦ (p : PadicInt p) * x n) atTop (nhds b)) :
-    ∃ c : PadicInt p, (p : PadicInt p) * c = b ∧ Tendsto x atTop (nhds c) := by
-  have hp : (p : PadicInt p) ≠ 0 := Nat.cast_ne_zero.mpr (Fact.out : p.Prime).ne_zero
-  have he : IsClosedEmbedding (fun z : PadicInt p ↦ (p : PadicInt p) * z) :=
-    (continuous_const.mul continuous_id).isClosedEmbedding (fun _ _ h ↦ mul_left_cancel₀ hp h)
-  have hb : b ∈ Set.range (fun z : PadicInt p ↦ (p : PadicInt p) * z) :=
-    he.isClosed_range.mem_of_tendsto h (Eventually.of_forall fun n ↦ ⟨x n, rfl⟩)
-  obtain ⟨c, hc⟩ := hb
-  change (p : PadicInt p) * c = b at hc
+/-- If `p x_n` converges to `b` in `ℤ_p`, then `x_n` converges to some `c` with `p c = b`. -/
+theorem exists_tendsto_of_prime_mul_tendsto {p : ℕ} [Fact p.Prime] {x : ℕ → ℤ_[p]} {b : ℤ_[p]}
+    (h : Tendsto (fun n ↦ (p : ℤ_[p]) * x n) atTop (𝓝 b)) :
+    ∃ c : ℤ_[p], (p : ℤ_[p]) * c = b ∧ Tendsto x atTop (𝓝 c) := by
+  have hp : (p : ℤ_[p]) ≠ 0 := Nat.cast_ne_zero.mpr (Fact.out : p.Prime).ne_zero
+  have he : IsClosedEmbedding fun z : ℤ_[p] ↦ (p : ℤ_[p]) * z :=
+    (continuous_const.mul continuous_id).isClosedEmbedding fun _ _ h ↦ mul_left_cancel₀ hp h
+  obtain ⟨c, hc⟩ := he.isClosed_range.mem_of_tendsto h (Eventually.of_forall fun n ↦ ⟨x n, rfl⟩)
   refine ⟨c, hc, he.tendsto_nhds_iff.mpr ?_⟩
-  change Tendsto (fun n ↦ (p : PadicInt p) * x n) atTop (nhds ((p : PadicInt p) * c))
-  rw [hc]
-  exact h
+  simpa only [Function.comp_def, hc] using h
 
 end PadicInt
 
 namespace LaurentSeries
 
-section OrbitSum
+variable {κ : Type*} [Field κ]
 
-variable {k : Type*} [Field k]
-
-/-- The original finite orbit sum of an actual coboundary telescopes. -/
-theorem sum_pow_apply_sub (E : LaurentSeries k ≃ₐ[k] LaurentSeries k)
-    (A : LaurentSeries k) (N : ℕ) :
+/-- `∑_{j < N} σ ^ j (σ(A) - A) = σ ^ N (A) - A`. -/
+private theorem sum_pow_apply_sub (E : LaurentSeries κ ≃ₐ[κ] LaurentSeries κ)
+    (A : LaurentSeries κ) (N : ℕ) :
     ∑ j ∈ Finset.range N, (E ^ j) (E A - A) = (E ^ N) A - A := by
   induction N with
   | zero => simp
@@ -67,263 +71,112 @@ theorem sum_pow_apply_sub (E : LaurentSeries k ≃ₐ[k] LaurentSeries k)
     rw [Finset.sum_range_succ, ih, map_sub, ← AlgEquiv.mul_apply, ← pow_succ]
     abel
 
-/-- Taking the characteristic-prime power of the actual orbit sum of a
-Frobenius root gives the actual iterated displacement. -/
-theorem orbit_sum_pow_eq_iterate_sub (p : ℕ) [Fact p.Prime] [CharP k p]
-    (E : LaurentSeries k ≃ₐ[k] LaurentSeries k) (A B : LaurentSeries k)
-    (hB : B ^ p = E A - A) (N : ℕ) :
-    (∑ j ∈ Finset.range N, (E ^ j) B) ^ p = (E ^ N) A - A := by
-  have : CharP (LaurentSeries k) p :=
-    ((algebraMap k (LaurentSeries k)).charP_iff_charP p).mp inferInstance
+/-- The orbit sum `x = ∑_{j < N} σ ^ j (B)` satisfies `σ(x) - x = σ ^ N (B) - B`. -/
+private theorem apply_sum_pow_sub (E : LaurentSeries κ ≃ₐ[κ] LaurentSeries κ)
+    (B : LaurentSeries κ) (N : ℕ) :
+    E (∑ j ∈ Finset.range N, (E ^ j) B) - ∑ j ∈ Finset.range N, (E ^ j) B = (E ^ N) B - B := by
+  rw [← sum_pow_apply_sub, map_sum, ← Finset.sum_sub_distrib]
+  refine Finset.sum_congr rfl fun j _ ↦ ?_
+  rw [map_sub, ← AlgEquiv.mul_apply, ← AlgEquiv.mul_apply, ← pow_succ', pow_succ]
+
+/-- In characteristic `p`, if `B ^ p = σ(A) - A`, then
+`(∑_{j < N} σ ^ j (B)) ^ p = σ ^ N (A) - A`. -/
+private theorem sum_pow_apply_pow_char (p : ℕ) [Fact p.Prime] [CharP κ p]
+    (E : LaurentSeries κ ≃ₐ[κ] LaurentSeries κ) {A B : LaurentSeries κ} (hB : B ^ p = E A - A)
+    (N : ℕ) : (∑ j ∈ Finset.range N, (E ^ j) B) ^ p = (E ^ N) A - A := by
+  have : CharP (LaurentSeries κ) p :=
+    ((algebraMap κ (LaurentSeries κ)).charP_iff_charP p).mp inferInstance
   rw [sum_pow_char]
   simp only [← map_pow, hB, sum_pow_apply_sub]
 
-/-- The actual defect of a finite orbit sum is the endpoint displacement. -/
-theorem subst_orbit_sum_sub (E : LaurentSeries k ≃ₐ[k] LaurentSeries k)
-    (B : LaurentSeries k) (N : ℕ) :
-    E (∑ j ∈ Finset.range N, (E ^ j) B) - ∑ j ∈ Finset.range N, (E ^ j) B =
-      (E ^ N) B - B := by
-  induction N with
-  | zero => simp
-  | succ N ih =>
-    rw [Finset.sum_range_succ, map_add]
-    calc
-      _ = (E (∑ j ∈ Finset.range N, (E ^ j) B) - ∑ j ∈ Finset.range N, (E ^ j) B) +
-          (E ((E ^ N) B) - (E ^ N) B) := by abel
-      _ = (E ^ N) B - B + ((E ^ (N + 1)) B - (E ^ N) B) := by
-        rw [ih, ← AlgEquiv.mul_apply, ← pow_succ']
-      _ = _ := by abel
-
-end OrbitSum
-
-section Displacement
-
-variable {k : Type*} [Field k]
-
-local instance exactDifferentialZeroSpanIsMaximal :
-    (Ideal.span ({(0 : k)} : Set k)).IsMaximal := by
-  rw [Ideal.span_singleton_zero]
-  exact Ideal.bot_isMaximal
-
-/-- A nondivisible input order gives an actual nonzero displacement with the
-exact expected order, even when that order is zero or negative. -/
-theorem subst_sub_ne_zero_and_order_eq_of_not_dvd (p : ℕ) [CharP k p]
-    (g : LaurentSeries k) (hG : IsAdmissible (0 : k) g) (d : ℤ) (hd : 1 ≤ d)
-    (hg : (g - HahnSeries.single (1 : ℤ) 1).orderTop = ((d + 1 : ℤ) : WithTop ℤ))
-    (x : LaurentSeries k) (hx : x ≠ 0) (hm : ¬ (p : ℤ) ∣ x.order) :
-    subst 0 IsNilpotent.zero g hG x - x ≠ 0 ∧
-      (subst 0 IsNilpotent.zero g hG x - x).order = x.order + d := by
-  let δ := g - HahnSeries.single (1 : ℤ) 1
-  have hδ : δ ≠ 0 := HahnSeries.orderTop_ne_top.mp (by rw [hg]; exact WithTop.coe_ne_top)
-  have hδorder : δ.order = d + 1 := by
-    have h := (HahnSeries.order_eq_orderTop_of_ne_zero hδ).trans hg
-    exact WithTop.coe_injective h
-  let α := δ.coeff δ.order
-  have hα : α ≠ 0 := HahnSeries.coeff_order_eq_zero.not.mpr hδ
-  have htail : g - HahnSeries.single (1 : ℤ) 1 - HahnSeries.single (d + 1) α ∈
-      orderAddSubgroup (d + 2) := by
-    have h := sub_leadingTerm_mem_orderAddSubgroup δ
-    change δ - HahnSeries.single (d + 1) α ∈ orderAddSubgroup (d + 2)
-    simpa only [α, hδorder, show d + 1 + 1 = d + 2 by omega] using h
-  have hlead := subst_sub_leadingTerm_mem g hG d hd α htail x x.order (x.coeff x.order)
-    (sub_leadingTerm_mem_orderAddSubgroup x)
-  have hβ : (x.order : k) * α * x.coeff x.order ≠ 0 :=
-    mul_ne_zero (mul_ne_zero (mt (CharP.intCast_eq_zero_iff k p x.order).mp hm) hα)
-      (HahnSeries.coeff_order_eq_zero.not.mpr hx)
-  have hc := (mem_orderAddSubgroup_iff_coeff (x.order + d + 1) _).mp hlead
-    (x.order + d) (by omega)
+/-- Let `κ` have characteristic `p` and let `g = T + O(T ^ 2)` have ramification number
+`d ≥ 1`. If `A ≠ 0` and `p ∤ v_T(A)`, then `A(g) - A ≠ 0` has order `v_T(A) + d`. -/
+private theorem ne_zero_and_order_substEquiv_sub (p : ℕ) [CharP κ p] {g : PowerSeries κ}
+    (hg : 1 ≤ g.ramificationNumber) {A : LaurentSeries κ} (hA : A ≠ 0)
+    (hpA : ¬ (p : ℤ) ∣ A.order) :
+    substEquiv g A - A ≠ 0 ∧ (substEquiv g A - A).order = A.order + g.ramificationNumber := by
+  obtain ⟨hgX, hg0, hg1⟩ := PowerSeries.one_le_ramificationNumber_iff.mp hg
+  set δ := HahnSeries.ofPowerSeries ℤ κ g - HahnSeries.single (1 : ℤ) 1 with hδdef
+  have htop := PowerSeries.orderTop_ofPowerSeries_sub_X hgX
+  rw [← hδdef] at htop
+  have hδ : δ ≠ 0 := HahnSeries.orderTop_ne_top.mp (by rw [htop]; exact WithTop.coe_ne_top)
+  have hδo : δ.order = g.ramificationNumber + 1 :=
+    WithTop.coe_injective ((HahnSeries.order_eq_orderTop_of_ne_zero hδ).trans htop)
+  have hα : δ.coeff δ.order ≠ 0 := HahnSeries.coeff_order_eq_zero.not.mpr hδ
+  have htail : HahnSeries.ofPowerSeries ℤ κ g - HahnSeries.single (1 : ℤ) 1 -
+      HahnSeries.single (g.ramificationNumber + 1) (δ.coeff δ.order) ∈
+        orderAddSubgroup (g.ramificationNumber + 2) := by
+    simpa only [← hδdef, hδo, add_assoc, one_add_one_eq_two] using
+      sub_leadingTerm_mem_orderAddSubgroup δ
+  have hb : (A.order : κ) * δ.coeff δ.order * A.coeff A.order ≠ 0 :=
+    mul_ne_zero (mul_ne_zero (mt (CharP.intCast_eq_zero_iff κ p A.order).mp hpA) hα)
+      (HahnSeries.coeff_order_eq_zero.not.mpr hA)
+  have hmem := subst_sub_leadingTerm_mem hg htail (sub_leadingTerm_mem_orderAddSubgroup A)
+  rw [← substEquiv_apply hg0 (hg1 ▸ isUnit_one)] at hmem
+  have hc := (mem_orderAddSubgroup_iff_coeff _ _).mp hmem (A.order + g.ramificationNumber)
+    (by omega)
   rw [HahnSeries.coeff_sub, HahnSeries.coeff_single_same, sub_eq_zero] at hc
-  refine ⟨HahnSeries.ne_zero_of_coeff_ne_zero (hc ▸ hβ), ?_⟩
-  exact order_subst_sub_eq_of_not_dvd p g hG d hd α hα htail x hx hm
+  exact ⟨HahnSeries.ne_zero_of_coeff_ne_zero (hc ▸ hb), order_eq_of_sub_single_mem hb hmem⟩
 
-/-- The actual prime-power orbit sums are nonzero and have the exact signed
-integer order dictated by the normalized primitive. Nonvanishing is established
-before the ordinary order calculation. -/
-theorem primePower_orbit_sum_ne_zero_and_order (p : ℕ) [Fact p.Prime]
-    (f : PowerSeries (ZMod p)) (hf : f.constantCoeff = 0) (hlinear : f.coeff 1 = 1)
-    (hinfinite : ¬ IsOfFinOrder (powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-      (by rw [hlinear]; exact isUnit_one)))
-    (A : LaurentSeries (ZMod p)) (hA : A ≠ 0) (hq : ¬ (p : ℤ) ∣ A.order)
-    (B : LaurentSeries (ZMod p))
-    (hB : B ^ p = powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-      (by rw [hlinear]; exact isUnit_one) A - A) :
-    let E := powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-      (by rw [hlinear]; exact isUnit_one)
-    ∀ n : ℕ, let x := ∑ j ∈ Finset.range (p ^ n), (E ^ j) B
-      x ≠ 0 ∧ (p : ℤ) * x.order = A.order +
-        ((HahnSeries.ofPowerSeries ℤ (ZMod p) (powerSeriesIterate f (p ^ n)) -
-          HahnSeries.single (1 : ℤ) 1).order - 1) := by
-  let E := powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-    (by rw [hlinear]; exact isUnit_one)
-  dsimp only
-  intro n
-  let g := powerSeriesIterate f (p ^ n)
-  let δ := HahnSeries.ofPowerSeries ℤ (ZMod p) g - HahnSeries.single (1 : ℤ) 1
-  let d := δ.order - 1
-  have hg0 : g.constantCoeff = 0 := (powerSeriesIterate_spec f hf _).1
-  have hg1 : g.coeff 1 = 1 := by
-    rw [(powerSeriesIterate_spec f hf _).2, hlinear, one_pow]
-  have hδ : δ ≠ 0 := powerSeriesIterate_displacement_ne_zero f hf _ hinfinite _
-    (pow_pos (Fact.out : p.Prime).pos n)
-  have hd : 1 ≤ d := by
-    have h := two_le_order_powerSeriesIterate_displacement f hf hlinear hinfinite _
-      (pow_pos (Fact.out : p.Prime).pos n)
-    change 2 ≤ δ.order at h
-    dsimp only [d]
-    omega
-  have hδtop : δ.orderTop = ((d + 1 : ℤ) : WithTop ℤ) := by
-    rw [← HahnSeries.order_eq_orderTop_of_ne_zero hδ]
-    congr 1
-    dsimp only [d]
-    omega
-  have hiter : powerSeriesSubstEquiv 0 IsNilpotent.zero g hg0
-      (by rw [hg1]; exact isUnit_one) = E ^ (p ^ n) :=
-    powerSeriesSubstEquiv_powerSeriesIterate f hf _ (p ^ n)
-  have ho := subst_sub_ne_zero_and_order_eq_of_not_dvd p
-    (HahnSeries.ofPowerSeries ℤ (ZMod p) g)
-    (isAdmissible_ofPowerSeries 0 g hg0 (by rw [hg1]; exact isUnit_one))
-    d hd hδtop A hA hq
-  have hpow : (∑ j ∈ Finset.range (p ^ n), (E ^ j) B) ^ p =
-      subst 0 IsNilpotent.zero (HahnSeries.ofPowerSeries ℤ (ZMod p) g)
-        (isAdmissible_ofPowerSeries 0 g hg0 (by rw [hg1]; exact isUnit_one)) A - A := by
-    rw [orbit_sum_pow_eq_iterate_sub p E A B hB, ← hiter]
-    rfl
-  refine ⟨?_, ?_⟩
-  · intro hx
-    apply ho.1
-    rw [← hpow, hx, zero_pow (Fact.out : p.Prime).ne_zero]
-  · have h := congrArg HahnSeries.order hpow
-    rw [HahnSeries.order_pow, ho.2, nsmul_eq_mul] at h
-    exact h
-
-/-- The genuine orbit sums satisfy every relative precision bound. Signed
-primitive orders and zero defects are both retained in the subgroup formulation. -/
-theorem primePower_orbit_sum_approximate_invariance (p : ℕ) [Fact p.Prime]
-    (f : PowerSeries (ZMod p)) (hf : f.constantCoeff = 0) (hlinear : f.coeff 1 = 1)
-    (hinfinite : ¬ IsOfFinOrder (powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-      (by rw [hlinear]; exact isUnit_one)))
-    (A : LaurentSeries (ZMod p)) (hA : A ≠ 0) (hq : ¬ (p : ℤ) ∣ A.order)
-    (B : LaurentSeries (ZMod p))
-    (hB : B ^ p = powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-      (by rw [hlinear]; exact isUnit_one) A - A) :
-    let E := powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-      (by rw [hlinear]; exact isUnit_one)
-    let x := fun n : ℕ ↦ ∑ j ∈ Finset.range (p ^ n), (E ^ j) B
-    ∀ N : ℤ, ∀ᶠ n in atTop, E (x n) - x n ∈ orderAddSubgroup ((x n).order + N) := by
-  let E := powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-    (by rw [hlinear]; exact isUnit_one)
-  let x := fun n : ℕ ↦ ∑ j ∈ Finset.range (p ^ n), (E ^ j) B
-  let d := fun n : ℕ ↦ (HahnSeries.ofPowerSeries ℤ (ZMod p)
-    (powerSeriesIterate f (p ^ n)) - HahnSeries.single (1 : ℤ) 1).order - 1
-  have ht : Tendsto d atTop atTop :=
-    tendsto_primePowerIterate_ramification_atTop p f hf hlinear hinfinite
-  have hp : (2 : ℤ) ≤ p := by exact_mod_cast (Fact.out : p.Prime).two_le
-  dsimp only
-  intro N
-  filter_upwards [Filter.tendsto_atTop.1 ht (max 0 (A.order + (p : ℤ) * (N - B.order)))] with n hn
-  have hd0 : 0 ≤ d n := (le_max_left _ _).trans hn
-  have hlarge : A.order + (p : ℤ) * (N - B.order) ≤ d n := (le_max_right _ _).trans hn
-  have horder := (primePower_orbit_sum_ne_zero_and_order p f hf hlinear hinfinite A hA hq B hB n).2
-  change (p : ℤ) * (x n).order = A.order + d n at horder
-  have hbound : (x n).order + N ≤ B.order + d n := by
-    have hproduct := mul_nonneg (sub_nonneg.mpr hp) hd0
-    nlinarith
-  let g := powerSeriesIterate f (p ^ n)
-  have hg0 : g.constantCoeff = 0 := (powerSeriesIterate_spec f hf _).1
-  have hg1 : g.coeff 1 = 1 := by
-    rw [(powerSeriesIterate_spec f hf _).2, hlinear, one_pow]
-  have hd : 1 ≤ d n := by
-    have h := two_le_order_powerSeriesIterate_displacement f hf hlinear hinfinite _
-      (pow_pos (Fact.out : p.Prime).pos n)
-    dsimp only [d]
-    omega
-  have hmem : HahnSeries.ofPowerSeries ℤ (ZMod p) g - HahnSeries.single (1 : ℤ) 1 ∈
-      orderAddSubgroup (d n + 1) := by
-    dsimp only [d]
-    rw [sub_add_cancel]
-    exact mem_orderAddSubgroup_order _
-  have hb := subst_sub_mem_orderAddSubgroup (HahnSeries.ofPowerSeries ℤ (ZMod p) g)
-    (isAdmissible_ofPowerSeries 0 g hg0 (by rw [hg1]; exact isUnit_one))
-    (d n) hd hmem B.order B (mem_orderAddSubgroup_order B)
-  have hiter : powerSeriesSubstEquiv 0 IsNilpotent.zero g hg0
-      (by rw [hg1]; exact isUnit_one) = E ^ (p ^ n) :=
-    powerSeriesSubstEquiv_powerSeriesIterate f hf _ (p ^ n)
-  have hdef : E (x n) - x n =
-      subst 0 IsNilpotent.zero (HahnSeries.ofPowerSeries ℤ (ZMod p) g)
-        (isAdmissible_ofPowerSeries 0 g hg0 (by rw [hg1]; exact isUnit_one)) B - B := by
-    rw [subst_orbit_sum_sub, ← hiter]
-    rfl
-  change E (x n) - x n ∈ orderAddSubgroup ((x n).order + N)
-  rw [hdef]
-  exact orderAddSubgroup_antitone hbound hb
-
-/-- **An exact invariant differential determines the ramification limit**
-(Yuan, Proposition 4.2). A differential is represented by its actual Laurent
-coefficient `a`, and invariance is the actual substitution chain-law formula.
-No choice of primitive, trace identity or limiting quotient is assumed. -/
-theorem padic_ramification_limit_eq_of_invariant_exact_differential
-    (p : ℕ) [Fact p.Prime] (f : PowerSeries (ZMod p))
-    (hf : f.constantCoeff = 0) (hlinear : f.coeff 1 = 1)
-    (hinfinite : ¬ IsOfFinOrder (powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-      (by rw [hlinear]; exact isUnit_one)))
-    (b : PadicInt p)
-    (hlimit : Tendsto (fun n : ℕ ↦
-      (((HahnSeries.ofPowerSeries ℤ (ZMod p) (powerSeriesIterate f (p ^ n)) -
-        HahnSeries.single (1 : ℤ) 1).order - 1 : ℤ) : PadicInt p)) atTop (nhds b))
-    (a : LaurentSeries (ZMod p)) (ha : a ≠ 0)
-    (hexact : ∃ U : LaurentSeries (ZMod p), derivative (ZMod p) U = a)
-    (hinvariant : powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-        (by rw [hlinear]; exact isUnit_one) a *
-      derivative (ZMod p) (HahnSeries.ofPowerSeries ℤ (ZMod p) f) = a) :
-    b = -((a.order + 1 : ℤ) : PadicInt p) := by
-  obtain ⟨U, hU⟩ := hexact
-  have hD : derivative (ZMod p) U ≠ 0 := by rw [hU]; exact ha
-  let A := coefficientPrimitive a
-  have hAderiv : derivative (ZMod p) A = a := by
-    dsimp only [A]
-    rw [← hU, derivative_coefficientPrimitive_derivative]
-  have hA : A ≠ 0 := by
-    intro hzero
-    apply ha
-    rw [← hAderiv, hzero, map_zero]
-  have hq : ¬ (p : ℤ) ∣ A.order := by
-    dsimp only [A]
-    rw [← hU]
-    exact not_dvd_order_coefficientPrimitive_derivative p U hD
-  have hqorder : A.order = a.order + 1 := by
-    dsimp only [A]
-    rw [← hU]
-    exact order_coefficientPrimitive_derivative U hD
-  let E := powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-    (by rw [hlinear]; exact isUnit_one)
-  have hzero : derivative (ZMod p) (E A - A) = 0 := by
-    rw [map_sub, powerSeriesSubstEquiv_apply, derivative_subst, hAderiv]
-    change E a * derivative (ZMod p) (HahnSeries.ofPowerSeries ℤ (ZMod p) f) - a = 0
-    exact sub_eq_zero.mpr hinvariant
-  obtain ⟨B, hB⟩ := (derivative_eq_zero_iff_exists_pow p (E A - A)).mp hzero
-  let x := fun n : ℕ ↦ ∑ j ∈ Finset.range (p ^ n), (E ^ j) B
-  let d := fun n : ℕ ↦ (HahnSeries.ofPowerSeries ℤ (ZMod p)
-    (powerSeriesIterate f (p ^ n)) - HahnSeries.single (1 : ℤ) 1).order - 1
-  have hx : ∀ n, x n ≠ 0 := fun n ↦
-    (primePower_orbit_sum_ne_zero_and_order p f hf hlinear hinfinite A hA hq B hB n).1
-  have ho (n : ℕ) : (p : ℤ) * (x n).order = A.order + d n :=
-    (primePower_orbit_sum_ne_zero_and_order p f hf hlinear hinfinite A hA hq B hB n).2
-  have hscaled : Tendsto (fun n : ℕ ↦ (p : PadicInt p) * ((x n).order : PadicInt p))
-      atTop (nhds ((A.order : PadicInt p) + b)) := by
-    have hfun : (fun n : ℕ ↦ (p : PadicInt p) * ((x n).order : PadicInt p)) =
-        (fun n : ℕ ↦ (A.order : PadicInt p) + ((d n : ℤ) : PadicInt p)) := by
-      funext n
-      exact_mod_cast ho n
-    rw [hfun]
-    exact tendsto_const_nhds.add hlimit
-  obtain ⟨m, hm, hxm⟩ := PadicInt.exists_tendsto_of_prime_mul_tendsto
-    (fun n ↦ ((x n).order : PadicInt p)) ((A.order : PadicInt p) + b) hscaled
-  have hmzero := padic_limit_order_eq_zero_of_approximate_invariance f hf hlinear hinfinite
-    x hx m hxm (primePower_orbit_sum_approximate_invariance p f hf hlinear hinfinite A hA hq B hB)
-  rw [hmzero, mul_zero] at hm
-  rw [← hqorder]
+/-- **Integrality constraint for invariant exact differentials** (Yuan, Proposition 4.3). Let `κ`
+be a finite field of characteristic `p` and `f = T + O(T ^ 2)` such that `σ : x ↦ x(f)` has
+infinite order, and suppose that the ramification numbers `i(σ ^ (p ^ n))` converge in `ℤ_p` to
+`b`. If `σ` fixes a nonzero exact differential `ω = a dT`, that is, `a = U'` for some `U` and
+`a(f) f' = a`, then `b = -v_T(a) - 1`. -/
+theorem padic_ramification_limit_eq_of_invariant_exact_differential [Finite κ] (p : ℕ)
+    [Fact p.Prime] [CharP κ p] {f : PowerSeries κ} (hf1 : f.coeff 1 = 1)
+    (hf : ¬ IsOfFinOrder (substEquiv f)) {b : ℤ_[p]}
+    (hlimit : Tendsto (fun n : ℕ ↦ ((PowerSeries.iterate f (p ^ n)).ramificationNumber : ℤ_[p]))
+      atTop (𝓝 b))
+    {a : LaurentSeries κ} (ha : a ≠ 0) (hexact : ∃ U : LaurentSeries κ, derivative κ U = a)
+    (hinv : substEquiv f a * derivative κ (HahnSeries.ofPowerSeries ℤ κ f) = a) :
+    b = -((a.order + 1 : ℤ) : ℤ_[p]) := by
+  have hp := (Fact.out : p.Prime)
+  obtain ⟨hf0, hf'⟩ := constantCoeff_eq_zero_and_isUnit_of_not_isOfFinOrder hf
+  obtain ⟨U, rfl⟩ := hexact
+  set A := coefficientPrimitive (derivative κ U)
+  have hAd : derivative κ A = derivative κ U := derivative_coefficientPrimitive_derivative U
+  have hA : A ≠ 0 := fun h0 ↦ ha (by rw [← hAd, h0, map_zero])
+  have hpA : ¬ (p : ℤ) ∣ A.order := not_dvd_order_coefficientPrimitive_derivative p U ha
+  obtain ⟨B, hB⟩ := (derivative_eq_zero_iff_exists_pow p (substEquiv f A - A)).mp (by
+    rw [map_sub, derivative_substEquiv hf0 hf', hAd, hinv, sub_self])
+  set d : ℕ → ℤ := fun n ↦ (PowerSeries.iterate f (p ^ n)).ramificationNumber
+  set x : ℕ → LaurentSeries κ := fun n ↦ ∑ j ∈ Finset.range (p ^ n), (substEquiv f ^ j) B
+    with hxdef
+  have hd (n : ℕ) : 1 ≤ d n :=
+    PowerSeries.one_le_ramificationNumber_iterate hf1 hf (pow_pos hp.pos n)
+  have hσ (n : ℕ) : substEquiv f ^ (p ^ n) = substEquiv (PowerSeries.iterate f (p ^ n)) :=
+    (substEquiv_iterate hf0 hf' _).symm
+  have hxo (n : ℕ) : x n ≠ 0 ∧ (p : ℤ) * (x n).order = A.order + d n := by
+    have hxp : x n ^ p = substEquiv (PowerSeries.iterate f (p ^ n)) A - A := by
+      rw [hxdef, sum_pow_apply_pow_char p _ hB, hσ]
+    obtain ⟨hne, ho⟩ := ne_zero_and_order_substEquiv_sub p (hd n) hA hpA
+    rw [← hxp] at hne ho
+    refine ⟨fun h0 ↦ hne (by rw [h0, zero_pow hp.ne_zero]), ?_⟩
+    rw [HahnSeries.order_pow, nsmul_eq_mul] at ho
+    exact ho
+  have happrox (N : ℤ) : ∀ᶠ n in atTop,
+      substEquiv f (x n) - x n ∈ orderAddSubgroup ((x n).order + N) := by
+    filter_upwards [tendsto_atTop.mp (PowerSeries.tendsto_ramificationNumber_iterate_pow_atTop
+      p hf1 hf) (A.order + p * (N - B.order))] with n hn
+    have hg := PowerSeries.one_le_ramificationNumber_iff.mp (hd n)
+    have hmem := subst_sub_mem_orderAddSubgroup (hd n)
+      (PowerSeries.ofPowerSeries_sub_X_mem_orderAddSubgroup _) (mem_orderAddSubgroup_order B)
+    rw [← substEquiv_apply hg.2.1 (hg.2.2 ▸ isUnit_one), ← hσ, ← apply_sum_pow_sub] at hmem
+    refine orderAddSubgroup_antitone ?_ hmem
+    have hp2 : (2 : ℤ) ≤ p := by exact_mod_cast hp.two_le
+    have hdn : d n ≤ (p - 1) * d n := le_mul_of_one_le_left (by linarith [hd n]) (by linarith)
+    have h2 : (p : ℤ) * ((x n).order + N) ≤ p * (B.order + d n) := by
+      linarith [(hxo n).2]
+    exact le_of_mul_le_mul_left h2 (by linarith)
+  have hscaled : Tendsto (fun n ↦ (p : ℤ_[p]) * ((x n).order : ℤ_[p])) atTop
+      (𝓝 ((A.order : ℤ_[p]) + b)) := by
+    refine (tendsto_const_nhds.add hlimit).congr fun n ↦ ?_
+    exact_mod_cast ((hxo n).2).symm
+  obtain ⟨m, hm, hxm⟩ := PadicInt.exists_tendsto_of_prime_mul_tendsto hscaled
+  rw [padic_limit_order_eq_zero_of_approximate_invariance p hf1 hf (fun n ↦ (hxo n).1) hxm
+    happrox, mul_zero] at hm
+  rw [← order_coefficientPrimitive_derivative U ha]
   linear_combination -hm
-
-end Displacement
 
 end LaurentSeries

@@ -7,18 +7,27 @@ module
 
 public import FalseTateNonliftability.LaurentSeries.NormalForm
 public import Mathlib.GroupTheory.OrderOfElement
-public import Mathlib.Order.Filter.AtTopBot.Archimedean
 
 /-!
-# Ramification growth of actual infinite-order substitutions
+# Growth of the ramification numbers of `p`-power iterates
 
-The actual difference operator gives the sharp bound `i(g^p) ≥ p * i(g)`,
-including an identity output of infinite order. For an actual infinite-order
-substitution tangent to the identity, every prime-power iterate has finite
-positive ramification number; these numbers strictly increase and diverge.
+Let `k` be a field of characteristic `p` and let `σ : x ↦ x(f)` be the automorphism of `k((T))`
+given by a power series `f = T + O(T ^ 2)`. Then `i(σ ^ p) ≥ p i(σ)`. If `σ` has infinite order,
+then `σ ^ n ≠ 1` for every `n > 0`, so the ramification numbers `d_n = i(σ ^ (p ^ n))` are
+positive integers; they satisfy `d_(n+1) ≥ p d_n`, hence strictly increase and tend to infinity.
 
-This proves `nl:iterate-ramification-growth`, over any field of characteristic
-`p`. The prime `2` is included.
+## Main results
+
+* `PowerSeries.mul_ramificationNumber_le_ramificationNumber_iterate`: `p i(σ) ≤ i(σ ^ p)`.
+* `PowerSeries.one_le_ramificationNumber_iterate`: `i(σ ^ n) ≥ 1` for `n > 0` if `σ` has infinite
+  order.
+* `PowerSeries.strictMono_ramificationNumber_iterate_pow`: `n ↦ i(σ ^ (p ^ n))` is strictly
+  increasing.
+* `PowerSeries.tendsto_ramificationNumber_iterate_pow_atTop`: `i(σ ^ (p ^ n)) → ∞`.
+
+## References
+
+* Yuan, proof of Lemma 4.2.
 -/
 
 @[expose] public section
@@ -27,213 +36,111 @@ noncomputable section
 
 namespace LaurentSeries
 
-open Filter
+variable {R : Type*} [CommRing R] [IsLocalRing R] [IsArtinianRing R] [IsPrincipalIdealRing R]
 
-variable {k : Type*} [Field k]
+/-- If `x ↦ x(P)` has infinite order, then `P(0) = 0` and `P'(0)` is a unit. -/
+theorem constantCoeff_eq_zero_and_isUnit_of_not_isOfFinOrder {P : PowerSeries R}
+    (h : ¬ IsOfFinOrder (substEquiv P)) : P.constantCoeff = 0 ∧ IsUnit (P.coeff 1) := by
+  by_contra hP
+  rw [substEquiv_of_not hP] at h
+  exact h IsOfFinOrder.one
 
-local instance iterateGrowthZeroSpanIsMaximal : (Ideal.span ({(0 : k)} : Set k)).IsMaximal := by
-  rw [Ideal.span_singleton_zero]
-  exact Ideal.bot_isMaximal
+end LaurentSeries
 
-/-- The sharp prime-fold bound follows from the actual characteristic-prime
-difference identity and its valuation-raising property. Zero output is allowed. -/
-theorem prime_iterate_sub_variable_mem (p : ℕ) [Fact p.Prime] [CharP k p]
-    (g : LaurentSeries k) (hG : IsAdmissible (0 : k) g) (d : ℤ) (hd : 1 ≤ d)
-    (hg : g - HahnSeries.single (1 : ℤ) 1 ∈ orderAddSubgroup (d + 1)) :
-    (subst 0 IsNilpotent.zero g hG)^[p] (HahnSeries.single (1 : ℤ) 1) -
-        HahnSeries.single (1 : ℤ) 1 ∈ orderAddSubgroup ((p : ℤ) * d + 1) := by
-  rw [← substitutionDifference_pow_char p g hG]
-  simpa only [add_comm] using substitutionDifference_pow_mem g hG d hd hg p 1
-    (HahnSeries.single (1 : ℤ) 1) (show HahnSeries.single (1 : ℤ) (1 : k) ∈ orderAddSubgroup 1
-      from HahnSeries.orderTop_single_le)
+namespace PowerSeries
 
-/-- The actual automorphism at the original power-series iterate is the
-power of the original automorphism, on the entire Laurent carrier. -/
-theorem powerSeriesSubstEquiv_powerSeriesIterate (f : PowerSeries k)
-    (hf : f.constantCoeff = 0) (hflinear : IsUnit (f.coeff 1)) (n : ℕ) :
-    powerSeriesSubstEquiv 0 IsNilpotent.zero (powerSeriesIterate f n)
-        (powerSeriesIterate_spec f hf n).1
-        (by rw [(powerSeriesIterate_spec f hf n).2]; exact hflinear.pow n) =
-      (powerSeriesSubstEquiv 0 IsNilpotent.zero f hf hflinear) ^ n := by
-  let := orderTopology k
-  have := orderTopology_t2Space (R := k)
-  have heq : (powerSeriesSubstEquiv 0 IsNilpotent.zero (powerSeriesIterate f n)
-        (powerSeriesIterate_spec f hf n).1
-        (by rw [(powerSeriesIterate_spec f hf n).2]; exact hflinear.pow n)).toAlgHom =
-      ((powerSeriesSubstEquiv 0 IsNilpotent.zero f hf hflinear) ^ n).toAlgHom := by
-    apply continuous_algHom_ext_X
-    · exact continuous_powerSeriesSubstEquiv _ _ _ _ _
-    · simpa only [AlgEquiv.coe_toAlgHom, AlgEquiv.coe_pow] using
-        (continuous_powerSeriesSubstEquiv 0 IsNilpotent.zero f hf hflinear).iterate n
-    · simpa only [AlgEquiv.coe_toAlgHom, AlgEquiv.coe_pow, HahnSeries.ofPowerSeries_X] using
-        powerSeriesSubstEquiv_iterate_ofPowerSeries f hf hflinear n PowerSeries.X
-  exact AlgEquiv.ext fun x ↦ AlgHom.congr_fun heq x
+open LaurentSeries Filter
 
-/-- An actual infinite-order substitution has no identity positive iterate
-in the original power-series carrier. Continuity extends equality from `X`. -/
-theorem powerSeriesIterate_ne_X_of_infiniteOrder (f : PowerSeries k)
-    (hf : f.constantCoeff = 0) (hflinear : IsUnit (f.coeff 1))
-    (hinfinite : ¬ IsOfFinOrder (powerSeriesSubstEquiv 0 IsNilpotent.zero f hf hflinear))
-    (n : ℕ) (hn : 0 < n) : powerSeriesIterate f n ≠ PowerSeries.X := by
-  intro hidentity
-  let := orderTopology k
-  have := orderTopology_t2Space (R := k)
-  let E := powerSeriesSubstEquiv 0 IsNilpotent.zero f hf hflinear
-  have hX : (E ^ n) (HahnSeries.single (1 : ℤ) 1) = HahnSeries.single (1 : ℤ) 1 := by
-    simpa only [E, AlgEquiv.coe_pow, hidentity, HahnSeries.ofPowerSeries_X] using
-      (ofPowerSeries_powerSeriesIterate f hf hflinear n).symm
-  have hmaps : (E ^ n).toAlgHom = (1 : LaurentSeries k ≃ₐ[k] LaurentSeries k).toAlgHom := by
-    apply continuous_algHom_ext_X
-    · simpa only [E, AlgEquiv.coe_toAlgHom, AlgEquiv.coe_pow] using
-        (continuous_powerSeriesSubstEquiv 0 IsNilpotent.zero f hf hflinear).iterate n
-    · exact continuous_id
-    · exact hX
-  apply hinfinite
-  exact isOfFinOrder_iff_pow_eq_one.mpr ⟨n, hn, AlgEquiv.ext fun x ↦ AlgHom.congr_fun hmaps x⟩
+section Subst
 
-/-- Every positive iterate of an actual infinite-order substitution has
-nonzero Laurent displacement, so its order is finite. -/
-theorem powerSeriesIterate_displacement_ne_zero (f : PowerSeries k)
-    (hf : f.constantCoeff = 0) (hflinear : IsUnit (f.coeff 1))
-    (hinfinite : ¬ IsOfFinOrder (powerSeriesSubstEquiv 0 IsNilpotent.zero f hf hflinear))
-    (n : ℕ) (hn : 0 < n) :
-    HahnSeries.ofPowerSeries ℤ k (powerSeriesIterate f n) - HahnSeries.single (1 : ℤ) 1 ≠ 0 := by
-  intro hzero
-  apply powerSeriesIterate_ne_X_of_infiniteOrder f hf hflinear hinfinite n hn
-  have heq : HahnSeries.ofPowerSeries ℤ k (powerSeriesIterate f n) =
-      HahnSeries.ofPowerSeries ℤ k PowerSeries.X := by
-    simpa only [HahnSeries.ofPowerSeries_X, sub_eq_zero] using hzero
-  ext j
-  simpa only [HahnSeries.ofPowerSeries_apply_coeff] using
-    congrArg (fun x : LaurentSeries k ↦ x.coeff (j : ℤ)) heq
+variable {R : Type*} [CommRing R] [IsLocalRing R] [IsArtinianRing R] [IsPrincipalIdealRing R]
 
-/-- Tangency to the identity is preserved in every original power-series
-iterate, expressed as the actual order-two support condition. -/
-theorem powerSeriesIterate_sub_variable_mem_two (f : PowerSeries k)
-    (hf : f.constantCoeff = 0) (hlinear : f.coeff 1 = 1) (n : ℕ) :
-    HahnSeries.ofPowerSeries ℤ k (powerSeriesIterate f n) - HahnSeries.single (1 : ℤ) 1 ∈
-      orderAddSubgroup 2 := by
-  have hspec := powerSeriesIterate_spec f hf n
-  simpa only [hspec.2, hlinear, one_pow] using
-    ofPowerSeries_sub_linear_mem_two (powerSeriesIterate f n) hspec.1
+/-- If `x ↦ x(f)` has infinite order, then `f^{∘n} ≠ X` for every `n > 0`. -/
+theorem iterate_ne_X_of_not_isOfFinOrder {f : R⟦X⟧} (hf : ¬ IsOfFinOrder (substEquiv f))
+    {n : ℕ} (hn : 0 < n) : iterate f n ≠ X := by
+  obtain ⟨hf0, hf'⟩ := constantCoeff_eq_zero_and_isUnit_of_not_isOfFinOrder hf
+  intro h
+  refine hf (isOfFinOrder_iff_pow_eq_one.mpr ⟨n, hn, ?_⟩)
+  rw [← substEquiv_iterate hf0 hf', h, ← iterate_zero f, substEquiv_iterate hf0 hf', pow_zero]
 
-/-- For a tangent substitution of infinite order, every positive iterate
-has finite displacement order at least two. -/
-theorem two_le_order_powerSeriesIterate_displacement (f : PowerSeries k)
-    (hf : f.constantCoeff = 0) (hlinear : f.coeff 1 = 1)
-    (hinfinite : ¬ IsOfFinOrder (powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-      (by rw [hlinear]; exact isUnit_one))) (n : ℕ) (hn : 0 < n) :
-    2 ≤ (HahnSeries.ofPowerSeries ℤ k (powerSeriesIterate f n) -
-      HahnSeries.single (1 : ℤ) 1).order := by
-  have hmem := powerSeriesIterate_sub_variable_mem_two f hf hlinear n
-  change ((2 : ℤ) : WithTop ℤ) ≤ _ at hmem
-  rw [← HahnSeries.order_eq_orderTop_of_ne_zero
-    (powerSeriesIterate_displacement_ne_zero f hf _ hinfinite n hn)] at hmem
-  exact WithTop.coe_le_coe.mp hmem
+/-- If `f = T + O(T ^ 2)` and `x ↦ x(f)` has infinite order, then `f^{∘n}` has positive
+ramification number for every `n > 0`. -/
+theorem one_le_ramificationNumber_iterate {f : R⟦X⟧} (hf1 : f.coeff 1 = 1)
+    (hf : ¬ IsOfFinOrder (substEquiv f)) {n : ℕ} (hn : 0 < n) :
+    1 ≤ (iterate f n).ramificationNumber := by
+  obtain ⟨hf0, -⟩ := constantCoeff_eq_zero_and_isUnit_of_not_isOfFinOrder hf
+  exact one_le_ramificationNumber_iff.mpr ⟨iterate_ne_X_of_not_isOfFinOrder hf hn,
+    constantCoeff_iterate hf0 n, by rw [coeff_one_iterate hf0, hf1, one_pow]⟩
 
-/-- The sharp prime-fold estimate on successive actual prime-power
-power-series iterates. Identity outputs retain their infinite order. -/
-theorem primePowerIterate_sub_variable_mem (p : ℕ) [Fact p.Prime] [CharP k p]
-    (f : PowerSeries k) (hf : f.constantCoeff = 0) (hflinear : IsUnit (f.coeff 1))
-    (n : ℕ) (d : ℤ) (hd : 1 ≤ d)
-    (hg : HahnSeries.ofPowerSeries ℤ k (powerSeriesIterate f (p ^ n)) -
-      HahnSeries.single (1 : ℤ) 1 ∈ orderAddSubgroup (d + 1)) :
-    HahnSeries.ofPowerSeries ℤ k (powerSeriesIterate f (p ^ (n + 1))) -
-      HahnSeries.single (1 : ℤ) 1 ∈ orderAddSubgroup ((p : ℤ) * d + 1) := by
-  have hlinear : IsUnit ((powerSeriesIterate f (p ^ n)).coeff 1) := by
-    rw [(powerSeriesIterate_spec f hf (p ^ n)).2]
-    exact hflinear.pow _
-  have hbound := prime_iterate_sub_variable_mem p
-    (HahnSeries.ofPowerSeries ℤ k (powerSeriesIterate f (p ^ n)))
-    (isAdmissible_ofPowerSeries 0 _ (powerSeriesIterate_spec f hf (p ^ n)).1 hlinear) d hd hg
-  change (powerSeriesSubstEquiv 0 IsNilpotent.zero (powerSeriesIterate f (p ^ n))
-      (powerSeriesIterate_spec f hf (p ^ n)).1 hlinear)^[p]
-        (HahnSeries.single (1 : ℤ) 1) - HahnSeries.single (1 : ℤ) 1 ∈ _ at hbound
-  have heq : (powerSeriesSubstEquiv 0 IsNilpotent.zero (powerSeriesIterate f (p ^ n))
-      (powerSeriesIterate_spec f hf (p ^ n)).1 hlinear)^[p]
-        (HahnSeries.single (1 : ℤ) 1) =
-      HahnSeries.ofPowerSeries ℤ k (powerSeriesIterate f (p ^ (n + 1))) := by
-    rw [← AlgEquiv.coe_pow, powerSeriesSubstEquiv_powerSeriesIterate f hf hflinear,
-      ← pow_mul, ← pow_succ p n, AlgEquiv.coe_pow]
-    exact (ofPowerSeries_powerSeriesIterate f hf hflinear (p ^ (n + 1))).symm
-  rwa [heq] at hbound
+end Subst
 
-/-- Successive finite ramification numbers satisfy the sharp multiplicative
-growth bound. Finiteness follows from the actual infinite-order automorphism. -/
-theorem primePowerIterate_ramification_growth (p : ℕ) [Fact p.Prime] [CharP k p]
-    (f : PowerSeries k) (hf : f.constantCoeff = 0) (hlinear : f.coeff 1 = 1)
-    (hinfinite : ¬ IsOfFinOrder (powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-      (by rw [hlinear]; exact isUnit_one))) (n : ℕ) :
-    (p : ℤ) * ((HahnSeries.ofPowerSeries ℤ k (powerSeriesIterate f (p ^ n)) -
-        HahnSeries.single (1 : ℤ) 1).order - 1) ≤
-      (HahnSeries.ofPowerSeries ℤ k (powerSeriesIterate f (p ^ (n + 1))) -
-        HahnSeries.single (1 : ℤ) 1).order - 1 := by
-  let D := fun n : ℕ ↦ HahnSeries.ofPowerSeries ℤ k (powerSeriesIterate f (p ^ n)) -
-    HahnSeries.single (1 : ℤ) 1
-  have hn : 0 < p ^ n := pow_pos (Fact.out : p.Prime).pos n
-  have hnext : 0 < p ^ (n + 1) := pow_pos (Fact.out : p.Prime).pos _
-  have hd : 1 ≤ (D n).order - 1 := by
-    have := two_le_order_powerSeriesIterate_displacement f hf hlinear hinfinite (p ^ n) hn
-    dsimp only [D]
-    omega
-  have hmem : D n ∈ orderAddSubgroup ((D n).order - 1 + 1) := by
-    simpa only [sub_add_cancel] using mem_orderAddSubgroup_order (D n)
-  have hbound := primePowerIterate_sub_variable_mem p f hf
-    (by rw [hlinear]; exact isUnit_one) n ((D n).order - 1) hd hmem
-  change (((p : ℤ) * ((D n).order - 1) + 1 : ℤ) : WithTop ℤ) ≤ (D (n + 1)).orderTop at hbound
-  rw [← HahnSeries.order_eq_orderTop_of_ne_zero
-    (powerSeriesIterate_displacement_ne_zero f hf _ hinfinite (p ^ (n + 1)) hnext)] at hbound
-  have h : (p : ℤ) * ((D n).order - 1) + 1 ≤ (D (n + 1)).order :=
-    WithTop.coe_le_coe.mp hbound
-  change (p : ℤ) * ((D n).order - 1) ≤ (D (n + 1)).order - 1
-  omega
+section Field
 
-/-- The actual finite prime-power ramification numbers strictly increase,
-including in characteristic two. -/
-theorem strictMono_primePowerIterate_ramification (p : ℕ) [Fact p.Prime] [CharP k p]
-    (f : PowerSeries k) (hf : f.constantCoeff = 0) (hlinear : f.coeff 1 = 1)
-    (hinfinite : ¬ IsOfFinOrder (powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-      (by rw [hlinear]; exact isUnit_one))) :
-    StrictMono (fun n : ℕ ↦ (HahnSeries.ofPowerSeries ℤ k (powerSeriesIterate f (p ^ n)) -
-      HahnSeries.single (1 : ℤ) 1).order - 1) := by
-  apply strictMono_nat_of_lt_succ
-  intro n
-  have hbound := primePowerIterate_ramification_growth p f hf hlinear hinfinite n
-  have horder := two_le_order_powerSeriesIterate_displacement f hf hlinear hinfinite (p ^ n)
-    (pow_pos (Fact.out : p.Prime).pos _)
+variable {k : Type*} [Field k] (p : ℕ) [Fact p.Prime] [CharP k p]
+
+private theorem ofPowerSeries_iterate_sub_X_mem {f : k⟦X⟧} (hf : 1 ≤ f.ramificationNumber) :
+    HahnSeries.ofPowerSeries ℤ k (iterate f p) - HahnSeries.single (1 : ℤ) 1 ∈
+      orderAddSubgroup (p * f.ramificationNumber + 1) := by
+  obtain ⟨-, hf0, hf1⟩ := one_le_ramificationNumber_iff.mp hf
+  have hf' : IsUnit (f.coeff 1) := hf1 ▸ isUnit_one
+  rw [ofPowerSeries_iterate hf0 hf',
+    show ⇑(substEquiv f) = LaurentSeries.subst (HahnSeries.ofPowerSeries ℤ k f) from
+      funext (substEquiv_apply hf0 hf'), ← substSubOne_pow_char_apply p, add_comm]
+  exact substSubOne_pow_mem hf (ofPowerSeries_sub_X_mem_orderAddSubgroup f) p
+    HahnSeries.orderTop_single_le
+
+/-- If `f = T + O(T ^ 2)` has ramification number `d ≥ 1` and `f^{∘p} ≠ X`, then `f^{∘p}` has
+ramification number at least `p d`: `i(σ ^ p) ≥ p i(σ)`. -/
+theorem mul_ramificationNumber_le_ramificationNumber_iterate {f : k⟦X⟧}
+    (hf : 1 ≤ f.ramificationNumber) (hfp : iterate f p ≠ X) :
+    (p : ℤ) * f.ramificationNumber ≤ (iterate f p).ramificationNumber :=
+  (le_ramificationNumber_iff hfp).mpr (ofPowerSeries_iterate_sub_X_mem p hf)
+
+/-- If `f = T + O(T ^ 2)` and `x ↦ x(f)` has infinite order, then
+`i(σ ^ (p ^ (n + 1))) ≥ p i(σ ^ (p ^ n))`. -/
+theorem mul_ramificationNumber_iterate_pow_le {f : k⟦X⟧} (hf1 : f.coeff 1 = 1)
+    (hf : ¬ IsOfFinOrder (substEquiv f)) (n : ℕ) :
+    (p : ℤ) * (iterate f (p ^ n)).ramificationNumber ≤
+      (iterate f (p ^ (n + 1))).ramificationNumber := by
+  obtain ⟨hf0, -⟩ := constantCoeff_eq_zero_and_isUnit_of_not_isOfFinOrder hf
+  have hp := (Fact.out : p.Prime).pos
+  have hne := iterate_ne_X_of_not_isOfFinOrder hf (pow_pos hp (n + 1))
+  rw [pow_succ, iterate_mul (.of_constantCoeff_zero' hf0)] at hne ⊢
+  exact mul_ramificationNumber_le_ramificationNumber_iterate p
+    (one_le_ramificationNumber_iterate hf1 hf (pow_pos hp n)) hne
+
+/-- If `f = T + O(T ^ 2)` and `x ↦ x(f)` has infinite order, then the ramification numbers
+`i(σ ^ (p ^ n))` strictly increase. -/
+theorem strictMono_ramificationNumber_iterate_pow {f : k⟦X⟧} (hf1 : f.coeff 1 = 1)
+    (hf : ¬ IsOfFinOrder (substEquiv f)) :
+    StrictMono fun n : ℕ ↦ (iterate f (p ^ n)).ramificationNumber := by
+  refine strictMono_nat_of_lt_succ fun n ↦ ?_
+  have h := mul_ramificationNumber_iterate_pow_le p hf1 hf n
+  have h1 := one_le_ramificationNumber_iterate hf1 hf (pow_pos (Fact.out : p.Prime).pos n)
   have hp : (2 : ℤ) ≤ p := by exact_mod_cast (Fact.out : p.Prime).two_le
   nlinarith
 
-/-- The actual finite ramification numbers of an infinite-order tangent
-substitution diverge in the ordinary integer order. -/
-theorem tendsto_primePowerIterate_ramification_atTop (p : ℕ) [Fact p.Prime] [CharP k p]
-    (f : PowerSeries k) (hf : f.constantCoeff = 0) (hlinear : f.coeff 1 = 1)
-    (hinfinite : ¬ IsOfFinOrder (powerSeriesSubstEquiv 0 IsNilpotent.zero f hf
-      (by rw [hlinear]; exact isUnit_one))) :
-    Tendsto (fun n : ℕ ↦ (HahnSeries.ofPowerSeries ℤ k (powerSeriesIterate f (p ^ n)) -
-      HahnSeries.single (1 : ℤ) 1).order - 1) atTop atTop := by
-  let d := fun n : ℕ ↦ (HahnSeries.ofPowerSeries ℤ k (powerSeriesIterate f (p ^ n)) -
-    HahnSeries.single (1 : ℤ) 1).order - 1
-  have hstrict : StrictMono d := strictMono_primePowerIterate_ramification p f hf hlinear hinfinite
-  have hlower : ∀ n : ℕ, (n : ℤ) + 1 ≤ d n := by
-    intro n
+/-- If `f = T + O(T ^ 2)` and `x ↦ x(f)` has infinite order, then the ramification numbers
+`i(σ ^ (p ^ n))` tend to infinity. -/
+theorem tendsto_ramificationNumber_iterate_pow_atTop {f : k⟦X⟧} (hf1 : f.coeff 1 = 1)
+    (hf : ¬ IsOfFinOrder (substEquiv f)) :
+    Tendsto (fun n : ℕ ↦ (iterate f (p ^ n)).ramificationNumber) atTop atTop := by
+  have hmono := strictMono_ramificationNumber_iterate_pow p hf1 hf
+  have hlow (n : ℕ) : (n : ℤ) ≤ (iterate f (p ^ n)).ramificationNumber := by
     induction n with
     | zero =>
-      have := two_le_order_powerSeriesIterate_displacement f hf hlinear hinfinite (p ^ 0)
-        (pow_pos (Fact.out : p.Prime).pos _)
-      dsimp only [d]
-      omega
-    | succ n ih =>
-      have hstep : d n < d (n + 1) := hstrict (Nat.lt_succ_self n)
-      change (((n + 1 : ℕ) : ℤ) + 1) ≤ d (n + 1)
+      have := one_le_ramificationNumber_iterate hf1 hf (pow_pos (Fact.out : p.Prime).pos 0)
       push_cast
       omega
-  apply tendsto_atTop.2
-  intro b
-  obtain ⟨N, hN⟩ := exists_nat_ge b
-  exact (eventually_ge_atTop N).mono fun n hn ↦ calc
-    b ≤ (N : ℤ) := hN
-    _ ≤ (n : ℤ) := by exact_mod_cast hn
-    _ ≤ d n := by have := hlower n; omega
+    | succ n ih =>
+      have h : (iterate f (p ^ n)).ramificationNumber <
+          (iterate f (p ^ (n + 1))).ramificationNumber := hmono (Nat.lt_succ_self n)
+      push_cast
+      omega
+  exact tendsto_atTop_atTop_of_monotone hmono.monotone fun b ↦ ⟨b.toNat, by
+    have := hlow b.toNat
+    omega⟩
 
-end LaurentSeries
+end Field
+
+end PowerSeries
