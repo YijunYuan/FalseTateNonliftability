@@ -7,6 +7,7 @@ module
 
 public import Mathlib.RingTheory.PowerSeries.Order
 public import Mathlib.RingTheory.PowerSeries.Substitution
+public import Mathlib.Tactic.LinearCombination
 
 /-!
 # Iterates, compositional inverses and conjugates of power series
@@ -35,6 +36,11 @@ Conjugation by `w` preserves composition and iterates.
   `f^{∘(m * n)} = (f^{∘m})^{∘n}`.
 * `PowerSeries.coeff_one_iterate`: the linear coefficient of `f^{∘n}` is the `n`-th power of the
   linear coefficient of `f`.
+* `PowerSeries.coeff_subst_eq_sum`, `PowerSeries.coeff_subst_sub_coeff_of_dvd_inner`,
+  `PowerSeries.coeff_subst_sub_coeff_of_dvd_outer`, `PowerSeries.coeff_iterate_sub_X`: low-degree
+  coefficients of `f ∘ g` and `f^{∘n}` when `f` or `g` is `X` modulo `X ^ N`.
+* `PowerSeries.continuous_subst_of_constantCoeff_zero`: over a discrete ring, `f ↦ f ∘ a` is
+  continuous for the topology of coefficientwise convergence.
 * `PowerSeries.subst_compInv_right`, `PowerSeries.subst_compInv_left`:
   `w ∘ w^{∘-1} = w^{∘-1} ∘ w = X`.
 * `PowerSeries.map_iterate`, `PowerSeries.map_compInv`, `PowerSeries.map_conj`: compatibility
@@ -78,7 +84,90 @@ theorem coeff_one_subst {f : R⟦X⟧} (hf : f.constantCoeff = 0) (g : R⟦X⟧)
     rw [coeff_one_pow, hf, smul_eq_mul]
     rcases d with _ | _ | d <;> simp_all
 
+open scoped WithPiTopology in
+/-- Over a discrete ring, `f ↦ f ∘ a` is continuous for the topology of coefficientwise
+convergence if `a(0) = 0`. -/
+theorem continuous_subst_of_constantCoeff_zero [TopologicalSpace R] [DiscreteTopology R]
+    {a : R⟦X⟧} (ha : a.constantCoeff = 0) : Continuous (fun f : R⟦X⟧ ↦ f.subst a) := by
+  obtain rfl := DiscreteTopology.eq_bot (α := R)
+  let : UniformSpace R := ⊥
+  exact MvPowerSeries.continuous_subst (HasSubst.of_constantCoeff_zero' ha).const
+
 end Subst
+
+/-! ### Coefficients of compositions -/
+
+section Coefficients
+
+/-- If `g(0) = 0`, then the coefficient of `X ^ e` in `g ^ d` vanishes for `e < d`. -/
+theorem coeff_pow_eq_zero_of_lt {g : R⟦X⟧} (hg : g.constantCoeff = 0) {d e : ℕ} (h : e < d) :
+    (g ^ d).coeff e = 0 := by
+  obtain ⟨a, rfl⟩ := X_dvd_iff.mpr hg
+  rw [mul_pow]
+  exact X_pow_dvd_iff.mp (dvd_mul_right _ _) e h
+
+/-- If `g(0) = 0`, then the coefficient of `X ^ d` in `g ^ d` is `g'(0) ^ d`. -/
+theorem coeff_pow_self {g : R⟦X⟧} (hg : g.constantCoeff = 0) (d : ℕ) :
+    (g ^ d).coeff d = g.coeff 1 ^ d := by
+  obtain ⟨a, rfl⟩ := X_dvd_iff.mpr hg
+  simp [mul_pow, coeff_X_pow_mul']
+
+/-- If `g(0) = 0`, then `[X ^ e] (f ∘ g) = ∑_{d ≤ e} [X ^ d] f · [X ^ e] g ^ d`. -/
+theorem coeff_subst_eq_sum {g : R⟦X⟧} (hg : g.constantCoeff = 0) (f : R⟦X⟧) (e : ℕ) :
+    coeff e (f.subst g) = ∑ d ∈ Finset.range (e + 1), f.coeff d * (g ^ d).coeff e := by
+  rw [coeff_subst' (.of_constantCoeff_zero' hg)]
+  simp only [smul_eq_mul]
+  refine finsum_eq_finsetSum_of_support_subset _ fun d hd ↦ Finset.mem_range.mpr ?_
+  by_contra h
+  exact hd (by simp only [coeff_pow_eq_zero_of_lt hg (show e < d by omega), mul_zero])
+
+/-- If `g(0) = 0` and `X ^ N ∣ g - X`, then `X ^ (N + n) ∣ g ^ (n + 1) - X ^ (n + 1)`. -/
+theorem X_pow_dvd_pow_sub_X_pow {g : R⟦X⟧} (hg : g.constantCoeff = 0) {N : ℕ}
+    (hN : X ^ N ∣ g - X) (n : ℕ) : X ^ (N + n) ∣ g ^ (n + 1) - X ^ (n + 1) := by
+  induction n with
+  | zero => simpa using hN
+  | succ n ih =>
+    have h : g ^ (n + 2) - X ^ (n + 2) = (g ^ (n + 1) - X ^ (n + 1)) * g +
+        X ^ (n + 1) * (g - X) := by ring
+    rw [h, show N + (n + 1) = N + n + 1 by omega]
+    refine dvd_add ?_ ?_
+    · rw [pow_succ]
+      exact mul_dvd_mul ih (X_dvd_iff.mpr hg)
+    · rw [show N + n + 1 = (n + 1) + N by omega, pow_add]
+      exact mul_dvd_mul dvd_rfl hN
+
+/-- If `g(0) = 0` and `g ≡ X mod X ^ N`, then
+`[X ^ e] (f ∘ g) - [X ^ e] f = f'(0) · [X ^ e] (g - X)` for `1 ≤ e ≤ N`. -/
+theorem coeff_subst_sub_coeff_of_dvd_inner {g : R⟦X⟧} (hg : g.constantCoeff = 0) {N : ℕ}
+    (hN : X ^ N ∣ g - X) (f : R⟦X⟧) {e : ℕ} (he₁ : 1 ≤ e) (he : e ≤ N) :
+    coeff e (f.subst g) - f.coeff e = f.coeff 1 * (g - X).coeff e := by
+  have hf : f.coeff e = ∑ d ∈ Finset.range (e + 1), f.coeff d * (X ^ d : R⟦X⟧).coeff e := by
+    simp [coeff_X_pow, eq_comm (a := e)]
+  rw [coeff_subst_eq_sum hg, hf, ← Finset.sum_sub_distrib, Finset.sum_eq_single 1]
+  · rw [pow_one, pow_one, ← mul_sub, ← map_sub]
+  · intro d _ hd₁
+    obtain rfl | hd₀ := eq_or_ne d 0
+    · simp
+    · have h := X_pow_dvd_pow_sub_X_pow hg hN (d - 1)
+      rw [Nat.sub_add_cancel (by omega)] at h
+      rw [← mul_sub, ← map_sub, X_pow_dvd_iff.mp h e (by omega), mul_zero]
+  · simp only [Finset.mem_range]
+    omega
+
+/-- If `g(0) = 0` and `f ≡ X mod X ^ N`, then
+`[X ^ N] (f ∘ g) - [X ^ N] g = [X ^ N] (f - X) · g'(0) ^ N`. -/
+theorem coeff_subst_sub_coeff_of_dvd_outer {g : R⟦X⟧} (hg : g.constantCoeff = 0)
+    {f : R⟦X⟧} {N : ℕ} (hN : X ^ N ∣ f - X) :
+    coeff N (f.subst g) - g.coeff N = (f - X).coeff N * g.coeff 1 ^ N := by
+  have hs : HasSubst g := .of_constantCoeff_zero' hg
+  have h : coeff N ((f - X).subst g) = (f - X).coeff N * g.coeff 1 ^ N := by
+    rw [coeff_subst_eq_sum hg, Finset.sum_eq_single N, coeff_pow_self hg]
+    · intro d hd hdN
+      rw [X_pow_dvd_iff.mp hN d (by have := Finset.mem_range.mp hd; omega), zero_mul]
+    · simp
+  rw [← h, subst_sub hs, subst_X hs, map_sub]
+
+end Coefficients
 
 section Iterate
 
@@ -158,6 +247,27 @@ theorem two_le_order_iterate_sub_X (hf : f.constantCoeff = 0) (hf' : f.coeff 1 =
   · simp [coeff_one_iterate hf, hf']
   · omega
 
+/-- If `f(0) = 0` and `f ≡ X mod X ^ N` with `N ≥ 2`, then
+`[X ^ e] (f^{∘n} - X) = n · [X ^ e] (f - X)` for `e ≤ N`. -/
+theorem coeff_iterate_sub_X (hf : f.constantCoeff = 0) {N : ℕ} (hN₂ : 2 ≤ N)
+    (hN : X ^ N ∣ f - X) (n : ℕ) {e : ℕ} (he : e ≤ N) :
+    (iterate f n - X).coeff e = (n : R) * (f - X).coeff e := by
+  induction n generalizing e with
+  | zero => simp
+  | succ n ih =>
+    rw [iterate_succ]
+    obtain rfl | he₀ := eq_or_ne e 0
+    · simp [constantCoeff_subst_of_constantCoeff_zero' hf, constantCoeff_iterate hf, hf]
+    have hlin : f.coeff 1 = 1 := by
+      have h := X_pow_dvd_iff.mp hN 1 (by omega)
+      rwa [map_sub, coeff_one_X, sub_eq_zero] at h
+    have h := coeff_subst_sub_coeff_of_dvd_inner hf hN (iterate f n) (by omega) he
+    rw [coeff_one_iterate hf, hlin, one_pow, one_mul] at h
+    have h' := ih he
+    rw [map_sub] at h' ⊢
+    push_cast
+    linear_combination h + h'
+
 /-- `φ(f^{∘n}) = φ(f)^{∘n}` for a ring homomorphism `φ` applied to the coefficients. -/
 theorem map_iterate (φ : R →+* S) (hf : HasSubst f) (n : ℕ) :
     (iterate f n).map φ = iterate (f.map φ) n := by
@@ -168,6 +278,22 @@ theorem map_iterate (φ : R →+* S) (hf : HasSubst f) (n : ℕ) :
     exact map_subst hf _
 
 end Iterate
+
+section Map
+
+/-- A coefficient map preserves the vanishing of the constant coefficient. -/
+theorem constantCoeff_map_eq_zero (φ : R →+* S) {f : R⟦X⟧} (hf : f.constantCoeff = 0) :
+    (f.map φ).constantCoeff = 0 := by
+  rw [← coeff_zero_eq_constantCoeff_apply, coeff_map, coeff_zero_eq_constantCoeff_apply, hf,
+    map_zero]
+
+/-- A coefficient map preserves the invertibility of the linear coefficient. -/
+theorem isUnit_coeff_one_map (φ : R →+* S) {f : R⟦X⟧} (hf : IsUnit (f.coeff 1)) :
+    IsUnit ((f.map φ).coeff 1) := by
+  rw [coeff_map]
+  exact hf.map φ
+
+end Map
 
 section CompInv
 
@@ -249,11 +375,8 @@ theorem compInv_subst {v : R⟦X⟧} (hv : v.constantCoeff = 0) (hv' : IsUnit (v
 (Yuan, Lemma 2.1 (3)). -/
 theorem map_compInv (φ : R →+* S) (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :
     w.compInv.map φ = (w.map φ).compInv := by
-  have hmap {u : R⟦X⟧} (hu : u.constantCoeff = 0) : (u.map φ).constantCoeff = 0 := by
-    rw [← coeff_zero_eq_constantCoeff_apply, coeff_map, coeff_zero_eq_constantCoeff_apply, hu,
-      map_zero]
-  refine eq_compInv_of_subst_eq_X (hmap hw) (by rw [coeff_map]; exact hw'.map φ)
-    (.of_constantCoeff_zero' (hmap (constantCoeff_compInv w))) ?_
+  refine eq_compInv_of_subst_eq_X (constantCoeff_map_eq_zero φ hw) (isUnit_coeff_one_map φ hw')
+    (.of_constantCoeff_zero' (constantCoeff_map_eq_zero φ (constantCoeff_compInv w))) ?_
   refine (map_subst (HasSubst.compInv w) (h := φ) w).symm.trans ?_
   rw [subst_compInv_right hw hw']
   exact map_X φ

@@ -6,7 +6,7 @@ Authors: Yijun Yuan
 module
 
 public import FalseTateNonliftability.LaurentSeries.NormalForm
-public import FalseTateNonliftability.PowerSeries.PrincipalUnitPowers
+public import FalseTateNonliftability.PowerSeries.PrincipalUnits
 public import FalseTateNonliftability.Liftability.CoordinateChange
 public import FalseTateNonliftability.Liftability.FieldOfNorms
 public import FalseTateExtension.Padic.Basic
@@ -55,12 +55,11 @@ elements.
   `ℚ_p` has the same residue field as `ℚ_p`.
 * `FalseTateNonliftability.fact_natCard_residueField_spectralIntegerRing`: the residue field of a
   finite totally ramified extension of `ℚ_p` has `p` elements.
-* `FalseTateNonliftability.IsLiftable.order_coordinateFamily_series_sub_X`,
-  `FalseTateNonliftability.IsLiftable.ramificationNumber_coordinateFamily_series`,
+* `FalseTateNonliftability.IsLiftable.ramificationNumber_coordinateFamily_series`,
   `FalseTateNonliftability.IsLiftable.orderOf_coeff_one_coordinateFamily_series`,
   `FalseTateNonliftability.IsLiftable.isOfFinOrder_substEquiv_coordinateFamily_series_iff`: the
-  isomorphism `κ_L ≅ κ_F` preserves the orders of `f_{g,u} - T`, the ramification numbers, the
-  orders of the linear coefficients and the orders of the automorphisms `a ↦ a ∘ f_{g,u}`.
+  isomorphism `κ_L ≅ κ_F` preserves the ramification numbers, the orders of the linear
+  coefficients and the orders of the automorphisms `a ↦ a ∘ f_{g,u}`.
 
 ## References
 
@@ -305,21 +304,6 @@ theorem coeff_coordinateFamily_series (g : L ≃ₐ[K] L) (n : ℕ) :
   rw [coordinateFamily_series, coeff_map]
   rfl
 
-/-- The series of `g` in the coordinate family over `κ_F` is `T` if and only if `f_{g,u} = T`. -/
-theorem coordinateFamily_series_eq_X_iff (g : L ≃ₐ[K] L) :
-    (coordinateFamily p K L F u hu).series g = X ↔
-      FieldOfNorms.coordinateSeries K L u hu g = X := by
-  rw [coordinateFamily_series, ← map_X (residueFieldEquiv p K L F).toRingHom]
-  exact (map_injective _ (residueFieldEquiv p K L F).injective).eq_iff
-
-/-- `κ_L ≅ κ_F` preserves the order of `f_{g,u} - T`. -/
-theorem order_coordinateFamily_series_sub_X (g : L ≃ₐ[K] L) :
-    ((coordinateFamily p K L F u hu).series g - X).order =
-      (FieldOfNorms.coordinateSeries K L u hu g - X).order := by
-  rw [coordinateFamily, ← FieldOfNorms.coordinateFamily_series]
-  exact (FieldOfNorms.coordinateFamily K L u hu).order_map_series_sub_X
-    (φ := (residueFieldEquiv p K L F).toRingHom) (residueFieldEquiv p K L F).injective g
-
 /-- `κ_L ≅ κ_F` preserves the ramification number `v_T(f_{g,u} - T) - 1`. -/
 theorem ramificationNumber_coordinateFamily_series (g : L ≃ₐ[K] L) :
     ((coordinateFamily p K L F u hu).series g).ramificationNumber =
@@ -327,13 +311,6 @@ theorem ramificationNumber_coordinateFamily_series (g : L ≃ₐ[K] L) :
   rw [coordinateFamily_series]
   exact ramificationNumber_map (φ := (residueFieldEquiv p K L F).toRingHom)
     (residueFieldEquiv p K L F).injective _
-
-/-- The iterates of the series of the coordinate family over `κ_F` are the images of the iterates
-of `f_{g,u}`. -/
-theorem iterate_coordinateFamily_series (g : L ≃ₐ[K] L) (n : ℕ) :
-    iterate ((coordinateFamily p K L F u hu).series g) n =
-      (iterate (FieldOfNorms.coordinateSeries K L u hu g) n).map (residueFieldEquiv p K L F) :=
-  (map_iterate _ ((FieldOfNorms.coordinateFamily K L u hu).hasSubst_series g) n).symm
 
 /-- The series of `g` in the coordinate family over `κ_F` is tangent to the identity if and only
 if `f_{g,u}` is. -/
@@ -407,16 +384,16 @@ theorem isLiftable_iff_uniformizer :
     IsLiftable p K L F ↔ (IsLiftable.coordinateFamily p K L F u hu).Liftable :=
   (IsLiftable.liftable_coordinateFamily_iff p K L F _ hu).symm
 
-/-- `F`-liftability holds if and only if the coordinate family in some uniformizer of `X_K(L)` has
-a lift to `A_K`. -/
+/-- Yuan, Proposition 2.3: `F`-liftability holds if and only if the coordinate family in some
+uniformizer of `X_K(L)` has a lift to `A_K`. -/
 theorem isLiftable_iff_exists_uniformizer :
     IsLiftable p K L F ↔ ∃ (u : FieldOfNorms K L)
       (hu : FieldOfNorms.valuation K L u = WithZero.exp (-1 : ℤ)),
         (IsLiftable.coordinateFamily p K L F u hu).Liftable :=
   ⟨fun h ↦ ⟨_, _, h⟩, fun ⟨_, hu, h⟩ ↦ (isLiftable_iff_uniformizer p K L F hu).mpr h⟩
 
-/-- `F`-liftability holds if and only if the coordinate family in every uniformizer of `X_K(L)`
-has a lift to `A_K`. -/
+/-- Yuan, Proposition 2.3: `F`-liftability holds if and only if the coordinate family in every
+uniformizer of `X_K(L)` has a lift to `A_K`. -/
 theorem isLiftable_iff_forall_uniformizer :
     IsLiftable p K L F ↔ ∀ (u : FieldOfNorms K L)
       (hu : FieldOfNorms.valuation K L u = WithZero.exp (-1 : ℤ)),

@@ -5,7 +5,7 @@ Authors: Yijun Yuan
 -/
 module
 
-public import FalseTateNonliftability.CoefficientRing.CoordinateChange
+public import FalseTateNonliftability.CoefficientRing.Substitution
 public import FalseTateNonliftability.Liftability.Defs
 public import Mathlib.FieldTheory.Finite.Basic
 
@@ -27,8 +27,6 @@ uniformizer (Yuan, Proposition 2.3).
 
 ## Main results
 
-* `LaurentSeries.subst_single_natCard_eq_pow`: over a field with `q` elements, substitution of
-  `T^q` is the Frobenius `a ↦ a^q`.
 * `LaurentSeries.conj_single_natCard`: over a field with `q` elements, conjugation by a power
   series fixes `T^q`.
 * `FalseTateNonliftability.CoordinateFamily.liftable_conj_iff`: `w ∘ f ∘ w^{∘-1}` has a lift to
@@ -48,19 +46,6 @@ noncomputable section
 namespace LaurentSeries
 
 variable {k : Type*} [Field k] [Finite k]
-
-/-- Over a field with `q` elements, substitution of `T^q` is the Frobenius `a ↦ a^q`. -/
-theorem subst_single_natCard_eq_pow (a : LaurentSeries k) :
-    subst (HahnSeries.single (Nat.card k : ℤ) 1) a = a ^ Nat.card k := by
-  have : Fintype k := Fintype.ofFinite k
-  let := orderTopology k
-  have := orderTopology_isTopologicalRing (R := k)
-  have hF := subst_unique (isAdmissible_single (Nat.cast_pos.mpr Nat.card_pos) isUnit_one)
-    (FiniteField.frobeniusAlgHom k (LaurentSeries k))
-    (by rw [FiniteField.coe_frobeniusAlgHom]; exact continuous_pow _)
-    (by rw [FiniteField.frobeniusAlgHom_apply, HahnSeries.single_pow, one_pow, nsmul_one,
-      Nat.card_eq_fintype_card (α := k)])
-  rw [← hF, FiniteField.frobeniusAlgHom_apply, Nat.card_eq_fintype_card (α := k)]
 
 /-- Over a field with `q` elements, conjugation by a power series `w` with `w(0) = 0` and
 `w'(0) ≠ 0` fixes the Frobenius: `w ∘ T^q ∘ w^{∘-1} = T^q`. -/

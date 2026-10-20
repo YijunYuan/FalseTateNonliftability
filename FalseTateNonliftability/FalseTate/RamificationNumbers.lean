@@ -320,13 +320,6 @@ theorem kummerRamificationLimit_mul_add_one :
   rw [kummerRamificationLimit, mul_assoc, Ring.inverse_mul_cancel _ (isUnit_natCast_add_one p),
     mul_one]
 
-/-- `kummerRamificationLimit p = (p - 1)/(p + 1)` in `ℚ_p`. -/
-theorem coe_kummerRamificationLimit :
-    (kummerRamificationLimit p : ℚ_[p]) = ((p : ℚ_[p]) - 1) / ((p : ℚ_[p]) + 1) := by
-  have h := congrArg ((↑) : ℤ_[p] → ℚ_[p]) (kummerRamificationLimit_mul_add_one p)
-  push_cast at h
-  rw [eq_div_iff (Nat.cast_add_one_ne_zero p), h]
-
 /-- `d_k - (p - 1)/(p + 1) = 2 p^{2k+2}/(p + 1)`. -/
 private theorem kummerRamificationBreak_sub_kummerRamificationLimit (k : ℕ) :
     (kummerRamificationBreak p k : ℤ_[p]) - kummerRamificationLimit p =

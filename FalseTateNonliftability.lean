@@ -6,49 +6,12 @@ Authors: Yijun Yuan
 module
 
 public import FalseTateNonliftability.Mathlib
-public import FalseTateNonliftability.LaurentSeries.Admissible
-public import FalseTateNonliftability.LaurentSeries.ApproximateInvariants
-public import FalseTateNonliftability.LaurentSeries.CharacteristicP
-public import FalseTateNonliftability.LaurentSeries.CoefficientMap
-public import FalseTateNonliftability.LaurentSeries.Derivative
-public import FalseTateNonliftability.LaurentSeries.Evaluation
-public import FalseTateNonliftability.LaurentSeries.EvaluationContinuity
-public import FalseTateNonliftability.LaurentSeries.ExactDifferentialLimit
-public import FalseTateNonliftability.LaurentSeries.FrobeniusKernel
-public import FalseTateNonliftability.LaurentSeries.InvariantExactDifferential
-public import FalseTateNonliftability.LaurentSeries.IterateGrowth
-public import FalseTateNonliftability.LaurentSeries.NilpotentPower
-public import FalseTateNonliftability.LaurentSeries.NormalForm
-public import FalseTateNonliftability.LaurentSeries.OrderTopology
-public import FalseTateNonliftability.LaurentSeries.PowerSeriesEval
-public import FalseTateNonliftability.LaurentSeries.PrimitiveNormalization
-public import FalseTateNonliftability.LaurentSeries.PrincipalQuotient
-public import FalseTateNonliftability.LaurentSeries.Substitution
-public import FalseTateNonliftability.LaurentSeries.Taylor
-public import FalseTateNonliftability.LaurentSeries.TruncationDensity
-public import FalseTateNonliftability.PowerSeries.PrincipalUnitIntegerPowers
-public import FalseTateNonliftability.PowerSeries.PrincipalUnitPowers
-public import FalseTateNonliftability.PowerSeries.UnitCompactness
-public import FalseTateNonliftability.PowerSeries.UnitRigidity
-public import FalseTateNonliftability.CoefficientRing.CoordinateChange
-public import FalseTateNonliftability.CoefficientRing.DiscreteValuation
-public import FalseTateNonliftability.CoefficientRing.FiniteObstruction
-public import FalseTateNonliftability.CoefficientRing.Graded
-public import FalseTateNonliftability.CoefficientRing.LocalRing
-public import FalseTateNonliftability.CoefficientRing.NormalizedDerivative
-public import FalseTateNonliftability.CoefficientRing.Quotient
-public import FalseTateNonliftability.CoefficientRing.Substitution
-public import FalseTateNonliftability.CoefficientRing.TopLevelObstruction
-public import FalseTateNonliftability.CoefficientRing.Truncation
-public import FalseTateNonliftability.CoefficientRing.ValuationBound
-public import FalseTateNonliftability.Liftability.CoordinateChange
-public import FalseTateNonliftability.Liftability.CoordinateFamily
-public import FalseTateNonliftability.Liftability.Defs
-public import FalseTateNonliftability.Liftability.FieldOfNorms
-public import FalseTateNonliftability.Liftability.IsLiftable
-public import FalseTateNonliftability.FalseTate.Main
-public import FalseTateNonliftability.FalseTate.RamificationNumbers
-public import FalseTateNonliftability.FalseTate.TameGenerator
+public import FalseTateNonliftability.LaurentSeries
+public import FalseTateNonliftability.PowerSeries
+public import FalseTateNonliftability.Differential
+public import FalseTateNonliftability.CoefficientRing
+public import FalseTateNonliftability.Liftability
+public import FalseTateNonliftability.FalseTate
 
 /-!
 # Non-liftability of the field of norms of the `p`-adic false Tate curve extension
@@ -76,7 +39,7 @@ Berger, and the obstruction already occurs modulo `𝔪_F ^ (e + 1)`, where `e =
   `ℚ_p^FT`) and `FalseTateNonliftability.not_finiteLiftable_falseTateExtension` (for
   `ℚ_p(π^{1/p^∞}, ζ_{p^∞})` and any uniformizer `π` of `ℚ_p`), in `FalseTate/Main`. The abstract
   form over a discrete valuation ring is `FalseTateNonliftability.Truncation.false_of_commute`
-  (`CoefficientRing/FiniteObstruction`).
+  (`CoefficientRing/Obstruction`).
 * Yuan, Proposition 2.3: `FalseTateNonliftability.isLiftable_iff_uniformizer`,
   `FalseTateNonliftability.isLiftable_iff_exists_uniformizer`,
   `FalseTateNonliftability.isLiftable_iff_forall_uniformizer`,

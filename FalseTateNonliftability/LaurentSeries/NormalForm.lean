@@ -7,9 +7,10 @@ module
 
 public import FalseTateNonliftability.LaurentSeries.Taylor
 public import FalseTateNonliftability.Mathlib.RingTheory.PowerSeries.Composition
+public import Mathlib.GroupTheory.OrderOfElement
 
 /-!
-# Ramification numbers and normal forms
+# Ramification numbers, normal forms and their growth under `p`-th powers
 
 Let `k` be a field and let `f ∈ T k⟦T⟧` have invertible linear coefficient, so that
 `σ : x ↦ x(f)` is a continuous automorphism of `k((T))` with `σ T = f`. The ramification number
@@ -23,6 +24,10 @@ which is smaller than `(p + 1) d`. Consequently, if `d = i(σ) ≡ -1 (mod p)` a
 `i(σ ^ p) ≥ (p + 1) d`, the coefficients of `σ T` in degrees `d + 2, …, 2 d` can be removed one
 by one by the coordinate changes `T' = T + t T ^ q`, and in a suitable uniformizer
 `σ T = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ≠ 0`.
+
+For every `f = T + O(T ^ 2)` in characteristic `p`, `i(σ ^ p) ≥ p i(σ)`. If `σ` has infinite
+order, then `σ ^ n ≠ 1` for every `n > 0`, so the ramification numbers `d_n = i(σ ^ (p ^ n))` are
+positive integers; they satisfy `d_(n+1) ≥ p d_n`, hence strictly increase and tend to infinity.
 
 ## Main definitions
 
@@ -40,47 +45,31 @@ by one by the coordinate changes `T' = T + t T ^ q`, and in a suitable uniformiz
   determines `i(σ ^ p)` (Yuan, Lemma 3.3).
 * `PowerSeries.exists_normalForm`: the normal form `T + α T ^ (d + 1) + O(T ^ (2 d + 1))`
   (Yuan, Theorem 3.4).
+* `PowerSeries.mul_ramificationNumber_le_ramificationNumber_iterate`: `p i(σ) ≤ i(σ ^ p)`.
+* `PowerSeries.one_le_ramificationNumber_iterate`: `i(σ ^ n) ≥ 1` for `n > 0` if `σ` has infinite
+  order.
+* `PowerSeries.strictMono_ramificationNumber_iterate_pow`: `n ↦ i(σ ^ (p ^ n))` is strictly
+  increasing.
+* `PowerSeries.tendsto_ramificationNumber_iterate_pow_atTop`: `i(σ ^ (p ^ n)) → ∞`.
 
 ## References
 
-* Yuan, §3.2: the ramification number, Lemma 3.3 and Theorem 3.4.
+* Yuan, §3.2: the ramification number, Lemma 3.3 and Theorem 3.4; proof of Lemma 4.2.
 -/
 
 @[expose] public section
 
 noncomputable section
 
+/-! ### Normal forms -/
+
+section NormalForm
+
 namespace LaurentSeries
 
 section CommRing
 
 variable {R : Type*} [CommRing R]
-
-/-- A power series without constant term is `O(T)`. -/
-theorem ofPowerSeries_mem_orderAddSubgroup_one {f : PowerSeries R} (hf : f.constantCoeff = 0) :
-    HahnSeries.ofPowerSeries ℤ R f ∈ orderAddSubgroup 1 := by
-  rw [mem_orderAddSubgroup_iff_coeff]
-  intro j hj
-  rw [PowerSeries.coeff_coe]
-  by_cases hj0 : j < 0
-  · rw [ite_eq_left hj0]
-  · obtain rfl : j = 0 := by omega
-    simpa only [lt_self_iff_false, ite_false, Int.natAbs_zero,
-      PowerSeries.coeff_zero_eq_constantCoeff_apply] using hf
-
-/-- A power series `f` without constant term is `f'(0) T + O(T ^ 2)`. -/
-theorem ofPowerSeries_sub_linear_mem_two {f : PowerSeries R} (hf : f.constantCoeff = 0) :
-    HahnSeries.ofPowerSeries ℤ R f - HahnSeries.single (1 : ℤ) (f.coeff 1) ∈
-      orderAddSubgroup 2 := by
-  rw [mem_orderAddSubgroup_iff_coeff]
-  intro j hj
-  rw [HahnSeries.coeff_sub]
-  by_cases hj1 : j = 1
-  · subst j
-    simp only [show (1 : ℤ) = ((1 : ℕ) : ℤ) from rfl, HahnSeries.ofPowerSeries_apply_coeff,
-      HahnSeries.coeff_single_same, sub_self]
-  · rw [(mem_orderAddSubgroup_iff_coeff 1 _).mp (ofPowerSeries_mem_orderAddSubgroup_one hf) j
-      (by omega), HahnSeries.coeff_single_of_ne hj1, sub_self]
 
 private theorem constantCoeff_eq_zero_and_coeff_one_eq_one {f : PowerSeries R}
     (h : HahnSeries.ofPowerSeries ℤ R f - HahnSeries.single (1 : ℤ) 1 ∈ orderAddSubgroup 2) :
@@ -92,28 +81,6 @@ private theorem constantCoeff_eq_zero_and_coeff_one_eq_one {f : PowerSeries R}
     PowerSeries.coeff_zero_eq_constantCoeff_apply, zero_ne_one, sub_zero] at h0
   simp only [Int.reduceLT, ite_false, Int.natAbs_one, ite_true, sub_eq_zero] at h1
   exact ⟨h0, h1⟩
-
-private theorem sub_single_coeff_mem {x : LaurentSeries R} {m : ℤ}
-    (hx : x ∈ orderAddSubgroup m) :
-    x - HahnSeries.single m (x.coeff m) ∈ orderAddSubgroup (m + 1) := by
-  rw [mem_orderAddSubgroup_iff_coeff]
-  intro j hj
-  rw [HahnSeries.coeff_sub]
-  by_cases hjm : j = m
-  · subst j
-    rw [HahnSeries.coeff_single_same, sub_self]
-  · rw [(mem_orderAddSubgroup_iff_coeff m x).mp hx j (by omega),
-      HahnSeries.coeff_single_of_ne hjm, sub_self]
-
-private theorem pow_mem_orderAddSubgroup {x : LaurentSeries R} {m : ℤ}
-    (hx : x ∈ orderAddSubgroup m) (n : ℕ) : x ^ n ∈ orderAddSubgroup (n * m) := by
-  induction n with
-  | zero =>
-    simpa only [pow_zero, Nat.cast_zero, zero_mul, map_one] using
-      ofPowerSeries_mem_orderAddSubgroup_zero (1 : PowerSeries R)
-  | succ n ih =>
-    rw [Nat.cast_add, Nat.cast_one, add_mul, one_mul, pow_succ]
-    exact mul_mem_orderAddSubgroup ih hx
 
 end CommRing
 
@@ -617,12 +584,12 @@ theorem exists_normalForm (p : ℕ) [Fact p.Prime] [CharP k p] {f : k⟦X⟧}
     | zero =>
       refine ⟨X, constantCoeff_X, by simp, ?_⟩
       rw [conj_X hf, Nat.cast_zero, add_zero, show d + 2 = d + 1 + 1 by ring]
-      exact sub_single_coeff_mem hδ
+      exact sub_single_coeff_mem_orderAddSubgroup hδ
     | succ n ih =>
       obtain ⟨w, hw, hw', hg⟩ := ih (by omega)
       have hg0 : (conj w f).constantCoeff = 0 := constantCoeff_conj hw hf0
       have hg1 : (conj w f).coeff 1 = 1 := (coeff_one_conj hw' hf0).trans hf1
-      have htail := sub_single_coeff_mem hg
+      have htail := sub_single_coeff_mem_orderAddSubgroup hg
       set β := (HahnSeries.ofPowerSeries ℤ k (conj w f) - HahnSeries.single (1 : ℤ) 1 -
         HahnSeries.single (d + 1) α).coeff (d + 2 + n)
       have hidx : d + 2 + n + 1 = d + 2 + ((n + 1 : ℕ) : ℤ) := by push_cast; ring
@@ -655,3 +622,122 @@ theorem exists_normalForm (p : ℕ) [Fact p.Prime] [CharP k p] {f : k⟦X⟧}
 end Field
 
 end PowerSeries
+
+end NormalForm
+
+/-! ### Growth of the ramification numbers of `p`-power iterates -/
+
+section IterateGrowth
+
+namespace LaurentSeries
+
+variable {R : Type*} [CommRing R] [IsLocalRing R] [IsArtinianRing R] [IsPrincipalIdealRing R]
+
+/-- If `x ↦ x(P)` has infinite order, then `P(0) = 0` and `P'(0)` is a unit. -/
+theorem constantCoeff_eq_zero_and_isUnit_of_not_isOfFinOrder {P : PowerSeries R}
+    (h : ¬ IsOfFinOrder (substEquiv P)) : P.constantCoeff = 0 ∧ IsUnit (P.coeff 1) := by
+  by_contra hP
+  rw [substEquiv_of_not hP] at h
+  exact h IsOfFinOrder.one
+
+end LaurentSeries
+
+namespace PowerSeries
+
+open LaurentSeries Filter
+
+section Subst
+
+variable {R : Type*} [CommRing R] [IsLocalRing R] [IsArtinianRing R] [IsPrincipalIdealRing R]
+
+/-- If `x ↦ x(f)` has infinite order, then `f^{∘n} ≠ X` for every `n > 0`. -/
+theorem iterate_ne_X_of_not_isOfFinOrder {f : R⟦X⟧} (hf : ¬ IsOfFinOrder (substEquiv f))
+    {n : ℕ} (hn : 0 < n) : iterate f n ≠ X := by
+  obtain ⟨hf0, hf'⟩ := constantCoeff_eq_zero_and_isUnit_of_not_isOfFinOrder hf
+  intro h
+  refine hf (isOfFinOrder_iff_pow_eq_one.mpr ⟨n, hn, ?_⟩)
+  rw [← substEquiv_iterate hf0 hf', h, ← iterate_zero f, substEquiv_iterate hf0 hf', pow_zero]
+
+/-- If `f = T + O(T ^ 2)` and `x ↦ x(f)` has infinite order, then `f^{∘n}` has positive
+ramification number for every `n > 0`. -/
+theorem one_le_ramificationNumber_iterate {f : R⟦X⟧} (hf1 : f.coeff 1 = 1)
+    (hf : ¬ IsOfFinOrder (substEquiv f)) {n : ℕ} (hn : 0 < n) :
+    1 ≤ (iterate f n).ramificationNumber := by
+  obtain ⟨hf0, -⟩ := constantCoeff_eq_zero_and_isUnit_of_not_isOfFinOrder hf
+  exact one_le_ramificationNumber_iff.mpr ⟨iterate_ne_X_of_not_isOfFinOrder hf hn,
+    constantCoeff_iterate hf0 n, by rw [coeff_one_iterate hf0, hf1, one_pow]⟩
+
+end Subst
+
+section Field
+
+variable {k : Type*} [Field k] (p : ℕ) [Fact p.Prime] [CharP k p]
+
+private theorem ofPowerSeries_iterate_sub_X_mem {f : k⟦X⟧} (hf : 1 ≤ f.ramificationNumber) :
+    HahnSeries.ofPowerSeries ℤ k (iterate f p) - HahnSeries.single (1 : ℤ) 1 ∈
+      orderAddSubgroup (p * f.ramificationNumber + 1) := by
+  obtain ⟨-, hf0, hf1⟩ := one_le_ramificationNumber_iff.mp hf
+  have hf' : IsUnit (f.coeff 1) := hf1 ▸ isUnit_one
+  rw [ofPowerSeries_iterate hf0 hf',
+    show ⇑(substEquiv f) = LaurentSeries.subst (HahnSeries.ofPowerSeries ℤ k f) from
+      funext (substEquiv_apply hf0 hf'), ← substSubOne_pow_char_apply p, add_comm]
+  exact substSubOne_pow_mem hf (ofPowerSeries_sub_X_mem_orderAddSubgroup f) p
+    HahnSeries.orderTop_single_le
+
+/-- If `f = T + O(T ^ 2)` has ramification number `d ≥ 1` and `f^{∘p} ≠ X`, then `f^{∘p}` has
+ramification number at least `p d`: `i(σ ^ p) ≥ p i(σ)`. -/
+theorem mul_ramificationNumber_le_ramificationNumber_iterate {f : k⟦X⟧}
+    (hf : 1 ≤ f.ramificationNumber) (hfp : iterate f p ≠ X) :
+    (p : ℤ) * f.ramificationNumber ≤ (iterate f p).ramificationNumber :=
+  (le_ramificationNumber_iff hfp).mpr (ofPowerSeries_iterate_sub_X_mem p hf)
+
+/-- If `f = T + O(T ^ 2)` and `x ↦ x(f)` has infinite order, then
+`i(σ ^ (p ^ (n + 1))) ≥ p i(σ ^ (p ^ n))`. -/
+theorem mul_ramificationNumber_iterate_pow_le {f : k⟦X⟧} (hf1 : f.coeff 1 = 1)
+    (hf : ¬ IsOfFinOrder (substEquiv f)) (n : ℕ) :
+    (p : ℤ) * (iterate f (p ^ n)).ramificationNumber ≤
+      (iterate f (p ^ (n + 1))).ramificationNumber := by
+  obtain ⟨hf0, -⟩ := constantCoeff_eq_zero_and_isUnit_of_not_isOfFinOrder hf
+  have hp := (Fact.out : p.Prime).pos
+  have hne := iterate_ne_X_of_not_isOfFinOrder hf (pow_pos hp (n + 1))
+  rw [pow_succ, iterate_mul (.of_constantCoeff_zero' hf0)] at hne ⊢
+  exact mul_ramificationNumber_le_ramificationNumber_iterate p
+    (one_le_ramificationNumber_iterate hf1 hf (pow_pos hp n)) hne
+
+/-- If `f = T + O(T ^ 2)` and `x ↦ x(f)` has infinite order, then the ramification numbers
+`i(σ ^ (p ^ n))` strictly increase. -/
+theorem strictMono_ramificationNumber_iterate_pow {f : k⟦X⟧} (hf1 : f.coeff 1 = 1)
+    (hf : ¬ IsOfFinOrder (substEquiv f)) :
+    StrictMono fun n : ℕ ↦ (iterate f (p ^ n)).ramificationNumber := by
+  refine strictMono_nat_of_lt_succ fun n ↦ ?_
+  have h := mul_ramificationNumber_iterate_pow_le p hf1 hf n
+  have h1 := one_le_ramificationNumber_iterate hf1 hf (pow_pos (Fact.out : p.Prime).pos n)
+  have hp : (2 : ℤ) ≤ p := by exact_mod_cast (Fact.out : p.Prime).two_le
+  nlinarith
+
+/-- If `f = T + O(T ^ 2)` and `x ↦ x(f)` has infinite order, then the ramification numbers
+`i(σ ^ (p ^ n))` tend to infinity. -/
+theorem tendsto_ramificationNumber_iterate_pow_atTop {f : k⟦X⟧} (hf1 : f.coeff 1 = 1)
+    (hf : ¬ IsOfFinOrder (substEquiv f)) :
+    Tendsto (fun n : ℕ ↦ (iterate f (p ^ n)).ramificationNumber) atTop atTop := by
+  have hmono := strictMono_ramificationNumber_iterate_pow p hf1 hf
+  have hlow (n : ℕ) : (n : ℤ) ≤ (iterate f (p ^ n)).ramificationNumber := by
+    induction n with
+    | zero =>
+      have := one_le_ramificationNumber_iterate hf1 hf (pow_pos (Fact.out : p.Prime).pos 0)
+      push_cast
+      omega
+    | succ n ih =>
+      have h : (iterate f (p ^ n)).ramificationNumber <
+          (iterate f (p ^ (n + 1))).ramificationNumber := hmono (Nat.lt_succ_self n)
+      push_cast
+      omega
+  exact tendsto_atTop_atTop_of_monotone hmono.monotone fun b ↦ ⟨b.toNat, by
+    have := hlow b.toNat
+    omega⟩
+
+end Field
+
+end PowerSeries
+
+end IterateGrowth

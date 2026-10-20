@@ -17,10 +17,9 @@ and `f_{gh} = f_h ∘ f_g` (Yuan, Lemma 2.2). A coordinate family over a commuta
 indexed by a monoid `Γ`, is a family `(f_g)_{g ∈ Γ}` of power series with `f_g(0) = 0`, `f_g'(0)`
 a unit and `f_{gh} = f_h ∘ f_g`. Then `f_1 = T` and `f_{g ^ n} = f_g^{∘n}`.
 
-A ring homomorphism `φ : κ → κ'` applied to the coefficients gives a coordinate family over `κ'`;
-for injective `φ` it preserves the `T`-adic order of every `f_g - T`. A change of variable
-`T' = w(T)`, with `w(0) = 0` and `w'(0)` a unit, replaces `f_g` by `w ∘ f_g ∘ w^{∘-1}`
-(Yuan, Lemma 2.2 (4)).
+A ring homomorphism `φ : κ → κ'` applied to the coefficients gives a coordinate family over `κ'`.
+A change of variable `T' = w(T)`, with `w(0) = 0` and `w'(0)` a unit, replaces `f_g` by
+`w ∘ f_g ∘ w^{∘-1}` (Yuan, Lemma 2.2 (4)).
 
 ## Main definitions
 
@@ -33,11 +32,8 @@ for injective `φ` it preserves the `T`-adic order of every `f_g - T`. A change 
 
 * `FalseTateNonliftability.CoordinateFamily.series_one`: `f_1 = T`.
 * `FalseTateNonliftability.CoordinateFamily.series_pow`: `f_{g ^ n} = f_g^{∘n}`.
-* `FalseTateNonliftability.CoordinateFamily.order_map_series_sub_X`: an injective coefficient
-  map preserves the order of `f_g - T`.
-* `FalseTateNonliftability.CoordinateFamily.conj_conj`,
-  `FalseTateNonliftability.CoordinateFamily.conj_compInv_conj`: changing the variable by `w` and
-  then by `v` is changing it by `v ∘ w`, and the change by `w^{∘-1}` undoes the change by `w`.
+* `FalseTateNonliftability.CoordinateFamily.conj_compInv_conj`: the change of variable by
+  `w^{∘-1}` undoes the change by `w`.
 * `FalseTateNonliftability.CoordinateFamily.map_conj`: changes of coefficients and changes of
   variable commute.
 
@@ -122,22 +118,6 @@ def map (φ : κ →+* κ') (f : CoordinateFamily κ Γ) : CoordinateFamily κ' 
 theorem map_series (φ : κ →+* κ') (g : Γ) : (f.map φ).series g = (f.series g).map φ :=
   rfl
 
-@[simp]
-theorem map_id : f.map (RingHom.id κ) = f :=
-  rfl
-
-theorem map_map (φ : κ →+* κ') (ψ : κ' →+* κ'') : (f.map φ).map ψ = f.map (ψ.comp φ) :=
-  rfl
-
-/-- An injective coefficient map preserves the order of `f_g - T`, so it preserves the
-ramification numbers `v_T(f_g - T) - 1`. -/
-theorem order_map_series_sub_X {φ : κ →+* κ'} (hφ : Function.Injective φ) (g : Γ) :
-    ((f.map φ).series g - X).order = (f.series g - X).order := by
-  rw [map_series, ← map_X φ, ← map_sub]
-  refine le_antisymm (le_order _ _ fun i hi ↦ hφ ?_) (le_order_map φ)
-  rw [map_zero, ← coeff_map]
-  exact coeff_of_lt_order i hi
-
 end Map
 
 section Conj
@@ -164,24 +144,6 @@ theorem conj_series (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) (g : �
 theorem conj_of_not (hw : ¬(w.constantCoeff = 0 ∧ IsUnit (w.coeff 1))) : f.conj w = f := by
   simp only [conj, hw, dite_false]
 
-@[simp]
-theorem conj_X : f.conj X = f :=
-  ext fun g ↦ by
-    rw [conj_series f constantCoeff_X (by simp), PowerSeries.conj_X (f.hasSubst_series g)]
-
-/-- Changing the variable by `w` and then by `v` is changing it by `v ∘ w`. -/
-theorem conj_conj {v : κ⟦X⟧} (hv : v.constantCoeff = 0) (hv' : IsUnit (v.coeff 1))
-    (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :
-    (f.conj w).conj v = f.conj (v.subst w) := by
-  have hvw : constantCoeff (v.subst w) = 0 := by
-    rw [constantCoeff_subst_of_constantCoeff_zero' hw, hv]
-  have hvw' : IsUnit (coeff 1 (v.subst w)) := by
-    rw [coeff_one_subst hw]
-    exact hv'.mul hw'
-  refine ext fun g ↦ ?_
-  rw [conj_series _ hv hv', conj_series f hw hw', conj_series f hvw hvw',
-    PowerSeries.conj_conj hv hv' hw hw' (f.hasSubst_series g)]
-
 /-- The change of variable by `w^{∘-1}` undoes the change of variable by `w`. -/
 @[simp]
 theorem conj_compInv_conj (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :
@@ -189,14 +151,6 @@ theorem conj_compInv_conj (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) 
   ext fun g ↦ by
     rw [conj_series _ (constantCoeff_compInv w) (isUnit_coeff_one_compInv w),
       conj_series f hw hw', PowerSeries.conj_compInv_conj hw hw' (f.hasSubst_series g)]
-
-/-- The change of variable by `w` undoes the change of variable by `w^{∘-1}`. -/
-@[simp]
-theorem conj_conj_compInv (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :
-    (f.conj w.compInv).conj w = f :=
-  ext fun g ↦ by
-    rw [conj_series _ hw hw', conj_series f (constantCoeff_compInv w) (isUnit_coeff_one_compInv w),
-      PowerSeries.conj_conj_compInv hw hw' (f.hasSubst_series g)]
 
 /-- Changes of coefficients commute with changes of variable. -/
 theorem map_conj (φ : κ →+* κ') (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :

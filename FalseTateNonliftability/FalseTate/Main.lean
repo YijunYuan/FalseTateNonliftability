@@ -5,7 +5,7 @@ Authors: Yijun Yuan
 -/
 module
 
-public import FalseTateNonliftability.CoefficientRing.FiniteObstruction
+public import FalseTateNonliftability.CoefficientRing.Obstruction
 public import FalseTateNonliftability.FalseTate.RamificationNumbers
 public import FalseTateNonliftability.FalseTate.TameGenerator
 public import FalseTateNonliftability.Liftability.IsLiftable

@@ -5,14 +5,13 @@ Authors: Yijun Yuan
 -/
 module
 
-public import FalseTateNonliftability.CoefficientRing.CoordinateChange
-public import FalseTateNonliftability.CoefficientRing.Graded
-public import FalseTateNonliftability.LaurentSeries.CharacteristicP
-public import Mathlib.Algebra.CharP.CharAndCard
-public import Mathlib.FieldTheory.Finite.Basic
+public import FalseTateNonliftability.CoefficientRing.Substitution
+public import FalseTateNonliftability.LaurentSeries.Taylor
+public import FalseTateNonliftability.Mathlib.Algebra.CharP.CharAndCard
+public import FalseTateNonliftability.Mathlib.RingTheory.LaurentSeries.Derivative
 
 /-!
-# The derivative level and the normalized derivative
+# The derivative level, the normalized derivative and its valuation bound
 
 Let `O` be a discrete valuation ring with maximal ideal `𝔪` and residue field `κ`, let `p` be a
 prime with `p ≠ 0` in `O` and `κ = 𝔽_p`, and let `e = v(p)` be the absolute ramification index
@@ -34,6 +33,13 @@ Let `P ∈ R_e` reduce to `T ^ p`. Then `P' ≠ 0`, and `s = s(P)` is the unique
 
 Except for `P' ≠ 0` and `1 ≤ s(P)`, these statements are proved over every truncation `R_r`.
 
+Let `k` be a field of characteristic `p`, let `d ≥ 1` with `d ≡ -1 (mod p)`, and let
+`g = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ∈ kˣ`. If `h ∈ k((T))` satisfies
+`h ∘ g = (g')^(p - 1) h`, `h' ≠ 0` and `v_T(h') ≤ p - 2`, then `v_T(h) ≤ p - 1 - d`. Hence, if
+`P, G ∈ R_r` commute, `P` reduces to `T ^ p`, `s(P) = e`, and the reduction `f` of `G` satisfies
+`f = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ∈ κˣ`, `d ≥ 1` and `d ≡ -1 (mod p)`, then
+`v_T(h_P) ≤ p - 1 - d` (Yuan, Theorem 3.1, where `r = e`).
+
 ## Main definitions
 
 * `absoluteRamificationIdx p O`: the absolute ramification index `e = v(p)` of `O`.
@@ -52,7 +58,9 @@ Except for `P' ≠ 0` and `1 ≤ s(P)`, these statements are proved over every t
   `Truncation.exists_normalizedDerivative_eq_single_add_derivative`,
   `Truncation.derivative_normalizedDerivative_ne_zero`,
   `Truncation.order_derivative_normalizedDerivative_le`: Lemma 2.4 (3).
-* `LaurentSeries.subst_single_natCard`: over a finite field with `q` elements, `f ∘ T ^ q = f ^ q`.
+* `LaurentSeries.order_le_of_subst_eq_derivative_pow_mul`: the bound `v_T(h) ≤ p - 1 - d` over a
+  field of characteristic `p`.
+* `Truncation.order_normalizedDerivative_le`: Yuan, Theorem 3.1.
 
 ## Implementation details
 
@@ -64,46 +72,24 @@ constant. The residue field hypothesis `κ = 𝔽_p` is the instance argument
 
 ## References
 
-* Yuan, Lemma 2.4 and Definition 2.5.
+* Yuan, Lemma 2.4, Definition 2.5 and Theorem 3.1.
 -/
 
 @[expose] public section
 
 noncomputable section
 
+/-! ### The derivative level and the normalized derivative -/
+
+section NormalizedDerivative
+
+open PowerSeries (constantCoeff_map_eq_zero isUnit_coeff_one_map)
+
 open IsLocalRing (maximalIdeal ResidueField)
-
-namespace LaurentSeries
-
-/-- Over a finite field `κ` with `q` elements, substitution of `T ^ q` is the `q`-th power map:
-`f ∘ T ^ q = f ^ q`. -/
-theorem subst_single_natCard {κ : Type*} [Field κ] [Finite κ] (f : LaurentSeries κ) :
-    subst (HahnSeries.single (Nat.card κ : ℤ) (1 : κ)) f = f ^ Nat.card κ := by
-  have := Fintype.ofFinite κ
-  let := orderTopology κ
-  have := orderTopology_isTopologicalRing (R := κ)
-  have hX : FiniteField.frobeniusAlgHom κ (LaurentSeries κ) (HahnSeries.single 1 1) =
-      HahnSeries.single (Nat.card κ : ℤ) 1 := by
-    rw [FiniteField.frobeniusAlgHom_apply, HahnSeries.single_pow, one_pow, nsmul_one,
-      Nat.card_eq_fintype_card]
-  have hF : Continuous (FiniteField.frobeniusAlgHom κ (LaurentSeries κ)) := by
-    rw [FiniteField.coe_frobeniusAlgHom]
-    exact continuous_pow _
-  rw [← subst_unique (isAdmissible_single (by exact_mod_cast Nat.card_pos) isUnit_one) _ hF hX,
-    FiniteField.frobeniusAlgHom_apply, Nat.card_eq_fintype_card]
-
-end LaurentSeries
 
 namespace FalseTateNonliftability
 
 open LaurentSeries
-
-/-- A ring with `p` elements, `p` prime, has characteristic `p`. -/
-theorem charP_of_natCard_eq_prime {R : Type*} [NonAssocRing R] {p : ℕ} [Fact p.Prime]
-    (hR : Nat.card R = p) : CharP R p := by
-  have : Finite R := Nat.finite_of_card_ne_zero (hR ▸ (Fact.out : p.Prime).ne_zero)
-  have := Fintype.ofFinite R
-  exact charP_of_card_eq_prime (Nat.card_eq_fintype_card.symm.trans hR)
 
 /-- The absolute ramification index `e = v(p)` of a discrete valuation ring `O`, where `v` is the
 normalized valuation of `O`; it is `0` if `p = 0` in `O`. -/
@@ -180,7 +166,7 @@ theorem derivativeLevel_le (P : LaurentSeries (Truncation O r)) : derivativeLeve
   · exact Nat.sInf_le (by
       rwa [Set.mem_ofPred_eq, layerIdeal_eq_bot O (Nat.lt_succ_self r), Ideal.mem_bot])
 
-/-- If `P' ≠ 0`, then `s(P)` is the unique `s` with `P' ∈ Λ_s ∖ Λ_{s + 1}`. -/
+/-- If `P' ≠ 0`, then `s(P)` is the unique `s` with `P' ∈ Λ_s ∖ Λ_{s + 1}` (Yuan, Lemma 2.4). -/
 theorem derivativeLevel_eq_iff {P : LaurentSeries (Truncation O r)}
     (h : derivative (Truncation O r) P ≠ 0) {s : ℕ} :
     derivativeLevel P = s ↔ derivative (Truncation O r) P ∈ layerIdeal O r s ∧
@@ -195,16 +181,6 @@ theorem derivativeLevel_eq_iff {P : LaurentSeries (Truncation O r)}
     exact ht (layerIdeal_antitone O r (Nat.succ_le_of_lt hts) hs)
 
 end LocalRing
-
-private theorem constantCoeff_map_eq_zero {R S : Type*} [CommRing R] [CommRing S] (φ : R →+* S)
-    {H : PowerSeries R} (hH : H.constantCoeff = 0) : (H.map φ).constantCoeff = 0 := by
-  rw [← PowerSeries.coeff_zero_eq_constantCoeff_apply, PowerSeries.coeff_map,
-    PowerSeries.coeff_zero_eq_constantCoeff_apply, hH, map_zero]
-
-private theorem isUnit_coeff_one_map {R S : Type*} [CommRing R] [CommRing S] (φ : R →+* S)
-    {H : PowerSeries R} (hl : IsUnit (H.coeff 1)) : IsUnit ((H.map φ).coeff 1) := by
-  rw [PowerSeries.coeff_map]
-  exact hl.map φ
 
 section DiscreteValuationRing
 
@@ -247,7 +223,7 @@ theorem derivativeLevel_conj {P : LaurentSeries (Truncation O r)} (hP : IsAdmiss
 private theorem layer_subst (G : LaurentSeries (Truncation O r)) {j : ℕ}
     {X : LaurentSeries (Truncation O r)} (hX : X ∈ layerIdeal O r j) :
     layer j (subst G X) = subst (mapRingHom (residue O r) G) (layer j X) :=
-  layer_algHom _ _ (mapRingHom_subst' (residue O r) G) hX
+  layer_algHom _ _ (mapRingHom_subst (residue O r) G) hX
 
 variable (p : ℕ)
 
@@ -319,7 +295,7 @@ private theorem subst_single_eq_pow (f : LaurentSeries (ResidueField O)) :
   have hκ : Nat.card (ResidueField O) = p := Fact.out
   have : Finite (ResidueField O) :=
     Nat.finite_of_card_ne_zero (hκ ▸ (Fact.out : p.Prime).ne_zero)
-  simpa only [hκ] using subst_single_natCard f
+  simpa only [hκ] using subst_single_natCard_eq_pow f
 
 /-- Yuan, Lemma 2.4 (1), equation (2.2): let `P` reduce to `T ^ p` and let `G` commute with `P`,
 `G ∘ P = P ∘ G`, where the reduction `f` of `G` lies in `T κ⟦T⟧` and has nonzero linear
@@ -340,7 +316,7 @@ theorem subst_normalizedDerivative_of_commute {P G : LaurentSeries (Truncation O
       derivative_subst hG]
   have h := congrArg (layer (derivativeLevel P)) hchain
   rw [layer_mul hDP, layer_mul (algHom_mem_layerIdeal O (subst G) hDP),
-    layer_subst G hDP, mapRingHom_subst', hP, subst_single_eq_pow, mapRingHom_derivative] at h
+    layer_subst G hDP, mapRingHom_subst, hP, subst_single_eq_pow, mapRingHom_derivative] at h
   rw [normalizedDerivative]
   apply mul_right_cancel₀ hD
   rw [← h, ← pow_sub_one_mul (Fact.out : p.Prime).ne_zero]
@@ -383,7 +359,7 @@ theorem subst_normalizedDerivative_conj {P : LaurentSeries (Truncation O r)}
       derivative_subst hPadm, mul_comm]
   have h := congrArg (layer (derivativeLevel P)) hchain
   rw [layer_mul (algHom_mem_layerIdeal O _ hDPH), layer_subst _ hDPH, layer_mul hDP,
-    mapRingHom_subst', hP, subst_single_eq_pow, mapRingHom_derivative,
+    mapRingHom_subst, hP, subst_single_eq_pow, mapRingHom_derivative,
     mapRingHom_ofPowerSeries] at h
   rw [normalizedDerivative, normalizedDerivative, derivativeLevel_conj hPadm hH hl]
   apply mul_right_cancel₀ hD
@@ -492,3 +468,111 @@ end DiscreteValuationRing
 end Truncation
 
 end FalseTateNonliftability
+
+end NormalizedDerivative
+
+/-! ### The valuation bound at derivative level `e` -/
+
+section ValuationBound
+
+open IsLocalRing (ResidueField)
+
+namespace LaurentSeries
+
+section CommRing
+
+variable {R : Type*} [CommRing R]
+
+private theorem sub_X_mem_of_normalForm {g : LaurentSeries R} {d : ℤ} (hd : 1 ≤ d) {α : R}
+    (hg : g - HahnSeries.single (1 : ℤ) 1 - HahnSeries.single (d + 1) α ∈
+      orderAddSubgroup (2 * d + 1)) :
+    g - HahnSeries.single (1 : ℤ) 1 ∈ orderAddSubgroup (d + 1) :=
+  mem_orderAddSubgroup_of_sub_single_mem (orderAddSubgroup_antitone (by omega) hg)
+
+private theorem derivative_sub_one_mem_of_normalForm (p : ℕ) [CharP R p] {g : LaurentSeries R}
+    {d : ℤ} (hdiv : (p : ℤ) ∣ d + 1) {α : R}
+    (hg : g - HahnSeries.single (1 : ℤ) 1 - HahnSeries.single (d + 1) α ∈
+      orderAddSubgroup (2 * d + 1)) :
+    derivative R g - 1 ∈ orderAddSubgroup (2 * d) := by
+  have hcast : ((d + 1 : ℤ) : R) = 0 := by
+    obtain ⟨n, hn⟩ := hdiv
+    rw [hn, Int.cast_mul, Int.cast_natCast, CharP.cast_eq_zero R p, zero_mul]
+  simpa [hcast] using derivative_mem_orderAddSubgroup _ _ hg
+
+end CommRing
+
+section Field
+
+variable {k : Type*} [Field k]
+
+/-- Let `k` have characteristic `p`, let `g = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ≠ 0`,
+`d ≥ 1` and `d ≡ -1 (mod p)`, and let `h ∈ k((T))` satisfy `h ∘ g = (g')^(p - 1) h`, `h' ≠ 0` and
+`v_T(h') ≤ p - 2`. Then `v_T(h) ≤ p - 1 - d` (Yuan, proof of Theorem 3.1). -/
+theorem order_le_of_subst_eq_derivative_pow_mul (p : ℕ) [CharP k p] {g : LaurentSeries k}
+    {d : ℤ} (hd : 1 ≤ d) (hdiv : (p : ℤ) ∣ d + 1) {α : k} (hα : α ≠ 0)
+    (hg : g - HahnSeries.single (1 : ℤ) 1 - HahnSeries.single (d + 1) α ∈
+      orderAddSubgroup (2 * d + 1))
+    {h : LaurentSeries k} (hD : derivative k h ≠ 0)
+    (hDorder : (derivative k h).order ≤ (p : ℤ) - 2)
+    (hchain : subst g h = derivative k g ^ (p - 1) * h) :
+    h.order ≤ (p : ℤ) - 1 - d := by
+  have hX := sub_X_mem_of_normalForm hd hg
+  have hXorder : (g - HahnSeries.single (1 : ℤ) 1).order = d + 1 :=
+    order_eq_of_sub_single_mem hα (orderAddSubgroup_antitone (by omega) hg)
+  have hXne : g - HahnSeries.single (1 : ℤ) 1 ≠ 0 := by
+    intro hz
+    rw [hz, HahnSeries.order_zero] at hXorder
+    omega
+  have hdiff : subst g h - h ∈ orderAddSubgroup (h.order + 2 * d) := by
+    rw [hchain, show derivative k g ^ (p - 1) * h - h = (derivative k g ^ (p - 1) - 1) * h by
+      ring, add_comm]
+    exact mul_mem_orderAddSubgroup (pow_sub_one_mem_orderAddSubgroup (by omega)
+      (derivative_sub_one_mem_of_normalForm p hdiv hg) _) (mem_orderAddSubgroup_order h)
+  have hprod : (g - HahnSeries.single (1 : ℤ) 1) * derivative k h ∈
+      orderAddSubgroup (h.order + 2 * d) := by
+    simpa only [sub_sub_cancel] using
+      sub_mem hdiff (subst_taylor_mem_orderAddSubgroup hd hX (mem_orderAddSubgroup_order h))
+  rw [mem_orderAddSubgroup, ← HahnSeries.order_eq_orderTop_of_ne_zero (mul_ne_zero hXne hD),
+    WithTop.coe_le_coe, HahnSeries.order_mul hXne hD, hXorder] at hprod
+  omega
+
+end Field
+
+end LaurentSeries
+
+namespace FalseTateNonliftability.Truncation
+
+open LaurentSeries
+
+variable {O : Type*} [CommRing O] [IsDomain O] [IsDiscreteValuationRing O] {r : ℕ}
+  (p : ℕ) [Fact p.Prime] [Fact (Nat.card (ResidueField O) = p)] [NeZero (p : O)]
+
+/-- **Theorem 3.1** (Yuan), valuation bound at level `e`. Let `p ≠ 0` in `O`, let `κ = 𝔽_p` and
+`e = v(p)`. Let `P, G ∈ (O ⧸ 𝔪 ^ (r + 1))((T))`, where `P` reduces to `T ^ p`,
+`G ∘ P = P ∘ G` and `s(P) = e`, and let the reduction `f` of `G` satisfy
+`f = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ≠ 0`, `d ≥ 1` and `d ≡ -1 (mod p)`. Then
+`v_T(h_P) ≤ p - 1 - d`. -/
+theorem order_normalizedDerivative_le {P G : LaurentSeries (Truncation O r)}
+    (hP : mapRingHom (residue O r) P = HahnSeries.single (p : ℤ) 1)
+    (hcomm : subst P G = subst G P) (hs : derivativeLevel P = absoluteRamificationIdx p O)
+    {d : ℤ} (hd : 1 ≤ d) (hdiv : (p : ℤ) ∣ d + 1) {α : ResidueField O} (hα : α ≠ 0)
+    (hG : mapRingHom (residue O r) G - HahnSeries.single (1 : ℤ) 1 -
+      HahnSeries.single (d + 1) α ∈ orderAddSubgroup (2 * d + 1)) :
+    (normalizedDerivative P).order ≤ (p : ℤ) - 1 - d := by
+  have := charP_of_natCard_eq_prime (Fact.out : Nat.card (ResidueField O) = p)
+  have hX := sub_X_mem_of_normalForm hd hG
+  have hadm : IsAdmissible G := (isAdmissible_mapRingHom_iff (residue O r) G).mp
+    (isAdmissible_of_sub_X_mem (orderAddSubgroup_antitone (by omega) hX))
+  have h1 : (mapRingHom (residue O r) G).coeff 1 ≠ 0 := by
+    have hc := (mem_orderAddSubgroup_iff_coeff _ _).mp hX 1 (by omega)
+    rw [HahnSeries.coeff_sub, HahnSeries.coeff_single_same, sub_eq_zero] at hc
+    rw [hc]
+    exact one_ne_zero
+  exact order_le_of_subst_eq_derivative_pow_mul p hd hdiv hα hG
+    (derivative_normalizedDerivative_ne_zero p hP hs)
+    (order_derivative_normalizedDerivative_le p hP hs)
+    (subst_normalizedDerivative_of_commute p hP hadm h1 hcomm)
+
+end FalseTateNonliftability.Truncation
+
+end ValuationBound

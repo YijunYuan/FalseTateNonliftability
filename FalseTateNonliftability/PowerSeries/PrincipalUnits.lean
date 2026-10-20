@@ -5,22 +5,37 @@ Authors: Yijun Yuan
 -/
 module
 
-public import FalseTateNonliftability.PowerSeries.PrincipalUnitIntegerPowers
-public import FalseTateNonliftability.LaurentSeries.OrderTopology
+public import FalseTateNonliftability.Mathlib.NumberTheory.Padics.Continuity
+public import FalseTateNonliftability.Mathlib.RingTheory.LaurentSeries.Topology
+public import FalseTateNonliftability.Mathlib.RingTheory.PowerSeries.Compactness
+public import FalseTateNonliftability.Mathlib.RingTheory.PowerSeries.Composition
+public import Mathlib.Algebra.CharP.Algebra
+public import Mathlib.Algebra.CharP.Lemmas
+public import Mathlib.Algebra.Ring.GeomSum
 public import Mathlib.NumberTheory.Padics.MahlerBasis
 public import Mathlib.NumberTheory.Padics.RingHoms
 public import Mathlib.RingTheory.PowerSeries.Binomial
+public import Mathlib.RingTheory.PowerSeries.Inverse
+public import Mathlib.RingTheory.PowerSeries.Order
 public import Mathlib.RingTheory.PowerSeries.Substitution
 public import Mathlib.Topology.Instances.ZMod
 
 /-!
-# `p`-adic powers of principal units of `κ⟦T⟧`
+# Powers of principal units of `κ⟦T⟧` in characteristic `p`
 
-Let `κ` be a field of characteristic `p`, let `z ∈ 1 + T κ⟦T⟧` be a principal unit and let
-`c ∈ ℤ_p`. The power `z ^ c := ∑ₙ (c choose n) (z - 1) ^ n` is obtained by substituting `z - 1`
-into the image in `κ⟦X⟧` of the binomial series `(1 + X) ^ c ∈ ℤ_p⟦X⟧`. It agrees with the power
-`z ^ n` for `n ∈ ℤ`, depends continuously on `c`, satisfies the exponent laws, commutes with
-substitution, and `v_T(z ^ c - 1) = p ^ v_p(c) v_T(z - 1)` for `c ≠ 0`.
+Let `κ` be a field of characteristic `p` and `z ∈ κ⟦T⟧`. Then
+`z ^ (p ^ r) - 1 = (z - 1) ^ (p ^ r)`, so `v_T(z ^ (p ^ r) - 1) = p ^ r v_T(z - 1)`; and if `z` is a
+principal unit and `p ∤ a`, then `v_T(z ^ a - 1) = v_T(z - 1)`.
+
+For a principal unit `z ∈ 1 + T κ⟦T⟧` and `c ∈ ℤ_p`, the power
+`z ^ c := ∑ₙ (c choose n) (z - 1) ^ n` is obtained by substituting `z - 1` into the image in
+`κ⟦X⟧` of the binomial series `(1 + X) ^ c ∈ ℤ_p⟦X⟧`. It agrees with the power `z ^ n` for
+`n ∈ ℤ`, depends continuously on `c`, satisfies the exponent laws, commutes with substitution,
+and `v_T(z ^ c - 1) = v_T(z - 1)` for `c ∈ ℤ_pˣ`.
+
+Let `κ` carry the discrete topology. If `κ` is finite, then for nonzero `x n ∈ κ((T))` the units
+`T ^ (-v_T(x n)) x n` of `κ⟦T⟧` have a subsequence converging to a unit. The expressions
+`u ^ (a i) (U i ∘ f) - U i` converge to `u ^ c (V ∘ f) - V` when `a i → c` in `ℤ_p` and `U i → V`.
 
 ## Main definitions
 
@@ -29,109 +44,71 @@ substitution, and `v_T(z ^ c - 1) = p ^ v_p(c) v_T(z - 1)` for `c ≠ 0`.
 
 ## Main results
 
+* `PowerSeries.order_pow_prime_pow_sub_one`: `v_T(z ^ (p ^ r) - 1) = p ^ r • v_T(z - 1)`.
+* `PowerSeries.order_pow_sub_one_of_not_dvd`: `v_T(z ^ a - 1) = v_T(z - 1)` if `z(0) = 1` and
+  `p ∤ a`.
 * `PowerSeries.principalUnitPow_natCast`, `PowerSeries.principalUnitPow_intCast`: `z ^ n` for
   `n ∈ ℤ`.
 * `PowerSeries.principalUnitPow_add`, `PowerSeries.principalUnitPow_mul_natCast`,
   `PowerSeries.principalUnitPow_mul_base`: exponent laws.
 * `PowerSeries.continuous_principalUnitPow`: `c ↦ z ^ c` is continuous.
-* `PowerSeries.order_principalUnitPow_sub_one`: `v_T(z ^ c - 1) = p ^ v_p(c) v_T(z - 1)`.
+* `PowerSeries.order_principalUnitPow_sub_one_of_isUnit`: `v_T(z ^ c - 1) = v_T(z - 1)` for
+  `c ∈ ℤ_pˣ`.
 * `PowerSeries.principalUnitPow_subst`: `z ^ c ∘ f = (z ∘ f) ^ c` for `f(0) = 0`.
+* `LaurentSeries.exists_subseq_powerSeriesPart_tendsto`: for nonzero `x n ∈ κ((T))`, the units
+  `T ^ (-v_T(x n)) x n` have a subsequence converging to a unit of `κ⟦T⟧`.
+* `PowerSeries.tendsto_principalUnitPow_mul_subst_sub_of_intCast_tendsto`: continuity of
+  `(c, U) ↦ u ^ c (U ∘ f) - U` along integer approximations of `c`.
 
 ## References
 
-* Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  Lemma 4.2, equation (4.3).
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Lemma 4.1 and Lemma 4.2, equation (4.3).
 -/
 
 @[expose] public section
 
 noncomputable section
 
-namespace HahnSeries
+/-! ### Natural powers -/
 
-/-- The order of `z ∈ R⟦T⟧` as a Laurent series is its order as a power series. -/
-theorem orderTop_ofPowerSeries {R : Type*} [Semiring R] (z : PowerSeries R) :
-    (ofPowerSeries ℤ R z).orderTop = WithTop.map (fun n : ℕ ↦ (n : ℤ)) z.order := by
-  rw [ofPowerSeries_apply, orderTop_embDomain]
-  suffices h : (toPowerSeries.symm z).orderTop = z.order by rw [h]; rfl
-  by_cases hz : z = 0
-  · simp only [hz, map_zero, orderTop_zero, PowerSeries.order_zero]
-    rfl
-  rw [← PowerSeries.coe_toNat_order hz]
-  apply orderTop_eq_of_le
-  · exact PowerSeries.coeff_order hz
-  · intro n hn
-    have hle := PowerSeries.order_le n (show PowerSeries.coeff n z ≠ 0 from hn)
-    rw [← PowerSeries.coe_toNat_order hz] at hle
-    exact_mod_cast hle
+section NatPowers
 
-end HahnSeries
+namespace PowerSeries
 
-namespace PadicInt
+variable {κ : Type*} [Field κ] {p : ℕ} [CharP κ p]
 
-variable {p : ℕ} [Fact p.Prime]
+/-- In characteristic `p`, `z ^ (p ^ r) - 1 = (z - 1) ^ (p ^ r)`. -/
+theorem pow_prime_pow_sub_one [Fact p.Prime] (z : PowerSeries κ) (r : ℕ) :
+    z ^ (p ^ r) - 1 = (z - 1) ^ (p ^ r) := by
+  have : CharP (PowerSeries κ) p := charP_of_injective_ringHom C_injective p
+  simpa using (sub_pow_char_pow (p := p) z 1 r).symm
 
-/-- The reduction `ℤ_p → ℤ/pℤ` is continuous. -/
-theorem continuous_toZMod : Continuous (toZMod : ℤ_[p] → ZMod p) := by
-  apply continuous_iff_continuousAt.mpr
-  intro x
-  have heq : ∀ᶠ y in nhds x, toZMod y = toZMod x := by
-    filter_upwards [Metric.ball_mem_nhds x zero_lt_one] with y hy
-    apply sub_eq_zero.mp
-    rw [← map_sub, ← RingHom.mem_ker, ker_toZMod, maximalIdeal_eq_span_p,
-      Ideal.mem_span_singleton]
-    exact (norm_lt_one_iff_dvd _).mp (by simpa only [Metric.mem_ball, dist_eq_norm] using hy)
-  apply tendsto_const_nhds.congr'
-  filter_upwards [heq] with y hy
-  exact hy.symm
+/-- In characteristic `p`, `v_T(z ^ (p ^ r) - 1) = p ^ r • v_T(z - 1)`. -/
+theorem order_pow_prime_pow_sub_one [Fact p.Prime] (z : PowerSeries κ) (r : ℕ) :
+    (z ^ (p ^ r) - 1).order = (p ^ r) • (z - 1).order := by
+  rw [pow_prime_pow_sub_one, order_pow]
 
-end PadicInt
+/-- If `z(0) = 1` and `p ∤ a`, then `v_T(z ^ a - 1) = v_T(z - 1)`. -/
+theorem order_pow_sub_one_of_not_dvd (z : PowerSeries κ) (hz : constantCoeff z = 1) (a : ℕ)
+    (ha : ¬ p ∣ a) : (z ^ a - 1).order = (z - 1).order := by
+  have hsum : IsUnit (∑ i ∈ Finset.range a, z ^ i) := by
+    rw [isUnit_iff_constantCoeff]
+    simpa [map_sum, hz] using
+      (isUnit_iff_ne_zero.mpr (mt (CharP.cast_eq_zero_iff κ p a).mp ha) : IsUnit (a : κ))
+  rw [← mul_geom_sum, order_mul, order_zero_of_isUnit hsum, add_zero]
+
+end PowerSeries
+
+end NatPowers
+
+/-! ### `p`-adic powers -/
+
+section PadicPowers
 
 namespace PowerSeries
 
 open scoped Topology PowerSeries.WithPiTopology
-
-section Topology
-
-variable {R : Type*} [CommRing R] [TopologicalSpace R] [DiscreteTopology R]
-
-/-- Substitution of a power series `a` with `a(0) = 0` is continuous for the `T`-adic topology. -/
-theorem continuous_subst_of_constantCoeff_zero {a : PowerSeries R} (ha : constantCoeff a = 0) :
-    Continuous (fun f : PowerSeries R ↦ (f.subst a : PowerSeries R)) := by
-  obtain rfl := DiscreteTopology.eq_bot (α := R)
-  let : UniformSpace R := ⊥
-  exact MvPowerSeries.continuous_subst (HasSubst.of_constantCoeff_zero' ha).const
-
-/-- For power series over a discrete ring, coefficientwise convergence implies convergence of
-the corresponding Laurent series in the `T`-adic topology. -/
-theorem tendsto_ofPowerSeries_orderTopology {ι : Type*} {l : Filter ι} {f : ι → PowerSeries R}
-    {g : PowerSeries R} (h : Filter.Tendsto f l (𝓝 g)) :
-    Filter.Tendsto (fun i ↦ HahnSeries.ofPowerSeries ℤ R (f i)) l
-      (@nhds (LaurentSeries R) (LaurentSeries.orderTopology R)
-        (HahnSeries.ofPowerSeries ℤ R g)) := by
-  have hc := (WithPiTopology.tendsto_iff_coeff_tendsto R f l g).mp h
-  have hfinite : ∀ N : ℕ, ∀ᶠ i in l, ∀ n < N, coeff n (f i) = coeff n g := by
-    intro N
-    induction N with
-    | zero => exact Filter.Eventually.of_forall (by intro i n hn; omega)
-    | succ N ih =>
-        have hs : ({coeff N g} : Set R) ∈ 𝓝 (coeff N g) := by
-          simp [nhds_discrete]
-        have hN : ∀ᶠ i in l, coeff N (f i) = coeff N g := by
-          simpa only [Set.mem_singleton_iff] using (hc N).eventually hs
-        filter_upwards [ih, hN] with i hi hiN n hn
-        by_cases hEq : n = N
-        · simpa only [hEq] using hiN
-        · exact hi n (by omega)
-  apply LaurentSeries.tendsto_orderTopology_iff.mpr
-  intro m
-  filter_upwards [hfinite (m.toNat + 1)] with i hi j hj
-  by_cases hjneg : j < 0
-  · simp only [coeff_coe, ite_eq_left hjneg]
-  · lift j to ℕ using le_of_not_gt hjneg
-    simpa only [HahnSeries.ofPowerSeries_apply_coeff] using hi j (by omega)
-
-end Topology
 
 variable {κ : Type*} [Field κ] {p : ℕ} [Fact p.Prime] [CharP κ p]
 
@@ -157,10 +134,6 @@ theorem constantCoeff_padicBinomialSeries (c : ℤ_[p]) :
 @[simp]
 theorem padicBinomialSeries_natCast (n : ℕ) :
     padicBinomialSeries κ (n : ℤ_[p]) = (1 + X) ^ n := by
-  simp [padicBinomialSeries]
-
-@[simp]
-theorem padicBinomialSeries_zero : padicBinomialSeries κ (0 : ℤ_[p]) = 1 := by
   simp [padicBinomialSeries]
 
 theorem padicBinomialSeries_add (c d : ℤ_[p]) :
@@ -199,15 +172,6 @@ private theorem hasSubst_sub_one (hz : constantCoeff z = 1) : HasSubst (z - 1) :
 private theorem principalUnitPow_eq_substAlgHom (hz : constantCoeff z = 1) (c : ℤ_[p]) :
     principalUnitPow z c = substAlgHom (R := κ) (hasSubst_sub_one hz) (padicBinomialSeries κ c) :=
   (congrFun (coe_substAlgHom (R := κ) (hasSubst_sub_one hz)) (padicBinomialSeries κ c)).symm
-
-@[simp]
-theorem constantCoeff_principalUnitPow (hz : constantCoeff z = 1) (c : ℤ_[p]) :
-    constantCoeff (principalUnitPow z c) = 1 := by
-  change MvPowerSeries.constantCoeff ((padicBinomialSeries κ c).subst (z - 1)) = 1
-  rw [constantCoeff_subst_of_constantCoeff_zero (by
-    change constantCoeff (z - 1) = 0
-    simp [hz])]
-  exact constantCoeff_padicBinomialSeries c
 
 @[simp]
 theorem principalUnitPow_natCast (hz : constantCoeff z = 1) (n : ℕ) :
@@ -305,17 +269,6 @@ theorem order_principalUnitPow_sub_one_of_isUnit (hz : constantCoeff z = 1) {c :
   rw [hdiff, hfactor, map_mul, substAlgHom_X, order_mul, order_zero_of_isUnit (hQ.map E),
     add_zero]
 
-/-- If `c ∈ ℤ_p` is nonzero, then `v_T(z ^ c - 1) = p ^ v_p(c) v_T(z - 1)`. -/
-theorem order_principalUnitPow_sub_one (hz : constantCoeff z = 1) {c : ℤ_[p]} (hc : c ≠ 0) :
-    (principalUnitPow z c - 1).order = (p ^ c.valuation) • (z - 1).order := by
-  let u := PadicInt.unitCoeff hc
-  have hcp : c = (u : ℤ_[p]) * ((p ^ c.valuation : ℕ) : ℤ_[p]) := by
-    simpa only [Nat.cast_pow] using PadicInt.unitCoeff_spec hc
-  have hpower : principalUnitPow z c = principalUnitPow z (u : ℤ_[p]) ^ (p ^ c.valuation) :=
-    (congrArg (principalUnitPow z) hcp).trans
-      (principalUnitPow_mul_natCast hz (u : ℤ_[p]) (p ^ c.valuation))
-  rw [hpower, order_pow_prime_pow_sub_one, order_principalUnitPow_sub_one_of_isUnit hz u.isUnit]
-
 end Algebra
 
 section Topology
@@ -353,3 +306,66 @@ theorem principalUnitPow_mul_base {z w : PowerSeries κ} (hz : constantCoeff z =
     principalUnitPow_natCast hz, principalUnitPow_natCast hw, mul_pow]
 
 end PowerSeries
+
+end PadicPowers
+
+/-! ### Limits of normalized Laurent series -/
+
+section Limits
+
+open scoped Topology PowerSeries.WithPiTopology LaurentSeries.OrderTopology
+
+namespace LaurentSeries
+
+variable {κ : Type*} [Field κ]
+
+/-- For a nonzero `x ∈ κ((T))`, the power series `T ^ (-v_T(x)) x` is a unit. -/
+theorem isUnit_powerSeriesPart {x : LaurentSeries κ} (hx : x ≠ 0) :
+    IsUnit x.powerSeriesPart := by
+  rw [PowerSeries.isUnit_iff_constantCoeff, isUnit_iff_ne_zero,
+    ← PowerSeries.coeff_zero_eq_constantCoeff_apply]
+  simpa only [powerSeriesPart_coeff, Nat.cast_zero, add_zero] using
+    HahnSeries.coeff_order_eq_zero.not.mpr hx
+
+/-- Over a finite discrete field, for nonzero `x n ∈ κ((T))` the units `T ^ (-v_T(x n)) x n` have
+a subsequence converging to a unit of `κ⟦T⟧`, both in `κ⟦T⟧` and in `κ((T))`. -/
+theorem exists_subseq_powerSeriesPart_tendsto [TopologicalSpace κ] [DiscreteTopology κ]
+    [Finite κ] (x : ℕ → LaurentSeries κ) (hx : ∀ n, x n ≠ 0) :
+    ∃ U : (PowerSeries κ)ˣ, ∃ φ : ℕ → ℕ, StrictMono φ ∧
+      Filter.Tendsto (fun n ↦ (x (φ n)).powerSeriesPart) Filter.atTop
+        (𝓝 (U : PowerSeries κ)) ∧
+      Filter.Tendsto
+        (fun n ↦ HahnSeries.ofPowerSeries ℤ κ (x (φ n)).powerSeriesPart) Filter.atTop
+        (𝓝 (HahnSeries.ofPowerSeries ℤ κ U)) := by
+  obtain ⟨V, ⟨U, hU⟩, φ, hφ, hconv⟩ :=
+    PowerSeries.exists_subseq_tendsto_of_isUnit (fun n ↦ (x n).powerSeriesPart)
+      (fun n ↦ isUnit_powerSeriesPart (hx n))
+  have hconv' : Filter.Tendsto (fun n ↦ (x (φ n)).powerSeriesPart) Filter.atTop
+      (𝓝 (U : PowerSeries κ)) := by
+    simpa only [hU, Function.comp_def] using hconv
+  exact ⟨U, φ, hφ, hconv', (continuous_ofPowerSeries.tendsto _).comp hconv'⟩
+
+end LaurentSeries
+
+namespace PowerSeries
+
+variable {κ : Type*} [Field κ] [TopologicalSpace κ] [DiscreteTopology κ] {p : ℕ} [Fact p.Prime]
+  [CharP κ p]
+
+/-- Let `u` be a principal unit of `κ⟦T⟧` and `f(0) = 0`. If integers `a i` converge to `c` in
+`ℤ_p` and `U i → V` in `κ⟦T⟧`, then `u ^ (a i) (U i ∘ f) - U i → u ^ c (V ∘ f) - V`. -/
+theorem tendsto_principalUnitPow_mul_subst_sub_of_intCast_tendsto {ι : Type*} {l : Filter ι}
+    (u : (PowerSeries κ)ˣ) (hu : constantCoeff (u : PowerSeries κ) = 1) {a : ι → ℤ} {c : ℤ_[p]}
+    (ha : Filter.Tendsto (fun i ↦ (a i : ℤ_[p])) l (𝓝 c)) {U : ι → PowerSeries κ}
+    {V : PowerSeries κ} (hU : Filter.Tendsto U l (𝓝 V)) {f : PowerSeries κ}
+    (hf : constantCoeff f = 0) :
+    Filter.Tendsto
+      (fun i ↦ ((u ^ a i : (PowerSeries κ)ˣ) : PowerSeries κ) * (U i).subst f - U i) l
+      (𝓝 (principalUnitPow (u : PowerSeries κ) c * V.subst f - V)) := by
+  simpa only [Function.comp_def] using
+    ((tendsto_principalUnitPow_of_intCast_tendsto u hu ha).mul
+      (((continuous_subst_of_constantCoeff_zero hf).tendsto V).comp hU)).sub hU
+
+end PowerSeries
+
+end Limits

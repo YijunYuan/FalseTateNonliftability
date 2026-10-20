@@ -7,7 +7,7 @@ module
 
 public import FalseTateNonliftability.LaurentSeries.Substitution
 public import FalseTateNonliftability.Mathlib.RingTheory.PowerSeries.Composition
-public import FalseTateNonliftability.PowerSeries.PrincipalUnitPowers
+public import FalseTateNonliftability.PowerSeries.PrincipalUnits
 
 /-!
 # Invariant exact differentials from two weighted identities

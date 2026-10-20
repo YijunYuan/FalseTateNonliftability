@@ -5,9 +5,9 @@ Authors: Yijun Yuan
 -/
 module
 
-public import FalseTateNonliftability.LaurentSeries.ApproximateInvariants
-public import FalseTateNonliftability.LaurentSeries.FrobeniusKernel
-public import FalseTateNonliftability.LaurentSeries.PrimitiveNormalization
+public import FalseTateNonliftability.Differential.ApproximateInvariants
+public import FalseTateNonliftability.Mathlib.NumberTheory.Padics.Continuity
+public import FalseTateNonliftability.Mathlib.RingTheory.LaurentSeries.Derivative
 
 /-!
 # The `p`-adic limit of ramification numbers and invariant exact differentials
@@ -25,8 +25,6 @@ If `p ∤ v_T(U)`, then `σ(U) - U = B ^ p` for some `B`, and the orbit sums
 
 ## Main results
 
-* `PadicInt.exists_tendsto_of_prime_mul_tendsto`: if `p x_n → b` in `ℤ_p`, then `x_n → c` with
-  `p c = b`.
 * `LaurentSeries.padic_ramification_limit_eq_of_invariant_exact_differential`: Yuan,
   Proposition 4.3.
 
@@ -41,21 +39,6 @@ If `p ∤ v_T(U)`, then `σ(U) - U = B ^ p` for some `B`, and the orbit sums
 noncomputable section
 
 open Filter Topology
-
-namespace PadicInt
-
-/-- If `p x_n` converges to `b` in `ℤ_p`, then `x_n` converges to some `c` with `p c = b`. -/
-theorem exists_tendsto_of_prime_mul_tendsto {p : ℕ} [Fact p.Prime] {x : ℕ → ℤ_[p]} {b : ℤ_[p]}
-    (h : Tendsto (fun n ↦ (p : ℤ_[p]) * x n) atTop (𝓝 b)) :
-    ∃ c : ℤ_[p], (p : ℤ_[p]) * c = b ∧ Tendsto x atTop (𝓝 c) := by
-  have hp : (p : ℤ_[p]) ≠ 0 := Nat.cast_ne_zero.mpr (Fact.out : p.Prime).ne_zero
-  have he : IsClosedEmbedding fun z : ℤ_[p] ↦ (p : ℤ_[p]) * z :=
-    (continuous_const.mul continuous_id).isClosedEmbedding fun _ _ h ↦ mul_left_cancel₀ hp h
-  obtain ⟨c, hc⟩ := he.isClosed_range.mem_of_tendsto h (Eventually.of_forall fun n ↦ ⟨x n, rfl⟩)
-  refine ⟨c, hc, he.tendsto_nhds_iff.mpr ?_⟩
-  simpa only [Function.comp_def, hc] using h
-
-end PadicInt
 
 namespace LaurentSeries
 

@@ -5,7 +5,9 @@ Authors: Yijun Yuan
 -/
 module
 
-public import FalseTateNonliftability.LaurentSeries.Admissible
+public import FalseTateNonliftability.LaurentSeries.Evaluation
+public import FalseTateNonliftability.Mathlib.RingTheory.PowerSeries.Composition
+public import Mathlib.FieldTheory.Finite.Basic
 public import Mathlib.RingTheory.HopkinsLevitzki
 public import Mathlib.RingTheory.PowerSeries.Substitution
 
@@ -44,6 +46,8 @@ preserves the order.
 * `LaurentSeries.substEquiv_symm`: the inverse of `substEquiv P` is `substEquiv` at the
   compositional inverse of `P`.
 * `LaurentSeries.order_substEquiv`: over a field, `substEquiv P` preserves the order.
+* `LaurentSeries.subst_single_natCard_eq_pow`: over a finite field with `q` elements,
+  `f(T ^ q) = f ^ q`.
 
 ## Implementation details
 
@@ -62,54 +66,13 @@ data, and no other statement refers to it.
 
 namespace LaurentSeries
 
+open scoped LaurentSeries.OrderTopology
+
 noncomputable section
 
 section CommRing
 
-variable {R S T : Type*} [CommRing R] [CommRing S] [CommRing T]
-
-/-- Coefficient maps compose. -/
-theorem mapRingHom_comp (ψ : S →+* T) (φ : R →+* S) :
-    mapRingHom (ψ.comp φ) = (mapRingHom ψ).comp (mapRingHom φ) :=
-  RingHom.ext fun _ ↦ rfl
-
-/-- On power series, the coefficient map of Laurent series is the coefficient map of power
-series. -/
-theorem mapRingHom_ofPowerSeries (φ : R →+* S) (P : PowerSeries R) :
-    mapRingHom φ (HahnSeries.ofPowerSeries ℤ R P) =
-      HahnSeries.ofPowerSeries ℤ S (PowerSeries.map φ P) := by
-  ext j
-  simp only [mapRingHom_coeff, PowerSeries.coeff_coe, PowerSeries.coeff_map]
-  split_ifs <;> simp only [map_zero]
-
-private theorem orderTop_mapRingHom_le_of_ker_le (φ : R →+* S) (ψ : R →+* T)
-    (h : RingHom.ker φ ≤ RingHom.ker ψ) (f : LaurentSeries R) :
-    (mapRingHom φ f).orderTop ≤ (mapRingHom ψ f).orderTop := by
-  apply HahnSeries.le_orderTop_iff_forall.mpr
-  intro j hj
-  rw [mapRingHom_coeff, ← RingHom.mem_ker]
-  apply h
-  rw [RingHom.mem_ker]
-  exact HahnSeries.coeff_eq_zero_of_lt_orderTop hj
-
-/-- Two coefficient maps with the same kernel give the same order. -/
-theorem orderTop_mapRingHom_eq_of_ker_eq (φ : R →+* S) (ψ : R →+* T)
-    (h : RingHom.ker φ = RingHom.ker ψ) (f : LaurentSeries R) :
-    (mapRingHom φ f).orderTop = (mapRingHom ψ f).orderTop :=
-  le_antisymm (orderTop_mapRingHom_le_of_ker_le φ ψ h.le f)
-    (orderTop_mapRingHom_le_of_ker_le ψ φ h.ge f)
-
-private theorem ofPowerSeries_mem_orderAddSubgroup_one {P : PowerSeries R}
-    (hP : P.constantCoeff = 0) : HahnSeries.ofPowerSeries ℤ R P ∈ orderAddSubgroup 1 := by
-  rw [mem_orderAddSubgroup_iff_coeff]
-  intro j hj
-  rw [PowerSeries.coeff_coe]
-  by_cases hj0 : j < 0
-  · rw [ite_eq_left hj0]
-  · have hjz : j = 0 := by omega
-    subst j
-    simpa only [lt_self_iff_false, ite_false, Int.natAbs_zero,
-      PowerSeries.coeff_zero_eq_constantCoeff_apply] using hP
+variable {R : Type*} [CommRing R]
 
 private theorem order_eq_of_coeff_ne_zero {f : LaurentSeries R} {m : ℤ} (hm : f.coeff m ≠ 0)
     (hbelow : ∀ j < m, f.coeff j = 0) : f.order = m := by
@@ -136,18 +99,6 @@ theorem order_derivative_ofPowerSeries [Nontrivial R] {H : PowerSeries R}
   apply order_ofPowerSeries_of_constantCoeff_ne_zero
   simpa only [← PowerSeries.coeff_zero_eq_constantCoeff_apply, PowerSeries.coeff_derivative,
     zero_add, Nat.cast_zero, Nat.cast_one, mul_one] using hlinear.ne_zero
-
-private theorem coeff_one_subst {P Q : PowerSeries R} (hP : P.constantCoeff = 0) :
-    PowerSeries.coeff 1 (Q.subst P) = Q.coeff 1 * P.coeff 1 := by
-  have h := congrArg PowerSeries.constantCoeff
-    (PowerSeries.derivative_subst (f := Q) (PowerSeries.HasSubst.of_constantCoeff_zero' hP))
-  have hc : PowerSeries.constantCoeff (PowerSeries.subst P (PowerSeries.derivative Q)) =
-      PowerSeries.constantCoeff (PowerSeries.derivative Q) := by
-    simpa only [PowerSeries.constantCoeff_eq, Algebra.algebraMap_self_apply] using
-      PowerSeries.constantCoeff_subst_of_constantCoeff_zero hP (PowerSeries.derivative Q)
-  rw [map_mul, hc] at h
-  simpa only [← PowerSeries.coeff_zero_eq_constantCoeff_apply, PowerSeries.coeff_derivative,
-    zero_add, Nat.cast_zero, Nat.cast_one, mul_one] using h
 
 private theorem isUnit_coeff_one_substInvOfIsUnit {P : PowerSeries R}
     (hlinear : IsUnit (P.coeff 1)) : IsUnit ((P.substInvOfIsUnit hlinear).coeff 1) := by
@@ -266,12 +217,6 @@ theorem IsAdmissible.map {G : LaurentSeries R} (hG : IsAdmissible G) (φ : R →
     IsAdmissible (mapRingHom φ G) :=
   (isAdmissible_mapRingHom_iff φ G).mpr hG
 
-/-- Admissibility is finite positive order of the image under any coefficient map to a field. -/
-theorem isAdmissible_iff_orderTop_mapRingHom {k : Type*} [Field k] (φ : R →+* k)
-    (G : LaurentSeries R) :
-    IsAdmissible G ↔ ∃ a : ℤ, 0 < a ∧ (mapRingHom φ G).orderTop = a := by
-  rw [← isAdmissible_mapRingHom_iff φ, isAdmissible_iff]
-
 end Artinian
 
 section Subst
@@ -301,7 +246,7 @@ private theorem exists_eq_add_C_mul {G : LaurentSeries R} (hG : IsAdmissible G) 
 endomorphism satisfying the chain rule. -/
 theorem exists_subst {G : LaurentSeries R} (hG : IsAdmissible G) :
     ∃ F : LaurentSeries R →ₐ[R] LaurentSeries R,
-      @Continuous _ _ (orderTopology R) (orderTopology R) F ∧
+      Continuous F ∧
         F (HahnSeries.single (1 : ℤ) (1 : R)) = G ∧
         ∀ f, derivative R (F f) = F (derivative R f) * derivative R G := by
   obtain ⟨δ, U, Y, r, a, c, hr, hδ, ha, hc, hU, hY, hUunit, rfl⟩ := exists_eq_add_C_mul hG
@@ -316,7 +261,7 @@ def subst (G : LaurentSeries R) : LaurentSeries R →ₐ[R] LaurentSeries R :=
   if hG : IsAdmissible G then Classical.choose (exists_subst hG) else AlgHom.id R _
 
 private theorem subst_spec {G : LaurentSeries R} (hG : IsAdmissible G) :
-    @Continuous _ _ (orderTopology R) (orderTopology R) (subst G) ∧
+    Continuous (subst G) ∧
       subst G (HahnSeries.single (1 : ℤ) (1 : R)) = G ∧
       ∀ f, derivative R (subst G f) = subst G (derivative R f) * derivative R G := by
   have h : subst G = Classical.choose (exists_subst hG) := dite_eq_left hG
@@ -328,12 +273,11 @@ theorem subst_of_not_isAdmissible {G : LaurentSeries R} (hG : ¬ IsAdmissible G)
   dite_eq_right hG
 
 /-- Substitution is continuous for the order topology. -/
-theorem continuous_subst (G : LaurentSeries R) :
-    @Continuous _ _ (orderTopology R) (orderTopology R) (subst G) := by
+theorem continuous_subst (G : LaurentSeries R) : Continuous (subst G) := by
   by_cases hG : IsAdmissible G
   · exact (subst_spec hG).1
   · rw [subst_of_not_isAdmissible hG, AlgHom.coe_id]
-    exact @continuous_id _ (orderTopology R)
+    exact continuous_id
 
 @[simp]
 theorem subst_X {G : LaurentSeries R} (hG : IsAdmissible G) :
@@ -354,16 +298,12 @@ theorem derivative_subst {G : LaurentSeries R} (hG : IsAdmissible G) (f : Lauren
 substitution of `G`. -/
 theorem subst_unique {G : LaurentSeries R} (hG : IsAdmissible G)
     (F : LaurentSeries R →ₐ[R] LaurentSeries R)
-    (hF : @Continuous _ _ (orderTopology R) (orderTopology R) F)
-    (hX : F (HahnSeries.single (1 : ℤ) (1 : R)) = G) : F = subst G := by
-  let := orderTopology R
-  have := orderTopology_t2Space (R := R)
-  exact continuous_algHom_ext_X F (subst G) hF (continuous_subst G)
-    (hX.trans (subst_X hG).symm)
+    (hF : Continuous F) (hX : F (HahnSeries.single (1 : ℤ) (1 : R)) = G) : F = subst G :=
+  continuous_algHom_ext_X F (subst G) hF (continuous_subst G) (hX.trans (subst_X hG).symm)
 
 /-- Substitution of the variable is the identity. -/
 theorem subst_X_left : subst (HahnSeries.single (1 : ℤ) (1 : R)) = AlgHom.id R _ :=
-  (subst_unique isAdmissible_X _ (@continuous_id _ (orderTopology R)) rfl).symm
+  (subst_unique isAdmissible_X _ continuous_id rfl).symm
 
 @[simp]
 theorem subst_X_left_apply (f : LaurentSeries R) :
@@ -387,10 +327,14 @@ theorem subst_eq_nilpotentLaurentEval {G : LaurentSeries R} (hG : IsAdmissible G
   (subst_unique hG _ (continuous_nilpotentLaurentEval ε U Y r hr hpow a c ha hc hU hY hUunit)
     ((nilpotentLaurentEval_X ε U Y r hr hpow a c ha hc hU hY hUunit).trans hdecomp.symm)).symm
 
-/-- Substitution commutes with coefficient maps: `φ(f(G)) = (φ f)(φ G)`. -/
-theorem mapRingHom_subst (φ : R →+* S) {G : LaurentSeries R} (hG : IsAdmissible G)
-    (f : LaurentSeries R) :
+/-- Substitution commutes with coefficient maps: `φ(f(G)) = (φ f)(φ G)` for every `G`. -/
+theorem mapRingHom_subst (φ : R →+* S) (G f : LaurentSeries R) :
     mapRingHom φ (subst G f) = subst (mapRingHom φ G) (mapRingHom φ f) := by
+  by_cases hG : IsAdmissible G
+  swap
+  · rw [subst_of_not_isAdmissible hG,
+      subst_of_not_isAdmissible (mt (isAdmissible_mapRingHom_iff φ G).mp hG), AlgHom.id_apply,
+      AlgHom.id_apply]
   obtain ⟨δ, U, Y, r, a, c, hr, hδ, ha, hc, hU, hY, hUunit, hdecomp⟩ := exists_eq_add_C_mul hG
   rw [subst_eq_nilpotentLaurentEval hG δ U Y r hr hδ a c ha hc hU hY hUunit hdecomp,
     subst_eq_nilpotentLaurentEval (hG.map φ) (φ δ) (mapRingHom φ U) (mapRingHom φ Y) r hr
@@ -399,14 +343,14 @@ theorem mapRingHom_subst (φ : R →+* S) {G : LaurentSeries R} (hG : IsAdmissib
       (by rw [hdecomp, map_add, map_mul, mapRingHom_C])]
   exact mapRingHom_nilpotentLaurentEval φ δ U Y r hr hδ a c ha hc hU hY hUunit f
 
-theorem semiconj_mapRingHom_subst (φ : R →+* S) {G : LaurentSeries R} (hG : IsAdmissible G) :
+theorem semiconj_mapRingHom_subst (φ : R →+* S) (G : LaurentSeries R) :
     Function.Semiconj (mapRingHom φ) (subst G) (subst (mapRingHom φ G)) :=
-  mapRingHom_subst φ hG
+  mapRingHom_subst φ G
 
-theorem mapRingHom_subst_iterate (φ : R →+* S) {G : LaurentSeries R} (hG : IsAdmissible G)
-    (n : ℕ) (f : LaurentSeries R) :
+theorem mapRingHom_subst_iterate (φ : R →+* S) (G : LaurentSeries R) (n : ℕ)
+    (f : LaurentSeries R) :
     mapRingHom φ ((subst G)^[n] f) = (subst (mapRingHom φ G))^[n] (mapRingHom φ f) :=
-  (semiconj_mapRingHom_subst φ hG).iterate_right n f
+  (semiconj_mapRingHom_subst φ G).iterate_right n f
 
 /-- Over a field, substitution of an admissible `G` multiplies a nonnegative lower bound on the
 order by the order of `G`. -/
@@ -439,14 +383,13 @@ private theorem isAdmissible_subst_of_field {k : Type*} [Field k] {G H : Laurent
 theorem IsAdmissible.subst {G H : LaurentSeries R} (hG : IsAdmissible G)
     (hH : IsAdmissible H) : IsAdmissible (LaurentSeries.subst H G) := by
   rw [← isAdmissible_mapRingHom_iff (IsLocalRing.residue R),
-    mapRingHom_subst (IsLocalRing.residue R) hH]
+    mapRingHom_subst (IsLocalRing.residue R) H]
   exact isAdmissible_subst_of_field (hG.map _) (hH.map _)
 
 /-- Composition of substitutions: `f(G)(H) = f(G(H))`. -/
 theorem subst_comp_subst {G H : LaurentSeries R} (hG : IsAdmissible G) (hH : IsAdmissible H) :
-    (subst H).comp (subst G) = subst (subst H G) := by
-  let := orderTopology R
-  exact subst_unique (hG.subst hH) _ ((continuous_subst H).comp (continuous_subst G))
+    (subst H).comp (subst G) = subst (subst H G) :=
+  subst_unique (hG.subst hH) _ ((continuous_subst H).comp (continuous_subst G))
     (by rw [AlgHom.comp_apply, subst_X hG])
 
 theorem subst_comp_subst_apply {G H : LaurentSeries R} (hG : IsAdmissible G)
@@ -550,11 +493,6 @@ theorem substEquiv_symm_apply {P : PowerSeries R} (hP : P.constantCoeff = 0)
   rw [substEquiv, dite_eq_left ⟨hP, hlinear⟩]
   rfl
 
-theorem substEquiv_toAlgHom {P : PowerSeries R} (hP : P.constantCoeff = 0)
-    (hlinear : IsUnit (P.coeff 1)) :
-    (substEquiv P).toAlgHom = subst (HahnSeries.ofPowerSeries ℤ R P) :=
-  AlgHom.ext (substEquiv_apply hP hlinear)
-
 /-- The inverse of `substEquiv P` is `substEquiv` at the compositional inverse of `P`. -/
 theorem substEquiv_symm {P : PowerSeries R} (hP : P.constantCoeff = 0)
     (hlinear : IsUnit (P.coeff 1)) :
@@ -582,22 +520,20 @@ theorem derivative_substEquiv {P : PowerSeries R} (hP : P.constantCoeff = 0)
   rw [substEquiv_apply hP hlinear, substEquiv_apply hP hlinear,
     derivative_subst (isAdmissible_ofPowerSeries hP hlinear)]
 
-theorem continuous_substEquiv (P : PowerSeries R) :
-    @Continuous _ _ (orderTopology R) (orderTopology R) (substEquiv P) := by
+theorem continuous_substEquiv (P : PowerSeries R) : Continuous (substEquiv P) := by
   by_cases h : P.constantCoeff = 0 ∧ IsUnit (P.coeff 1)
   · rw [show ⇑(substEquiv P) = subst (HahnSeries.ofPowerSeries ℤ R P) from
       funext (substEquiv_apply h.1 h.2)]
     exact continuous_subst _
   · rw [substEquiv_of_not h, AlgEquiv.coe_refl]
-    exact @continuous_id _ (orderTopology R)
+    exact continuous_id
 
-theorem continuous_substEquiv_symm (P : PowerSeries R) :
-    @Continuous _ _ (orderTopology R) (orderTopology R) (substEquiv P).symm := by
+theorem continuous_substEquiv_symm (P : PowerSeries R) : Continuous (substEquiv P).symm := by
   by_cases h : P.constantCoeff = 0 ∧ IsUnit (P.coeff 1)
   · rw [substEquiv_symm h.1 h.2]
     exact continuous_substEquiv _
   · rw [substEquiv_of_not h, AlgEquiv.refl_symm, AlgEquiv.coe_refl]
-    exact @continuous_id _ (orderTopology R)
+    exact continuous_id
 
 /-- Composition of power-series coordinates: `f ↦ f(Q(P))` is `f ↦ f(Q)` followed by
 `f ↦ f(P)`. -/
@@ -609,7 +545,7 @@ theorem substEquiv_subst {P Q : PowerSeries R} (hP : P.constantCoeff = 0)
     simpa only [PowerSeries.constantCoeff_eq] using
       PowerSeries.constantCoeff_subst_eq_zero hP Q hQ
   have h1 : IsUnit (PowerSeries.coeff 1 (Q.subst P)) := by
-    rw [coeff_one_subst hP]
+    rw [PowerSeries.coeff_one_subst hP]
     exact hQlinear.mul hPlinear
   refine AlgEquiv.ext fun f ↦ ?_
   rw [AlgEquiv.trans_apply, substEquiv_apply h0 h1, substEquiv_apply hQ hQlinear,
@@ -617,26 +553,6 @@ theorem substEquiv_subst {P Q : PowerSeries R} (hP : P.constantCoeff = 0)
     subst_comp_subst_apply (isAdmissible_ofPowerSeries hQ hQlinear)
       (isAdmissible_ofPowerSeries hP hPlinear),
     subst_ofPowerSeries hP (isAdmissible_ofPowerSeries hP hPlinear)]
-
-/-- Power-series coordinate automorphisms commute with coefficient maps. -/
-theorem mapRingHom_substEquiv (φ : R →+* S) {P : PowerSeries R} (hP : P.constantCoeff = 0)
-    (hlinear : IsUnit (P.coeff 1)) (f : LaurentSeries R) :
-    mapRingHom φ (substEquiv P f) = substEquiv (P.map φ) (mapRingHom φ f) := by
-  have hP' : (P.map φ).constantCoeff = 0 := by
-    rw [← PowerSeries.coeff_zero_eq_constantCoeff_apply, PowerSeries.coeff_map,
-      PowerSeries.coeff_zero_eq_constantCoeff_apply, hP, map_zero]
-  have hlinear' : IsUnit ((P.map φ).coeff 1) := by
-    rw [PowerSeries.coeff_map]
-    exact hlinear.map φ
-  rw [substEquiv_apply hP hlinear, substEquiv_apply hP' hlinear',
-    mapRingHom_subst φ (isAdmissible_ofPowerSeries hP hlinear), mapRingHom_ofPowerSeries]
-
-theorem mapRingHom_substEquiv_symm (φ : R →+* S) {P : PowerSeries R} (hP : P.constantCoeff = 0)
-    (hlinear : IsUnit (P.coeff 1)) (f : LaurentSeries R) :
-    mapRingHom φ ((substEquiv P).symm f) = (substEquiv (P.map φ)).symm (mapRingHom φ f) := by
-  apply (substEquiv (P.map φ)).injective
-  rw [AlgEquiv.apply_symm_apply, ← mapRingHom_substEquiv φ hP hlinear,
-    AlgEquiv.apply_symm_apply]
 
 section Field
 
@@ -717,6 +633,17 @@ theorem orderTop_substEquiv {H : PowerSeries k} (hzero : H.constantCoeff = 0)
   have hEf : substEquiv H f ≠ 0 := (map_ne_zero_iff _ (substEquiv H).injective).mpr hf
   rw [← HahnSeries.order_eq_orderTop_of_ne_zero hEf, order_substEquiv hzero hlinear,
     HahnSeries.order_eq_orderTop_of_ne_zero hf]
+
+/-- Over a finite field with `q` elements, substitution of `T ^ q` is the Frobenius `f ↦ f ^ q`. -/
+theorem subst_single_natCard_eq_pow [Finite k] (f : LaurentSeries k) :
+    subst (HahnSeries.single (Nat.card k : ℤ) 1) f = f ^ Nat.card k := by
+  have : Fintype k := Fintype.ofFinite k
+  have hF := subst_unique (isAdmissible_single (Nat.cast_pos.mpr Nat.card_pos) isUnit_one)
+    (FiniteField.frobeniusAlgHom k (LaurentSeries k))
+    (by rw [FiniteField.coe_frobeniusAlgHom]; exact continuous_pow _)
+    (by rw [FiniteField.frobeniusAlgHom_apply, HahnSeries.single_pow, one_pow, nsmul_one,
+      Nat.card_eq_fintype_card (α := k)])
+  rw [← hF, FiniteField.frobeniusAlgHom_apply, Nat.card_eq_fintype_card (α := k)]
 
 end Field
 

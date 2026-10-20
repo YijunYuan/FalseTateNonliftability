@@ -5,8 +5,8 @@ Authors: Yijun Yuan
 -/
 module
 
-public import FalseTateNonliftability.LaurentSeries.IterateGrowth
-public import FalseTateNonliftability.PowerSeries.PrincipalUnitPowers
+public import FalseTateNonliftability.LaurentSeries.NormalForm
+public import FalseTateNonliftability.PowerSeries.PrincipalUnits
 public import Mathlib.Algebra.CharP.Reduced
 public import Mathlib.FieldTheory.Perfect
 public import Mathlib.RingTheory.PowerSeries.Expand

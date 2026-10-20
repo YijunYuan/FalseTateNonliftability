@@ -8,7 +8,6 @@ module
 public import FalseTateNonliftability.LaurentSeries.Substitution
 public import Mathlib.NumberTheory.Multiplicity
 public import Mathlib.RingTheory.PowerSeries.Derivative
-public import Mathlib.Topology.Algebra.OpenSubgroup
 
 /-!
 # Taylor expansion of substitutions close to the identity
@@ -30,8 +29,6 @@ whenever `v(U') < v(g - T)`.
   (Lemma 3.2).
 * `LaurentSeries.subst_taylor_mem_orderAddSubgroup`: `f(g) - f - (g - T) f' = O(T ^ (m + 2 d))`,
   the expansion in the proof of Theorem 3.1.
-* `LaurentSeries.order_subst_sub_eq_of_not_dvd`: over a field of characteristic `p` and for
-  `α ≠ 0`, `v(x(g) - x) = v(x) + d` when `p ∤ v(x)`.
 * `LaurentSeries.exists_powerSeries_taylor_remainder`: over a field,
   `U(g) - U - (g - T) U' ∈ (g - T) ^ 2 k⟦T⟧`.
 * `LaurentSeries.order_subst_ofPowerSeries_sub_eq`: `v(U(g) - U) = v(g - T) + v(U')` when
@@ -49,6 +46,7 @@ noncomputable section
 namespace LaurentSeries
 
 open Filter
+open scoped LaurentSeries.OrderTopology
 
 section CommRing
 
@@ -75,51 +73,6 @@ private theorem sub_one_sq_dvd_zpow_sub_one_sub_mul (u : Rˣ) (j : ℤ) :
     push_cast at hv
     linear_combination ((u⁻¹ : Rˣ) : R) * hv +
       (1 + ((-(n : R) - 1) * ((u : R) - 1))) * hunit
-
-/-- A power series has no terms of negative degree. -/
-theorem ofPowerSeries_mem_orderAddSubgroup_zero (P : PowerSeries R) :
-    HahnSeries.ofPowerSeries ℤ R P ∈ orderAddSubgroup 0 := by
-  rw [mem_orderAddSubgroup_iff_coeff]
-  intro j hj
-  rw [PowerSeries.coeff_coe, ite_eq_left hj]
-
-/-- The order subgroups are closed in the order topology. -/
-theorem isClosed_orderAddSubgroup (m : ℤ) :
-    @IsClosed (LaurentSeries R) (orderTopology R) (orderAddSubgroup (R := R) m) := by
-  let := orderTopology R
-  let := orderTopology_isTopologicalAddGroup (R := R)
-  exact (orderAddSubgroup m).isClosed_of_isOpen (isOpen_orderAddSubgroup m)
-
-/-- A series `b T ^ m + O(T ^ (m + 1))` is `O(T ^ m)`. -/
-theorem mem_orderAddSubgroup_of_sub_single_mem {f : LaurentSeries R} {m : ℤ} {b : R}
-    (hf : f - HahnSeries.single m b ∈ orderAddSubgroup (m + 1)) : f ∈ orderAddSubgroup m := by
-  simpa only [sub_add_cancel] using
-    add_mem (orderAddSubgroup_antitone (show m ≤ m + 1 by omega) hf)
-      (show HahnSeries.single m b ∈ orderAddSubgroup m from HahnSeries.orderTop_single_le)
-
-/-- `f - c T ^ v(f)`, where `c` is the coefficient of `f` in degree `v(f)`, is
-`O(T ^ (v(f) + 1))`. -/
-theorem sub_leadingTerm_mem_orderAddSubgroup (f : LaurentSeries R) :
-    f - HahnSeries.single f.order (f.coeff f.order) ∈ orderAddSubgroup (f.order + 1) := by
-  rw [mem_orderAddSubgroup_iff_coeff]
-  intro j hj
-  rw [HahnSeries.coeff_sub]
-  by_cases heq : j = f.order
-  · subst j
-    rw [HahnSeries.coeff_single_same, sub_self]
-  · rw [HahnSeries.coeff_eq_zero_of_lt_order (by omega), HahnSeries.coeff_single_of_ne heq,
-      sub_self]
-
-/-- A series `b T ^ m + O(T ^ (m + 1))` with `b ≠ 0` has order `m`. -/
-theorem order_eq_of_sub_single_mem {f : LaurentSeries R} {m : ℤ} {b : R} (hb : b ≠ 0)
-    (hf : f - HahnSeries.single m b ∈ orderAddSubgroup (m + 1)) : f.order = m := by
-  have hc := (mem_orderAddSubgroup_iff_coeff (m + 1) _).mp hf m (by omega)
-  rw [HahnSeries.coeff_sub, HahnSeries.coeff_single_same, sub_eq_zero] at hc
-  have hn : f.coeff m ≠ 0 := hc ▸ hb
-  have ht : f.orderTop = (m : WithTop ℤ) := le_antisymm
-    (HahnSeries.orderTop_le_of_coeff_ne_zero hn) (mem_orderAddSubgroup_of_sub_single_mem hf)
-  exact_mod_cast (HahnSeries.order_eq_orderTop_of_ne_zero
-    (HahnSeries.ne_zero_of_coeff_ne_zero hn)).trans ht
 
 private theorem ne_zero_and_order_eq_of_orderTop_eq {f : LaurentSeries R} {m : ℤ}
     (hf : f.orderTop = (m : WithTop ℤ)) : f ≠ 0 ∧ f.order = m := by
@@ -269,8 +222,6 @@ private theorem subst_X_mul_taylor_mem (u : (PowerSeries R)ˣ) {d : ℤ}
         f - HahnSeries.single (1 : ℤ) 1 *
           HahnSeries.ofPowerSeries ℤ R ((u : PowerSeries R) - 1) * derivative R f ∈
       orderAddSubgroup (m + 2 * d) := by
-  let := orderTopology R
-  let := orderTopology_isTopologicalRing (R := R)
   let F := subst (HahnSeries.single (1 : ℤ) 1 *
     HahnSeries.ofPowerSeries ℤ R (u : PowerSeries R))
   let δ := HahnSeries.single (1 : ℤ) 1 * HahnSeries.ofPowerSeries ℤ R ((u : PowerSeries R) - 1)
@@ -415,19 +366,6 @@ end Subst
 section Field
 
 variable {k : Type*} [Field k]
-
-/-- Let `k` have characteristic `p`, let `g = T + α T ^ (d + 1) + O(T ^ (d + 2))` with `d ≥ 1` and
-`α ≠ 0`, and let `x ≠ 0` have order prime to `p`. Then `x(g) - x` has order `v(x) + d`. -/
-theorem order_subst_sub_eq_of_not_dvd (p : ℕ) [CharP k p] {g : LaurentSeries k} {d : ℤ}
-    (hd : 1 ≤ d) {α : k} (hα : α ≠ 0)
-    (hg : g - HahnSeries.single (1 : ℤ) 1 - HahnSeries.single (d + 1) α ∈
-      orderAddSubgroup (d + 2))
-    {x : LaurentSeries k} (hx : x ≠ 0) (hm : ¬ (p : ℤ) ∣ x.order) :
-    (subst g x - x).order = x.order + d :=
-  order_eq_of_sub_single_mem
-    (mul_ne_zero (mul_ne_zero (mt (CharP.intCast_eq_zero_iff k p x.order).mp hm) hα)
-      (HahnSeries.coeff_order_eq_zero.not.mpr hx))
-    (subst_sub_leadingTerm_mem hd hg (sub_leadingTerm_mem_orderAddSubgroup x))
 
 /-- For `g = T + O(T ^ 2)` and a power series `U` over a field, `U(g) - U - (g - T) U'` is
 `(g - T) ^ 2` times a power series. -/

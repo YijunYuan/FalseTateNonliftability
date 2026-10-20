@@ -6,7 +6,7 @@ Authors: Yijun Yuan
 module
 
 public import FalseTateNonliftability.LaurentSeries.Taylor
-public import FalseTateNonliftability.PowerSeries.UnitCompactness
+public import FalseTateNonliftability.PowerSeries.PrincipalUnits
 public import FalseTateNonliftability.PowerSeries.UnitRigidity
 
 /-!
