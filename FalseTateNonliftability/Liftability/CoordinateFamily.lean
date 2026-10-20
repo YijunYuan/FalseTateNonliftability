@@ -5,6 +5,7 @@ Authors: Yijun Yuan
 -/
 module
 
+public import FalseTateNonliftability.LaurentSeries.NormalForm
 public import FalseTateNonliftability.Mathlib.RingTheory.PowerSeries.Composition
 
 /-!
@@ -39,6 +40,10 @@ applied to the coefficients gives a coordinate family `φ(f)` over `κ'`. A chan
   `w^{∘-1}` undoes the change of variable by `w`.
 * `FalseTateNonliftability.CoordinateFamily.map_conj`: changes of coefficients commute with
   changes of variable.
+* `FalseTateNonliftability.CoordinateFamily.isOfFinOrder_substEquiv_series_iff`,
+  `FalseTateNonliftability.CoordinateFamily.isOfFinOrder_substEquiv_map_series_iff`: over a local
+  Artinian principal ideal ring `κ`, the automorphism `a ↦ a ∘ f_g` of `κ((T))` has finite order
+  if and only if `f_{g ^ n} = T` for some `n > 0`, and an injective coefficient map preserves this.
 
 ## Implementation notes
 
@@ -181,6 +186,50 @@ theorem map_conj (φ : κ →+* κ') (hw : w.constantCoeff = 0) (hw' : IsUnit (w
     PowerSeries.map_conj φ hw hw' (f.hasSubst_series g)]
 
 end Conj
+
+section Order
+
+open LaurentSeries
+
+variable [IsLocalRing κ] [IsArtinianRing κ] [IsPrincipalIdealRing κ] [IsLocalRing κ']
+  [IsArtinianRing κ'] [IsPrincipalIdealRing κ']
+
+/-- The substitution `a ↦ a ∘ P` is the identity exactly for `P = T`. -/
+private theorem substEquiv_eq_one_iff {P : PowerSeries κ} (hP : P.constantCoeff = 0)
+    (hP' : IsUnit (P.coeff 1)) : substEquiv P = 1 ↔ P = X := by
+  constructor
+  · intro h
+    apply HahnSeries.ofPowerSeries_injective (Γ := ℤ)
+    rw [← substEquiv_X hP hP', h, HahnSeries.ofPowerSeries_X]
+    rfl
+  · rintro rfl
+    refine AlgEquiv.ext fun a ↦ ?_
+    rw [substEquiv_apply constantCoeff_X (by simp), HahnSeries.ofPowerSeries_X,
+      subst_X_left_apply]
+    rfl
+
+/-- The automorphism `a ↦ a ∘ f_g` of `κ((T))` has finite order if and only if `f_{g ^ n} = T` for
+some `n > 0`. -/
+theorem isOfFinOrder_substEquiv_series_iff (g : Γ) :
+    IsOfFinOrder (substEquiv (f.series g)) ↔ ∃ n, 0 < n ∧ f.series (g ^ n) = X := by
+  rw [isOfFinOrder_iff_pow_eq_one]
+  refine exists_congr fun n ↦ and_congr_right fun _ ↦ ?_
+  have h0 := f.constantCoeff_series (g ^ n)
+  have h1 := f.isUnit_coeff_one_series (g ^ n)
+  rw [← substEquiv_eq_one_iff h0 h1, f.series_pow, substEquiv_iterate (f.constantCoeff_series g)
+    (f.isUnit_coeff_one_series g)]
+
+/-- For an injective ring homomorphism `φ`, the automorphism `a ↦ a ∘ φ(f_g)` has finite order if
+and only if `a ↦ a ∘ f_g` has finite order. -/
+theorem isOfFinOrder_substEquiv_map_series_iff {φ : κ →+* κ'} (hφ : Function.Injective φ)
+    (g : Γ) :
+    IsOfFinOrder (substEquiv ((f.map φ).series g)) ↔ IsOfFinOrder (substEquiv (f.series g)) := by
+  rw [isOfFinOrder_substEquiv_series_iff, isOfFinOrder_substEquiv_series_iff]
+  refine exists_congr fun n ↦ and_congr_right fun _ ↦ ?_
+  rw [map_series, ← map_X φ]
+  exact (map_injective φ hφ).eq_iff
+
+end Order
 
 end CoordinateFamily
 

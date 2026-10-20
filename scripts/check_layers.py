@@ -5,7 +5,10 @@
   (the single `.lean` file next to `lakefile.toml`) through `import` lines.
 * Every file under `<Lib>/<Layer>/` is imported by the aggregate `<Lib>/<Layer>.lean`, the root
   imports every aggregate, and a layer imports only layers listed before it.
-* The layers before `Liftability` import neither `FontaineWintenberger` nor `FalseTateExtension`.
+* The layers before `Liftability` and the abstract part of `Liftability` (`CoordinateFamily`,
+  `Defs`, `CoordinateChange`) depend neither on `FontaineWintenberger` nor on
+  `FalseTateExtension`: no module in their import closure within the library imports one of
+  these projects.
 
 Exit status 1 on any violation."""
 import pathlib, re, sys
@@ -22,6 +25,9 @@ LAYERS = ['Mathlib', 'LaurentSeries', 'PowerSeries', 'Differential', 'Coefficien
 LAYER_ORDER = {layer: i for i, layer in enumerate(LAYERS)}
 # Layers that must not depend on the two upstream projects.
 UPSTREAM_FREE = set(LAYERS[:LAYERS.index('Liftability')])
+# Further modules that must not depend on them (the abstract part of `Liftability`).
+UPSTREAM_FREE_MODULES = {f'{LIB}.Liftability.{m}'
+                         for m in ['CoordinateFamily', 'Defs', 'CoordinateChange']}
 UPSTREAM = re.compile(r'^(?:public )?import (FontaineWintenberger|FalseTateExtension)\b', re.M)
 IMPORT = re.compile(rf'^(?:public )?import ({re.escape(LIB)}\.[\w.]+)', re.M)
 
@@ -81,6 +87,30 @@ for f in sorted(SRC.rglob('*.lean')):
             bad.append(f'{f.relative_to(ROOT)} imports the later layer {m}')
     if parts[0] in UPSTREAM_FREE and UPSTREAM.search(text):
         bad.append(f'{f.relative_to(ROOT)} imports an upstream project from layer {parts[0]}')
+
+# 3. upstream-free modules: no module in the import closure imports an upstream project
+for m in sorted(UPSTREAM_FREE_MODULES):
+    if not path_of(m).exists():
+        bad.append(f'{m} is listed as upstream-free but does not exist')
+for f in sorted(SRC.rglob('*.lean')):
+    m = module(f)
+    parts = f.relative_to(SRC).parts
+    if not (parts[0] in UPSTREAM_FREE or m in UPSTREAM_FREE_MODULES):
+        continue
+    closure: set[str] = set()
+    todo = [m]
+    while todo:
+        n = todo.pop()
+        if n in closure or not path_of(n).exists():
+            continue
+        closure.add(n)
+        todo.extend(IMPORT.findall(path_of(n).read_text()))
+    for n in sorted(closure - {m}):
+        if UPSTREAM.search(path_of(n).read_text()):
+            bad.append(f'{f.relative_to(ROOT)} must be upstream-free but imports {n}, '
+                       'which imports an upstream project')
+    if m in UPSTREAM_FREE_MODULES and UPSTREAM.search(f.read_text()):
+        bad.append(f'{f.relative_to(ROOT)} must be upstream-free but imports an upstream project')
 
 for line in bad:
     print(line)

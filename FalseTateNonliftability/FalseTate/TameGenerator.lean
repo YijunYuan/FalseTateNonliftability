@@ -40,16 +40,24 @@ Proposition 5.1) by comparing the coefficients of `T^{2p}` in
 * `FalseTateNonliftability.padicCyclotomicCharacter_tameGenerator`: `χ(δ) = ω(g)`.
 * `FalseTateNonliftability.orderOf_map_toZMod_padicCyclotomicCharacter_tameGenerator`:
   `χ(δ) mod p` has order `p - 1` in `𝔽_pˣ`.
-* `FalseTateNonliftability.coeff_one_coordinateSeries_tameGenerator`: `f_{δ,u}'(0)` is the image
-  of `χ(δ) mod p` in `κ_L` (Yuan, Lemma 5.3).
-* `FalseTateNonliftability.orderOf_coeff_one_coordinateSeries_tameGenerator`: `f_{δ,u}'(0)` has
-  multiplicative order `p - 1` (Yuan, Lemma 5.3).
+* `FalseTateNonliftability.falseTateKummerFixing_mul_kummerGenerator`,
+  `FalseTateNonliftability.tameGenerator_mul_kummerGenerator`: `σ τ = τ^{χ(σ)} σ` for
+  `σ ∈ Gal(K_FT/K_Kum)`, in particular `δ τ = τ^{χ(δ)} δ` (Yuan, Lemma 1.2 (3)).
+* `FalseTateNonliftability.coeff_one_coordinateSeries_falseTateKummerFixing`,
+  `FalseTateNonliftability.coeff_one_coordinateSeries_tameGenerator`: `f_{σ,u}'(0)` is the image
+  of `χ(σ) mod p` in `κ_L`, for `σ ∈ Gal(K_FT/K_Kum)` and for `σ = δ` (Yuan, Lemma 5.3).
+* `FalseTateNonliftability.orderOf_coeff_one_coordinateSeries_falseTateKummerFixing`,
+  `FalseTateNonliftability.orderOf_coeff_one_coordinateSeries_tameGenerator`: `f_{σ,u}'(0)` has
+  multiplicative order `p - 1` if `χ(σ) mod p` has order `p - 1`, in particular for `σ = δ`
+  (Yuan, Lemma 5.3).
 
 ## Implementation notes
 
 Yuan, Lemma 1.2 (3) lets `δ` be any generator of the torsion subgroup of `Gal(K_FT/K_Kum)`. Here
-`δ` is the element with `χ(δ) = ω(g)` for a generator `g` of `𝔽_pˣ` chosen once and for all; the
-proofs use only that `χ(δ) mod p` generates `𝔽_pˣ`.
+`δ` is the element with `χ(δ) = ω(g)` for a generator `g` of `𝔽_pˣ` chosen once and for all. The
+proofs use only that `χ(δ) mod p` generates `𝔽_pˣ`, and Lemma 5.3 is also stated for every
+`σ ∈ Gal(K_FT/K_Kum)` with this property, which includes every generator of the torsion
+subgroup.
 
 ## References
 
@@ -155,15 +163,16 @@ private theorem kummerKernelEquivPadicInt_symm_natCast (N : ℕ) :
   rw [← nsmul_one, map_nsmul, toMul_nsmul]
   rfl
 
-/-- `δ τ = τ^{χ(δ)} δ` (Yuan, Lemma 1.2 (3)). -/
-private theorem tameGenerator_mul_kummerGenerator :
-    (δ p π).val * (τ p π).val = ((kummerKernelEquivPadicInt p π).symm
-      (padicCyclotomicCharacter p (π : ℚ_[p]) (δ p π).val : ℤ_[p])).toMul.val * (δ p π).val := by
-  have hb := (mem_falseTateKummerFixing_iff p (π : ℚ_[p]) _).mp (δ p π).property
+/-- `σ τ = τ^{χ(σ)} σ` for every `σ ∈ Gal(K_FT/K_Kum)`, where `τ^a` for `a ∈ ℤ_p` is the element
+of `Gal(K_FT/ℚ_p(ζ_{p^∞}))` with Kummer exponent `a` (Yuan, Lemma 1.2 (3)). -/
+theorem falseTateKummerFixing_mul_kummerGenerator (σ : falseTateKummerFixing p (π : ℚ_[p])) :
+    σ.val * (τ p π).val = ((kummerKernelEquivPadicInt p π).symm
+      (padicCyclotomicCharacter p (π : ℚ_[p]) σ.val : ℤ_[p])).toMul.val * σ.val := by
+  have hb := (mem_falseTateKummerFixing_iff p (π : ℚ_[p]) _).mp σ.property
   set t := ((kummerKernelEquivPadicInt p π).symm
-    (padicCyclotomicCharacter p (π : ℚ_[p]) (δ p π).val : ℤ_[p])).toMul
+    (padicCyclotomicCharacter p (π : ℚ_[p]) σ.val : ℤ_[p])).toMul
   have ht : padicKummerExponent p (π : ℚ_[p]) t.val =
-      padicCyclotomicCharacter p (π : ℚ_[p]) (δ p π).val :=
+      padicCyclotomicCharacter p (π : ℚ_[p]) σ.val :=
     (kummerKernelEquivPadicInt p π).apply_symm_apply _
   apply padicCoordinates_injective p (π : ℚ_[p])
   refine Prod.ext ?_ ?_
@@ -173,6 +182,13 @@ private theorem tameGenerator_mul_kummerGenerator :
     simp
   · change padicCyclotomicCharacter p (π : ℚ_[p]) _ = padicCyclotomicCharacter p (π : ℚ_[p]) _
     rw [map_mul, map_mul, (τ p π).property, t.property, mul_one, one_mul]
+
+/-- `δ τ = τ^{χ(δ)} δ`, where `τ^a` for `a ∈ ℤ_p` is the element of `Gal(K_FT/ℚ_p(ζ_{p^∞}))` with
+Kummer exponent `a` (Yuan, Lemma 1.2 (3)). -/
+theorem tameGenerator_mul_kummerGenerator :
+    (δ p π).val * (τ p π).val = ((kummerKernelEquivPadicInt p π).symm
+      (padicCyclotomicCharacter p (π : ℚ_[p]) (δ p π).val : ℤ_[p])).toMul.val * (δ p π).val :=
+  falseTateKummerFixing_mul_kummerGenerator p π (δ p π)
 
 end TameGenerator
 
@@ -281,23 +297,24 @@ private theorem natCast_eq_algebraMap_toZMod {N : ℕ} {a : ℤ_[p]}
       algebraMap 𝓀[ℚ_[p]] _ ((padicResidueFieldEquiv p).symm (PadicInt.toZMod a)) := by
   rw [← h, map_natCast, map_natCast, map_natCast]
 
-/-- The linear coefficient of `f_{δ,u}` is the image of `χ(δ) mod p` in `κ_L = 𝔽_p`: for every
-uniformizer `u` of `X_{ℚ_p}(K_FT)`, `f_{δ,u} = χ(δ) T + O(T²)` (Yuan, Lemma 5.3). -/
-theorem coeff_one_coordinateSeries_tameGenerator :
-    (FieldOfNorms.coordinateSeries ℚ_[p] (falseTateExtension p (π : ℚ_[p])) u hu
-      (δ p π).val).coeff 1 =
+/-- Let `σ ∈ Gal(K_FT/K_Kum)`. The linear coefficient of `f_{σ,u}` is the image of `χ(σ) mod p` in
+`κ_L = 𝔽_p`: for every uniformizer `u` of `X_{ℚ_p}(K_FT)`, `f_{σ,u} = χ(σ) T + O(T²)` (Yuan,
+Lemma 5.3, for every element of `Gal(K_FT/K_Kum)`). -/
+theorem coeff_one_coordinateSeries_falseTateKummerFixing
+    (σ : falseTateKummerFixing p (π : ℚ_[p])) :
+    (FieldOfNorms.coordinateSeries ℚ_[p] (falseTateExtension p (π : ℚ_[p])) u hu σ.val).coeff 1 =
       algebraMap 𝓀[ℚ_[p]] (integralClosureResidueField ℚ_[p] (falseTateExtension p (π : ℚ_[p])))
         ((padicResidueFieldEquiv p).symm
-          (PadicInt.toZMod (padicCyclotomicCharacter p (π : ℚ_[p]) (δ p π).val : ℤ_[p]))) := by
+          (PadicInt.toZMod (padicCyclotomicCharacter p (π : ℚ_[p]) σ.val : ℤ_[p]))) := by
   obtain ⟨N, hN, hσ⟩ := exists_natCast_coeff_coordinateSeries_sub_X_eq u hu
-    (padicCyclotomicCharacter p (π : ℚ_[p]) (δ p π).val : ℤ_[p])
+    (padicCyclotomicCharacter p (π : ℚ_[p]) σ.val : ℤ_[p])
   obtain ⟨hα, hτ⟩ := coeff_coordinateSeries_kummerGenerator_sub_X u hu
   obtain ⟨μ, hμ⟩ := IsTotallyRamified.algebraMap_surjective (K := ℚ_[p])
     (L := falseTateExtension p (π : ℚ_[p]))
-    ((FieldOfNorms.coordinateSeries ℚ_[p] _ u hu (δ p π).val).coeff 1)
+    ((FieldOfNorms.coordinateSeries ℚ_[p] _ u hu σ.val).coeff 1)
   have hμp : μ ^ p = μ := (padicResidueFieldEquiv p).injective (by rw [map_pow, ZMod.pow_card])
   have hrel := congrArg (FieldOfNorms.coordinateSeries ℚ_[p] (falseTateExtension p (π : ℚ_[p])) u
-    hu) (tameGenerator_mul_kummerGenerator p π)
+    hu) (falseTateKummerFixing_mul_kummerGenerator p π σ)
   rw [FieldOfNorms.coordinateSeries_mul, FieldOfNorms.coordinateSeries_mul] at hrel
   rw [← natCast_eq_algebraMap_toZMod hN]
   exact coeff_one_eq_of_subst_eq (Fact.out : p.Prime).one_le
@@ -306,16 +323,37 @@ theorem coeff_one_coordinateSeries_tameGenerator :
     (FieldOfNorms.isUnit_coeff_one_coordinateSeries _ _ u hu _).ne_zero
     (by rw [← hμ, ← map_pow, hμp]) hrel
 
-/-- The linear coefficient of `f_{δ,u}` has multiplicative order `p - 1` (Yuan, Lemma 5.3). -/
-theorem orderOf_coeff_one_coordinateSeries_tameGenerator :
+/-- The linear coefficient of `f_{δ,u}` is the image of `χ(δ) mod p` in `κ_L = 𝔽_p`: for every
+uniformizer `u` of `X_{ℚ_p}(K_FT)`, `f_{δ,u} = χ(δ) T + O(T²)` (Yuan, Lemma 5.3). -/
+theorem coeff_one_coordinateSeries_tameGenerator :
+    (FieldOfNorms.coordinateSeries ℚ_[p] (falseTateExtension p (π : ℚ_[p])) u hu
+      (δ p π).val).coeff 1 =
+      algebraMap 𝓀[ℚ_[p]] (integralClosureResidueField ℚ_[p] (falseTateExtension p (π : ℚ_[p])))
+        ((padicResidueFieldEquiv p).symm
+          (PadicInt.toZMod (padicCyclotomicCharacter p (π : ℚ_[p]) (δ p π).val : ℤ_[p]))) :=
+  coeff_one_coordinateSeries_falseTateKummerFixing u hu (δ p π)
+
+/-- Let `σ ∈ Gal(K_FT/K_Kum)` be such that `χ(σ) mod p` has order `p - 1` in `𝔽_pˣ`, for instance
+a generator of the torsion subgroup of `Gal(K_FT/K_Kum)`. Then the linear coefficient of `f_{σ,u}`
+has multiplicative order `p - 1` (Yuan, Lemma 5.3). -/
+theorem orderOf_coeff_one_coordinateSeries_falseTateKummerFixing
+    {σ : falseTateKummerFixing p (π : ℚ_[p])}
+    (hσ : orderOf (Units.map (PadicInt.toZMod : ℤ_[p] →+* ZMod p).toMonoidHom
+      (padicCyclotomicCharacter p (π : ℚ_[p]) σ.val)) = p - 1) :
     orderOf ((FieldOfNorms.coordinateSeries ℚ_[p] (falseTateExtension p (π : ℚ_[p])) u hu
-      (δ p π).val).coeff 1) = p - 1 := by
-  rw [coeff_one_coordinateSeries_tameGenerator,
-    ← orderOf_map_toZMod_padicCyclotomicCharacter_tameGenerator p π, ← orderOf_units]
+      σ.val).coeff 1) = p - 1 := by
+  rw [coeff_one_coordinateSeries_falseTateKummerFixing, ← hσ, ← orderOf_units]
   -- `𝔽_p → 𝓀[ℚ_p] → κ_L` is injective
   exact orderOf_injective
     ((algebraMap 𝓀[ℚ_[p]] _).comp (padicResidueFieldEquiv p).symm.toRingHom).toMonoidHom
     (RingHom.injective _) _
+
+/-- The linear coefficient of `f_{δ,u}` has multiplicative order `p - 1` (Yuan, Lemma 5.3). -/
+theorem orderOf_coeff_one_coordinateSeries_tameGenerator :
+    orderOf ((FieldOfNorms.coordinateSeries ℚ_[p] (falseTateExtension p (π : ℚ_[p])) u hu
+      (δ p π).val).coeff 1) = p - 1 :=
+  orderOf_coeff_one_coordinateSeries_falseTateKummerFixing u hu
+    (orderOf_map_toZMod_padicCyclotomicCharacter_tameGenerator p π)
 
 end LinearCoefficient
 

@@ -32,6 +32,14 @@ gives `(v_T(U) + b) / p = 0`.
   of the ramification numbers `i(σ ^ (p ^ n))` is `-ord_T(ω) - 1` for every nonzero exact
   differential `ω` fixed by `σ` (Yuan, Proposition 4.3).
 
+## Implementation notes
+
+The condition `f ∈ T + T ^ 2 κ⟦T⟧` is stated as `f'(0) = 1` together with the infinite order of
+`σ = LaurentSeries.substEquiv f`. Since `substEquiv f` is the identity unless `f(0) = 0` and
+`f'(0)` is a unit, infinite order already gives `f(0) = 0`
+(`LaurentSeries.constantCoeff_eq_zero_and_isUnit_of_not_isOfFinOrder`), so there is no separate
+hypothesis `f(0) = 0`.
+
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,

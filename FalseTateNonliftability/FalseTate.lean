@@ -31,6 +31,8 @@ these give Proposition 1.3 and Theorem A.
 * `FalseTateNonliftability.ramificationNumber_kummerGenerator_pow`,
   `FalseTateNonliftability.kummerRamificationBreak_tendsto_padic`: Yuan, Proposition 5.1
   (`FalseTate/RamificationNumbers`).
+* `FalseTateNonliftability.tameGenerator_mul_kummerGenerator`: `δ τ = τ^{χ(δ)} δ` (Yuan,
+  Lemma 1.2 (3), `FalseTate/TameGenerator`).
 * `FalseTateNonliftability.orderOf_coeff_one_coordinateSeries_tameGenerator`: Yuan, Lemma 5.3
   (`FalseTate/TameGenerator`).
 * `FalseTateNonliftability.not_finiteLiftable_falseTate`: Yuan, Proposition 1.3

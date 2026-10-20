@@ -30,6 +30,14 @@ of the proof of Yuan, Lemma 4.2: the limiting functional equation (4.4) forces `
 * `PowerSeries.eq_zero_of_principalUnitPow_mul_subst_eq`: `(f / T) ^ m (U ∘ f) = U` implies
   `m = 0` (Yuan, proof of Lemma 4.2).
 
+## Implementation notes
+
+The condition `f ∈ T + T ^ 2 κ⟦T⟧` is stated as `f'(0) = 1` together with the infinite order of
+`σ = LaurentSeries.substEquiv f`. Since `substEquiv f` is the identity unless `f(0) = 0` and
+`f'(0)` is a unit, infinite order already gives `f(0) = 0`
+(`LaurentSeries.constantCoeff_eq_zero_and_isUnit_of_not_isOfFinOrder`), so there is no separate
+hypothesis `f(0) = 0`.
+
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,

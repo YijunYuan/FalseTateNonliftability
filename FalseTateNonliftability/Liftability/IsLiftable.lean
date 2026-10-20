@@ -81,6 +81,11 @@ and `κ_F` has `p` elements.
   the field of norms of FontaineWintenberger, is the instance `Fact (¬ Module.Finite K L)`.
 * `IsLiftable p K L F` uses the uniformizer `FieldOfNorms.uniformizer K L` of FontaineWintenberger;
   `isLiftable_iff_uniformizer` replaces it by any other uniformizer.
+* Proposition 2.3 also states that liftability modulo every power of `ϖ_F`, with the composition
+  law `F_h ∘ F_g = F_{gh}`, does not depend on the uniformizer. Of the statements modulo
+  `𝔪_F ^ (r + 1)`, only the one for finite lifts (`CoordinateFamily.FiniteLift`: a lift of
+  Frobenius commuting with lifts of the elements of a subset, without composition law) is
+  formalized, `finiteLiftable_coordinateFamily_iff`; this is the form of Proposition 1.3.
 
 ## References
 
@@ -97,103 +102,7 @@ open FontaineWintenberger PowerSeries
 open IsLocalRing (ResidueField)
 open scoped PowerSeries
 
-namespace PowerSeries
-
-variable {R S : Type*} [CommRing R] [CommRing S]
-
-/-- For an injective ring homomorphism `φ`, the ramification number `v_T(φ(f) - T) - 1` of the
-image `φ(f)` of `f` is the ramification number of `f`. -/
-theorem ramificationNumber_map {φ : R →+* S} (hφ : Function.Injective φ) (f : R⟦X⟧) :
-    (f.map φ).ramificationNumber = f.ramificationNumber := by
-  have key (A : LaurentSeries R) : (LaurentSeries.mapRingHom φ A).order = A.order := by
-    by_cases hA : A = 0
-    · rw [hA, map_zero, HahnSeries.order_zero, HahnSeries.order_zero]
-    have ht := LaurentSeries.orderTop_mapRingHom_of_injective φ hφ A
-    have hA' : LaurentSeries.mapRingHom φ A ≠ 0 := by
-      rw [← HahnSeries.orderTop_ne_top, ht, HahnSeries.orderTop_ne_top]
-      exact hA
-    exact WithTop.coe_inj.mp ((HahnSeries.order_eq_orderTop_of_ne_zero hA').trans
-      (ht.trans (HahnSeries.order_eq_orderTop_of_ne_zero hA).symm))
-  rw [ramificationNumber, ramificationNumber, ← key, map_sub,
-    LaurentSeries.mapRingHom_ofPowerSeries, LaurentSeries.mapRingHom_single, φ.map_one]
-
-/-- If `f - T` has order `n`, then the ramification number of `f` is `n - 1`. -/
-theorem ramificationNumber_eq_of_order_sub_X_eq {f : R⟦X⟧} {n : ℕ}
-    (h : (f - X).order = (n : ℕ∞)) : f.ramificationNumber = n - 1 := by
-  have hf : f ≠ X := by
-    rintro rfl
-    simp at h
-  have ht := orderTop_ofPowerSeries_sub_X hf
-  rw [← HahnSeries.ofPowerSeries_X, ← map_sub, HahnSeries.orderTop_ofPowerSeries] at ht
-  have h' : ((n : ℤ) : WithTop ℤ) = ((f.ramificationNumber + 1 : ℤ) : WithTop ℤ) :=
-    (congrArg (WithTop.map fun n : ℕ ↦ (n : ℤ)) h).symm.trans ht
-  rw [WithTop.coe_inj] at h'
-  omega
-
-end PowerSeries
-
 namespace FalseTateNonliftability
-
-namespace CoordinateFamily
-
-open LaurentSeries
-
-variable {κ κ' : Type*} [CommRing κ] [IsLocalRing κ] [IsArtinianRing κ] [IsPrincipalIdealRing κ]
-  [CommRing κ'] [IsLocalRing κ'] [IsArtinianRing κ'] [IsPrincipalIdealRing κ']
-  {Γ : Type*} [Monoid Γ] (f : CoordinateFamily κ Γ)
-
-/-- The substitution `a ↦ a ∘ P` is the identity exactly for `P = T`. -/
-private theorem substEquiv_eq_one_iff {P : PowerSeries κ} (hP : P.constantCoeff = 0)
-    (hP' : IsUnit (P.coeff 1)) : substEquiv P = 1 ↔ P = X := by
-  constructor
-  · intro h
-    apply HahnSeries.ofPowerSeries_injective (Γ := ℤ)
-    rw [← substEquiv_X hP hP', h, HahnSeries.ofPowerSeries_X]
-    rfl
-  · rintro rfl
-    refine AlgEquiv.ext fun a ↦ ?_
-    rw [substEquiv_apply constantCoeff_X (by simp), HahnSeries.ofPowerSeries_X,
-      subst_X_left_apply]
-    rfl
-
-/-- The automorphism `a ↦ a ∘ f_g` of `κ((T))` has finite order if and only if `f_{g ^ n} = T` for
-some `n > 0`. -/
-theorem isOfFinOrder_substEquiv_series_iff (g : Γ) :
-    IsOfFinOrder (substEquiv (f.series g)) ↔ ∃ n, 0 < n ∧ f.series (g ^ n) = X := by
-  rw [isOfFinOrder_iff_pow_eq_one]
-  refine exists_congr fun n ↦ and_congr_right fun _ ↦ ?_
-  have h0 := f.constantCoeff_series (g ^ n)
-  have h1 := f.isUnit_coeff_one_series (g ^ n)
-  rw [← substEquiv_eq_one_iff h0 h1, f.series_pow, substEquiv_iterate (f.constantCoeff_series g)
-    (f.isUnit_coeff_one_series g)]
-
-/-- For an injective ring homomorphism `φ`, the automorphism `a ↦ a ∘ φ(f_g)` has finite order if
-and only if `a ↦ a ∘ f_g` has finite order. -/
-theorem isOfFinOrder_substEquiv_map_series_iff {φ : κ →+* κ'} (hφ : Function.Injective φ)
-    (g : Γ) :
-    IsOfFinOrder (substEquiv ((f.map φ).series g)) ↔ IsOfFinOrder (substEquiv (f.series g)) := by
-  rw [isOfFinOrder_substEquiv_series_iff, isOfFinOrder_substEquiv_series_iff]
-  refine exists_congr fun n ↦ and_congr_right fun _ ↦ ?_
-  rw [map_series, ← map_X φ]
-  exact (map_injective φ hφ).eq_iff
-
-end CoordinateFamily
-
-namespace FieldOfNorms
-
-variable (K : Type*) [NontriviallyNormedField K] [IsPerfectResidueLocalField K]
-  (L : Type*) [Field L] [Algebra K L] [Algebra.IsSeparable K L] [IsAPF K L]
-  [Fact (¬ Module.Finite K L)] [IsTotallyRamified K L]
-  {u : FieldOfNorms K L} (hu : FieldOfNorms.valuation K L u = WithZero.exp (-1 : ℤ))
-
-/-- The automorphism `a ↦ a ∘ f_{g,u}` of `κ_L((T))` has finite order if and only if
-`f_{g ^ n, u} = T` for some `n > 0`. -/
-theorem isOfFinOrder_substEquiv_coordinateSeries_iff (g : L ≃ₐ[K] L) :
-    IsOfFinOrder (LaurentSeries.substEquiv (coordinateSeries K L u hu g)) ↔
-      ∃ n, 0 < n ∧ coordinateSeries K L u hu (g ^ n) = X :=
-  (coordinateFamily K L u hu).isOfFinOrder_substEquiv_series_iff g
-
-end FieldOfNorms
 
 section BaseField
 
@@ -289,7 +198,12 @@ def residueFieldBaseFieldEquiv : 𝓀[K] ≃+* integralClosureResidueField ℚ_[
 
 variable (L : IntermediateField K (AlgebraicClosure K)) [Algebra.IsSeparable K L] [IsAPF K L]
   [Fact (¬ Module.Finite K L)] [IsTotallyRamified K L]
-  (F : IntermediateField ℚ_[p] (AlgebraicClosure K)) [(baseField p K).HasSameResidueField F]
+  (F : IntermediateField ℚ_[p] (AlgebraicClosure K)) [FiniteDimensional ℚ_[p] F]
+  [(baseField p K).HasSameResidueField F]
+
+section CoordinateFamily
+
+omit [FiniteDimensional ℚ_[p] F]
 
 namespace IsLiftable
 
@@ -363,7 +277,7 @@ theorem isOfFinOrder_substEquiv_coordinateFamily_series_iff (g : L ≃ₐ[K] L) 
 
 end IsLiftable
 
-variable [FiniteDimensional ℚ_[p] F]
+end CoordinateFamily
 
 /-- Yuan, Definition 1.1 (Berger 2014): the action of `Aut(L/K)` on the field of norms `X_K(L)` is
 `F`-liftable, that is, there exist `P` and `(F_g)_{g ∈ Aut(L/K)}` in the `𝔪_F`-adic completion
@@ -389,9 +303,11 @@ theorem liftable_coordinateFamily_iff :
     CoordinateFamily.map_conj _ _ hV0 hV1]
   exact CoordinateFamily.liftable_conj_iff _
 
-/-- Yuan, Proposition 2.3 modulo `𝔪_F ^ (r + 1)`: for two uniformizers `u` and `u'` of `X_K(L)`
-and a subset `S ⊆ Aut(L/K)`, the coordinate family in `u'` has a finite lift modulo
-`𝔪_F ^ (r + 1)` on `S` if and only if the coordinate family in `u` has one. -/
+/-- Yuan, Proposition 2.3 modulo `𝔪_F ^ (r + 1)`, for a lift of Frobenius commuting with lifts of
+a prescribed collection of elements: for two uniformizers `u` and `u'` of `X_K(L)` and a subset
+`S ⊆ Aut(L/K)`, the coordinate family in `u'` has a finite lift modulo `𝔪_F ^ (r + 1)` on `S`
+(elements `P` and `F_g`, `g ∈ S`, with `P̄ = T^q`, `F̄_g = f_{g,u'}` and `F_g ∘ P = P ∘ F_g`) if and
+only if the coordinate family in `u` has one. -/
 theorem finiteLiftable_coordinateFamily_iff (S : Set (L ≃ₐ[K] L)) (r : ℕ) :
     (coordinateFamily p K L F u' hu').FiniteLiftable S r ↔
       (coordinateFamily p K L F u hu).FiniteLiftable S r := by

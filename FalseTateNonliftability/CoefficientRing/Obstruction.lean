@@ -59,6 +59,12 @@ of the tame generator `δ` (Lemma 5.3) this is Proposition 1.3.
 The hypotheses on the ramification numbers are bundled in the structures `HasRamificationGrowth`
 and `HasRamificationLimit`, which the false Tate curve extension satisfies by Proposition 5.1.
 
+In `HasRamificationGrowth` and in case 2, the condition `f ∈ T + T ^ 2 κ⟦T⟧` is stated as
+`f'(0) = 1` together with the infinite order of `σ = LaurentSeries.substEquiv f`. Since
+`substEquiv f` is the identity unless `f(0) = 0` and `f'(0)` is a unit, infinite order already
+gives `f(0) = 0` (`LaurentSeries.constantCoeff_eq_zero_and_isUnit_of_not_isOfFinOrder`), so there
+is no separate hypothesis `f(0) = 0`.
+
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,

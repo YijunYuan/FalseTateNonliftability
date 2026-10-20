@@ -78,8 +78,9 @@ FalseTateNonliftability.lean   imports the seven aggregates; its docstring lists
 
 A layer imports only layers above it in this list. `Mathlib` … `CoefficientRing` and the abstract
 part of `Liftability` (`CoordinateFamily`, `Defs`, `CoordinateChange`) import neither
-FontaineWintenberger nor FalseTateExtension. `scripts/check_layers.py` (CI) enforces the layer
-order, the upstream-free layers and that every file is imported by its aggregate; a new file must
+FontaineWintenberger nor FalseTateExtension, also through their imports. `scripts/check_layers.py`
+(CI) enforces the layer order, the upstream-freeness of these layers and files (through their
+import closure in the library) and that every file is imported by its aggregate; a new file must
 be added to its layer's aggregate. Declarations outside the dependency closure of the paper's
 results (plus the natural API of the `Mathlib/` files) are deleted.
 
@@ -93,6 +94,9 @@ variable {R : Type*} [CommRing R] [IsLocalRing R] [IsArtinianRing R] [IsPrincipa
 variable {κ : Type*} [Field κ] [Finite κ] (p : ℕ) [Fact p.Prime] [CharP κ p]
 -- abstract coefficient DVR (Definition 1.1, §2, §6):
 variable {O : Type*} [CommRing O] [IsDomain O] [IsDiscreteValuationRing O]
+-- in addition for Lemma 2.4, Theorem 3.1 and §6 (residue field 𝔽_p, p ≠ 0 in O):
+variable (p : ℕ) [Fact p.Prime] [Fact (Nat.card (IsLocalRing.ResidueField O) = p)]
+  [NeZero (p : O)]
 -- Definition 1.1 for fields of norms:
 variable (p : ℕ) [Fact p.Prime] (K : Type*) [NontriviallyNormedField K]
   [IsPerfectResidueLocalField K] [NormedAlgebra ℚ_[p] K] [FiniteDimensional ℚ_[p] K]
@@ -107,13 +111,28 @@ variable (p : ℕ) [Fact p.Prime] [Fact (p ≠ 2)] (π : 𝒪[ℚ_[p]]) [Fact (I
 - `𝒪[K]`, `𝓀[K]` (scoped notation of `FontaineWintenberger`), `ℚ_[p]`, `ℤ_[p]`. Never spell out
   `(NormedField.valuation (K := K)).valuationSubring`, `Padic p`, `PadicInt p`, and never introduce
   file-local abbreviations (`OK`, `κK`, `O_F`, `O_0`, …) for them.
-- `p` is explicit in the p-adic, coefficient-ring and field-of-norms layers (`CharP` parameter,
-  `absoluteRamificationIdx p O`, `IsLiftable p K L F`).
+- `p` is explicit in the p-adic, coefficient-ring and field-of-norms layers (`CharP κ p`,
+  `absoluteRamificationIdx p O`, `IsLiftable p K L F`). Over an abstract DVR `O`, "residue field
+  `𝔽_p`" and "`p ≠ 0` in `O`" are the instances `[Fact (Nat.card (ResidueField O) = p)]` and
+  `[NeZero (p : O)]`; `CharP` of the residue field is derived from them.
 - Hypotheses that are Prop classes are instance arguments (`[Fact (Irreducible π)]`,
   `[IsAPF K L]`, `[Fact (¬ Module.Finite K L)]`, `[IsTotallyRamified K L]`,
-  `[HasSameResidueField E F]`); definitions never take proofs as value arguments. A definition
+  `[HasSameResidueField E F]`); definitions do not take proofs as value arguments. A definition
   that only makes sense under a hypothesis is defined for all inputs (junk value otherwise), and
-  its lemmas carry the hypothesis — as Mathlib's `PowerSeries.subst`.
+  its lemmas carry the hypothesis — as Mathlib's `PowerSeries.subst`. A lemma whose statement
+  holds without such a hypothesis does not take it (Mathlib style); where a hypothesis is implied
+  by another one through a junk value, the module's Implementation notes say so (example:
+  `¬ IsOfFinOrder (substEquiv f)` forces `f(0) = 0`). The exceptions, which take a proof as a
+  value argument:
+  1. a uniformizer of the field of norms is a pair `u hu` (`hu : valuation u = exp (-1)`), as in
+     FontaineWintenberger's `FieldOfNorms.laurentEquiv K L u hu`: `FieldOfNorms.coordinateSeries`,
+     `FieldOfNorms.coordinateFamily`, `IsLiftable.coordinateFamily` (Proposition 1.3 is stated for
+     a uniformizer `u hu`);
+  2. the order hypotheses `s ≤ r` of `Truncation.factor` and `j ≤ r` of
+     `Truncation.gradedLayerEquiv`, as in Mathlib's `Ideal.Quotient.factor`;
+  3. the compatibility proof of the universal property `CoefficientRing.lift`, as in Mathlib's
+     `AdicCompletion.liftRingHom`;
+  4. the construction behind `subst` in `LaurentSeries/Evaluation` (below).
 - Never install an instance with `letI`/`haveI` inside a theorem *statement*; if an instance is
   missing, add it where the type is defined.
 
@@ -126,8 +145,11 @@ variable (p : ℕ) [Fact p.Prime] [Fact (p ≠ 2)] (π : 𝒪[ℚ_[p]]) [Fact (I
   `P'(0)` is a unit. `PowerSeries.compInv w` is `X` unless `w'(0)` is a unit;
   `PowerSeries.conj w f = w ∘ f ∘ w^{∘-1}`, `LaurentSeries.conj`, `CoefficientRing.conj` and
   `CoordinateFamily.conj` follow the same pattern. The paper's `Q ∘ G` is `subst G Q` (the inner
-  series first). The construction of `subst` in `LaurentSeries/Evaluation` takes a nilpotent
-  generator `δ` of the maximal ideal, a decomposition `G = U + δ Y` and bounds as arguments; only
+  series first); `LaurentSeries.subst` and `CoefficientRing.subst` are `@[pp_nodot]`, so they are
+  printed as `subst G Q`, not as `G.subst Q` (which would read as `G ∘ Q` by analogy with
+  Mathlib's `PowerSeries.subst`). The inverse of `substEquiv P` is stated with `P.compInv`. The
+  construction of `subst` in `LaurentSeries/Evaluation` takes a nilpotent generator `δ` of the
+  maximal ideal, a decomposition `G = U + δ Y` and bounds as arguments; only
   `LaurentSeries/Substitution` uses it, and nothing downstream mentions `δ`.
 - **Truncations are indexed by `r + 1`.** `Truncation O r = O ⧸ 𝔪 ^ (r + 1)`, so every `r : ℕ` is
   valid and there are no `1 ≤ r` hypotheses; the paper's `R = A ⧸ ϖ_F^(e+1) A` is

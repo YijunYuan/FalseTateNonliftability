@@ -158,6 +158,7 @@ private theorem substRingHom_algebraMap (G : CoefficientRing O) (b : O) :
 /-- Substitution `f ↦ f(G)` of `G ∈ A` for the variable: the `O`-algebra endomorphism of `A`
 that reduces modulo every `𝔪 ^ (r + 1)` to substitution of the reduction of `G`
 (`reduction_subst`). It is the identity if `G` is not admissible. -/
+@[pp_nodot]
 def subst (G : CoefficientRing O) : CoefficientRing O →ₐ[O] CoefficientRing O :=
   { substRingHom G with commutes' := substRingHom_algebraMap G }
 
@@ -236,16 +237,10 @@ variable {R S : Type*} [CommRing R] [IsLocalRing R] [IsArtinianRing R] [IsPrinci
 
 variable {H : PowerSeries R}
 
-omit [IsArtinianRing R] [IsPrincipalIdealRing R] in
-private theorem isAdmissible_ofPowerSeries_compInv (H : PowerSeries R) :
-    IsAdmissible (HahnSeries.ofPowerSeries ℤ R H.compInv) :=
-  isAdmissible_ofPowerSeries (PowerSeries.constantCoeff_compInv H)
-    (PowerSeries.isUnit_coeff_one_compInv H)
-
 private theorem subst_ofPowerSeries_compInv (hH : H.constantCoeff = 0)
     (hl : IsUnit (H.coeff 1)) (f : LaurentSeries R) :
-    subst (HahnSeries.ofPowerSeries ℤ R H.compInv) f = (substEquiv H).symm f := by
-  rw [substEquiv_symm_apply hH hl, PowerSeries.compInv_eq_substInvOfIsUnit hl]
+    subst (HahnSeries.ofPowerSeries ℤ R H.compInv) f = (substEquiv H).symm f :=
+  (substEquiv_symm_apply hH hl f).symm
 
 /-- `H ∘ P ∘ H^{∘-1}` is the image of `H ∘ P` under the inverse of `f ↦ f(H)`. -/
 theorem conj_eq_substEquiv_symm (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))

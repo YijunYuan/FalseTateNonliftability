@@ -61,6 +61,12 @@ ring `O` are instances.
 
 `subst G` is defined for every `G` and is the identity if `G` is not admissible; `substEquiv P` is
 the identity unless `P(0) = 0` and `P'(0)` is a unit. Their properties carry these hypotheses.
+The inverse of `substEquiv P` is stated with the total compositional inverse
+`PowerSeries.compInv P`.
+
+The paper's `Q ∘ G` is `subst G Q`, the inner series first. `subst` is tagged `pp_nodot`, so that
+it is printed as `subst G Q` and not as `G.subst Q`, which would read as `G ∘ Q` by analogy with
+`PowerSeries.subst`.
 
 For admissible `G` write `G = U + δ Y`, where `U` is a unit of positive order
 (`exists_nilpotentLaurentEval_data`); evaluation at these data (`nilpotentLaurentEval`) is a
@@ -111,11 +117,6 @@ theorem order_derivative_ofPowerSeries [Nontrivial R] {H : PowerSeries R}
   simpa only [← PowerSeries.coeff_zero_eq_constantCoeff_apply, PowerSeries.coeff_derivative,
     zero_add, Nat.cast_zero, Nat.cast_one, mul_one] using hlinear.ne_zero
 
-private theorem isUnit_coeff_one_substInvOfIsUnit {P : PowerSeries R}
-    (hlinear : IsUnit (P.coeff 1)) : IsUnit ((P.substInvOfIsUnit hlinear).coeff 1) := by
-  rw [PowerSeries.coeff_one_substInvOfIsUnit]
-  exact Units.isUnit _
-
 end CommRing
 
 section IsAdmissible
@@ -161,13 +162,11 @@ theorem isAdmissible_ofPowerSeries {P : PowerSeries R} (hP : P.constantCoeff = 0
     exact (hlinear.map (IsLocalRing.residue R)).ne_zero
   · exact mapRingHom_mem_orderAddSubgroup _ _ _ (ofPowerSeries_mem_orderAddSubgroup_one hP)
 
-/-- The compositional inverse of a power series `P` with `P(0) = 0` and `P'(0)` a unit is
-admissible. -/
-theorem isAdmissible_ofPowerSeries_substInvOfIsUnit {P : PowerSeries R}
-    (hlinear : IsUnit (P.coeff 1)) :
-    IsAdmissible (HahnSeries.ofPowerSeries ℤ R (P.substInvOfIsUnit hlinear)) :=
-  isAdmissible_ofPowerSeries (PowerSeries.constantCoeff_substInvOfIsUnit P hlinear)
-    (isUnit_coeff_one_substInvOfIsUnit hlinear)
+/-- The compositional inverse `P^{∘-1}` of a power series `P` is admissible. -/
+theorem isAdmissible_ofPowerSeries_compInv (P : PowerSeries R) :
+    IsAdmissible (HahnSeries.ofPowerSeries ℤ R P.compInv) :=
+  isAdmissible_ofPowerSeries (PowerSeries.constantCoeff_compInv P)
+    (PowerSeries.isUnit_coeff_one_compInv P)
 
 end IsAdmissible
 
@@ -273,6 +272,7 @@ open scoped Classical in
 endomorphism `f ↦ f(G)` of `R((T))` sending `T` to `G` (see `subst_unique`); for
 `f = ∑ aᵢ Tⁱ`, `f(G) = ∑ aᵢ Gⁱ` (Yuan, Lemma 2.1 (1)). It is the identity if `G` is not
 admissible. -/
+@[pp_nodot]
 def subst (G : LaurentSeries R) : LaurentSeries R →ₐ[R] LaurentSeries R :=
   if hG : IsAdmissible G then Classical.choose (exists_subst hG) else AlgHom.id R _
 
@@ -486,18 +486,17 @@ theorem subst_ofPowerSeries_comp_eq_id {P Q : PowerSeries R} (hP : P.constantCoe
 
 open scoped Classical in
 /-- The automorphism `f ↦ f(P)` of `R((T))` for a power series `P` with `P(0) = 0` and `P'(0)` a
-unit; its inverse is `f ↦ f(Q)` for the compositional inverse `Q` of `P`. For every other `P`
-this is the identity. -/
+unit; its inverse is `f ↦ f(P^{∘-1})` for the compositional inverse `P^{∘-1}` of `P`. For every
+other `P` this is the identity. -/
 def substEquiv (P : PowerSeries R) : LaurentSeries R ≃ₐ[R] LaurentSeries R :=
   if h : P.constantCoeff = 0 ∧ IsUnit (P.coeff 1) then
     AlgEquiv.ofAlgHom (subst (HahnSeries.ofPowerSeries ℤ R P))
-      (subst (HahnSeries.ofPowerSeries ℤ R (P.substInvOfIsUnit h.2)))
+      (subst (HahnSeries.ofPowerSeries ℤ R P.compInv))
       (subst_ofPowerSeries_comp_eq_id h.1 (isAdmissible_ofPowerSeries h.1 h.2)
-        (isAdmissible_ofPowerSeries_substInvOfIsUnit h.2)
-        (PowerSeries.subst_substInvOfIsUnit_left P h.1 h.2))
-      (subst_ofPowerSeries_comp_eq_id (PowerSeries.constantCoeff_substInvOfIsUnit P h.2)
-        (isAdmissible_ofPowerSeries_substInvOfIsUnit h.2) (isAdmissible_ofPowerSeries h.1 h.2)
-        (PowerSeries.subst_substInvOfIsUnit_right P h.1 h.2))
+        (isAdmissible_ofPowerSeries_compInv P) (PowerSeries.subst_compInv_left h.1 h.2))
+      (subst_ofPowerSeries_comp_eq_id (PowerSeries.constantCoeff_compInv P)
+        (isAdmissible_ofPowerSeries_compInv P) (isAdmissible_ofPowerSeries h.1 h.2)
+        (PowerSeries.subst_compInv_right h.1 h.2))
   else AlgEquiv.refl
 
 /-- If `P(0) ≠ 0` or `P'(0)` is not a unit, then `substEquiv P` is the identity. -/
@@ -515,8 +514,7 @@ theorem substEquiv_apply {P : PowerSeries R} (hP : P.constantCoeff = 0)
 /-- If `P(0) = 0` and `P'(0)` is a unit, then the inverse of `f ↦ f(P)` is `f ↦ f(P^{∘-1})`. -/
 theorem substEquiv_symm_apply {P : PowerSeries R} (hP : P.constantCoeff = 0)
     (hlinear : IsUnit (P.coeff 1)) (f : LaurentSeries R) :
-    (substEquiv P).symm f =
-      subst (HahnSeries.ofPowerSeries ℤ R (P.substInvOfIsUnit hlinear)) f := by
+    (substEquiv P).symm f = subst (HahnSeries.ofPowerSeries ℤ R P.compInv) f := by
   rw [substEquiv, dite_eq_left ⟨hP, hlinear⟩]
   rfl
 
@@ -524,11 +522,10 @@ theorem substEquiv_symm_apply {P : PowerSeries R} (hP : P.constantCoeff = 0)
 the compositional inverse `P^{∘-1}` (Yuan, Lemma 2.1 (3)). -/
 theorem substEquiv_symm {P : PowerSeries R} (hP : P.constantCoeff = 0)
     (hlinear : IsUnit (P.coeff 1)) :
-    (substEquiv P).symm = substEquiv (P.substInvOfIsUnit hlinear) :=
+    (substEquiv P).symm = substEquiv P.compInv :=
   AlgEquiv.ext fun f ↦ by
-    rw [substEquiv_symm_apply hP hlinear,
-      substEquiv_apply (PowerSeries.constantCoeff_substInvOfIsUnit P hlinear)
-        (isUnit_coeff_one_substInvOfIsUnit hlinear)]
+    rw [substEquiv_symm_apply hP hlinear, substEquiv_apply (PowerSeries.constantCoeff_compInv P)
+      (PowerSeries.isUnit_coeff_one_compInv P)]
 
 /-- `T(P) = P`. -/
 theorem substEquiv_X {P : PowerSeries R} (hP : P.constantCoeff = 0)

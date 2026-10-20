@@ -29,7 +29,7 @@ candidates), `LaurentSeries` (substitution, §2.1, and §3), `PowerSeries` (prin
 `Differential` (§4), `CoefficientRing` (the ring `A_K`, §2.2, Theorem 3.1 and §6), `Liftability`
 (Definition 1.1, Lemma 2.2, Proposition 2.3) and `FalseTate` (§5, Proposition 1.3, Theorem A).
 All declarations below are in the namespace `FalseTateNonliftability` unless they start with
-`LaurentSeries.` or `PowerSeries.`.
+`LaurentSeries.`, `PowerSeries.` or `FalseTateExtension.`.
 
 ## Main definitions
 
@@ -47,9 +47,11 @@ All declarations below are in the namespace `FalseTateNonliftability` unless the
   (`CoefficientRing/NormalizedDerivative`), built from the layers `Truncation.layer j X = ϖ⁻ʲX`
   (`CoefficientRing/Truncation`).
 * Yuan, Lemma 1.2 (3): `tameGenerator`, notation `δ`, with `padicCyclotomicCharacter_tameGenerator`
-  and `orderOf_map_toZMod_padicCyclotomicCharacter_tameGenerator` (`FalseTate/TameGenerator`); the
-  Kummer generator `τ` is `FalseTateExtension.kummerGenerator`. Lemma 1.2 (1), (2) are in
-  FalseTateExtension.
+  and `orderOf_map_toZMod_padicCyclotomicCharacter_tameGenerator`, and the relation
+  `δ τ = τ^{χ(δ)} δ`, `tameGenerator_mul_kummerGenerator`, which holds for every
+  `σ ∈ Gal(ℚ_p^FT/ℚ_p(p^{1/p^∞}))` (`falseTateKummerFixing_mul_kummerGenerator`), in
+  `FalseTate/TameGenerator`; the Kummer generator `τ` is `FalseTateExtension.kummerGenerator`.
+  Lemma 1.2 (1), (2) are in FalseTateExtension.
 
 ## Main results
 
@@ -57,15 +59,20 @@ All declarations below are in the namespace `FalseTateNonliftability` unless the
   `not_isLiftable_falseTateExtension` (for `ℚ_p(π^{1/p^∞}, ζ_{p^∞})` and any uniformizer `π` of
   `ℚ_p`), in `FalseTate/Main`.
 * Yuan, Proposition 1.3: `not_finiteLiftable_falseTate` and
-  `not_finiteLiftable_falseTateExtension` (`FalseTate/Main`). The abstract form over a discrete
-  valuation ring is `Truncation.false_of_commute` (`CoefficientRing/Obstruction`). Over
+  `not_finiteLiftable_falseTateExtension` (`FalseTate/Main`); with `δ` replaced by any `σ` whose
+  character `χ(σ) mod p` has order `p - 1`, for instance any generator of the torsion subgroup in
+  Lemma 1.2 (3): `not_finiteLiftable_falseTateExtension_of_orderOf`. The abstract form over a
+  discrete valuation ring is `Truncation.false_of_commute` (`CoefficientRing/Obstruction`). Over
   `F = ℚ_p`, the Kummer generator alone has no lift modulo `p ^ 2` commuting with a lift of
   Frobenius: `not_finiteLiftable_kummerGenerator_bot` (`FalseTate/Main`).
 * Yuan, Proposition 2.3: `isLiftable_iff_uniformizer`, `isLiftable_iff_exists_uniformizer`,
-  `isLiftable_iff_forall_uniformizer`, `IsLiftable.liftable_coordinateFamily_iff` and
+  `isLiftable_iff_forall_uniformizer` and `IsLiftable.liftable_coordinateFamily_iff`; modulo
+  `𝔪_F ^ (r + 1)`, for a Frobenius lift commuting with lifts of a prescribed collection of
+  elements (without the composition law, the form of Proposition 1.3),
   `IsLiftable.finiteLiftable_coordinateFamily_iff` (`Liftability/IsLiftable`); for an abstract
   coordinate family and a change of variable, `CoordinateFamily.liftable_conj_iff` and
-  `CoordinateFamily.finiteLiftable_conj_iff` (`Liftability/CoordinateChange`).
+  `CoordinateFamily.finiteLiftable_conj_iff` (`Liftability/CoordinateChange`). The statement
+  modulo `𝔪_F ^ (r + 1)` with the composition law is not formalized.
 
 ## The other numbered results
 
@@ -79,11 +86,15 @@ All declarations below are in the namespace `FalseTateNonliftability` unless the
   `FieldOfNorms.isUnit_coeff_one_coordinateSeries` (1), `FieldOfNorms.aut_laurentEquiv` (2),
   `FieldOfNorms.coordinateSeries_mul` (3), `FieldOfNorms.coordinateSeries_eq_conj` (4)
   (`Liftability/FieldOfNorms`).
-* Lemma 2.4: `Truncation.derivativeLevel_eq_iff`, `Truncation.one_le_derivativeLevel`;
-  `Truncation.subst_normalizedDerivative_of_commute` (1); `Truncation.derivativeLevel_conj`,
-  `Truncation.subst_normalizedDerivative_conj`, `Truncation.order_normalizedDerivative_conj` (2);
+* Lemma 2.4: `Truncation.derivative_ne_zero`, `Truncation.derivativeLevel_eq_iff`,
+  `Truncation.one_le_derivativeLevel`, `Truncation.derivativeLevel_le`;
+  `Truncation.subst_normalizedDerivative_of_commute` (1); `Truncation.mapRingHom_residue_conj`,
+  `Truncation.derivativeLevel_conj`, `Truncation.subst_normalizedDerivative_conj`,
+  `Truncation.order_normalizedDerivative_conj` (2);
   `Truncation.exists_normalizedDerivative_eq_derivative`,
-  `Truncation.exists_normalizedDerivative_eq_single_add_derivative`,
+  `Truncation.exists_normalizedDerivative_eq_single_add_derivative` (with the constant
+  `c = p / ϖ ^ e mod 𝔪`), `Truncation.coeff_layer_C_natCast_ne_zero` (`c ≠ 0`),
+  `Truncation.derivative_normalizedDerivative_ne_zero`,
   `Truncation.order_derivative_normalizedDerivative_le` (3)
   (`CoefficientRing/NormalizedDerivative`).
 * Theorem 3.1: `Truncation.order_normalizedDerivative_le`, with the series computation
@@ -106,7 +117,9 @@ All declarations below are in the namespace `FalseTateNonliftability` unless the
   `FalseTateExtension.kummerRamificationBreak_growth`; all of it as used in §6:
   `hasRamificationLimit_coordinateFamily_series_kummerGenerator` (`FalseTate/Main`).
 * Lemma 5.3: `coeff_one_coordinateSeries_tameGenerator`,
-  `orderOf_coeff_one_coordinateSeries_tameGenerator` (`FalseTate/TameGenerator`).
+  `orderOf_coeff_one_coordinateSeries_tameGenerator`; for every
+  `σ ∈ Gal(ℚ_p^FT/ℚ_p(p^{1/p^∞}))`: `coeff_one_coordinateSeries_falseTateKummerFixing`,
+  `orderOf_coeff_one_coordinateSeries_falseTateKummerFixing` (`FalseTate/TameGenerator`).
 * §6, case 1 (`s(P) = e` is impossible): `Truncation.derivativeLevel_lt_absoluteRamificationIdx`;
   case 2 (`s(P) < e` is impossible): `Truncation.absoluteRamificationIdx_le_derivativeLevel`
   (`CoefficientRing/Obstruction`).

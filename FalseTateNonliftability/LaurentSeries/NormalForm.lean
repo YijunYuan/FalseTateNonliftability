@@ -44,6 +44,8 @@ positive integers; they satisfy `d_(n+1) ≥ p d_n`, hence strictly increase and
 * `LaurentSeries.substSubOne_pow_char_apply`: in characteristic `p`, `(σ - 1) ^ p = σ ^ p - 1`.
 * `PowerSeries.ramificationNumber_conj`: the ramification number does not depend on the
   uniformizer (Yuan, §3.2).
+* `PowerSeries.ramificationNumber_map`: an injective coefficient map preserves the ramification
+  number.
 * `PowerSeries.ramificationNumber_iterate_eq_of_resonant`: a nonzero resonant coefficient
   determines `i(σ ^ p)` (Yuan, Lemma 3.3).
 * `PowerSeries.exists_normalForm`: the normal form `T + α T ^ (d + 1) + O(T ^ (2 d + 1))`
@@ -59,7 +61,14 @@ positive integers; they satisfy `d_(n+1) ≥ p d_n`, hence strictly increase and
 
 `PowerSeries.ramificationNumber f` is the integer `v_T(f - T) - 1`, where `v_T` is
 `HahnSeries.order`, so that `v_T(0) = 0`. For `f = X`, where the paper has `i(σ) = +∞`, it is
-`-1`.
+`-1`; it is also `-1` for every `f` with `f(0) ≠ 0` (then `v_T(f - T) = 0`), and `0` for `f(0) = 0`
+and `f'(0) ≠ 1`. It is positive exactly for `f ≠ T` in `T + T ^ 2 k⟦T⟧`
+(`PowerSeries.one_le_ramificationNumber_iff`).
+
+Theorem 3.4 (`PowerSeries.exists_normalForm`) is stated without the hypothesis `d < ∞` of the
+paper. The congruence `d ≡ -1 (mod p)` excludes `d = 0`, and for `d = -1` (that is, `f = T` or
+`f(0) ≠ 0`) the conclusion holds trivially with `w = T`, so the content of the statement is the
+case `d ≥ 1` of the paper.
 
 ## References
 
@@ -107,7 +116,8 @@ variable {R : Type*} [CommRing R]
 
 /-- The ramification number `v_T(f - T) - 1` of a power series `f` (Yuan, §3.2). If a continuous
 automorphism `σ` of `k((T))` sends `T` to `f`, this is the ramification number `i(σ)`. It is `-1`
-for `f = X`, where `i(σ) = ∞`. -/
+for `f = X`, where `i(σ) = ∞`, and for every `f` with `f(0) ≠ 0`; it is `0` if `f(0) = 0` and
+`f'(0) ≠ 1`. -/
 def ramificationNumber (f : R⟦X⟧) : ℤ :=
   (HahnSeries.ofPowerSeries ℤ R f - HahnSeries.single (1 : ℤ) 1).order - 1
 
@@ -172,6 +182,36 @@ theorem ramificationNumber_eq_zero {f : R⟦X⟧} (hf : f.constantCoeff = 0) (hf
       exact ofPowerSeries_sub_linear_mem_two hf)
   rw [ramificationNumber, h, sub_self]
 
+/-- For an injective ring homomorphism `φ`, the ramification number `v_T(φ(f) - T) - 1` of the
+image `φ(f)` of `f` is the ramification number of `f`. -/
+theorem ramificationNumber_map {S : Type*} [CommRing S] {φ : R →+* S}
+    (hφ : Function.Injective φ) (f : R⟦X⟧) :
+    (f.map φ).ramificationNumber = f.ramificationNumber := by
+  have key (A : LaurentSeries R) : (LaurentSeries.mapRingHom φ A).order = A.order := by
+    by_cases hA : A = 0
+    · rw [hA, map_zero, HahnSeries.order_zero, HahnSeries.order_zero]
+    have ht := LaurentSeries.orderTop_mapRingHom_of_injective φ hφ A
+    have hA' : LaurentSeries.mapRingHom φ A ≠ 0 := by
+      rw [← HahnSeries.orderTop_ne_top, ht, HahnSeries.orderTop_ne_top]
+      exact hA
+    exact WithTop.coe_inj.mp ((HahnSeries.order_eq_orderTop_of_ne_zero hA').trans
+      (ht.trans (HahnSeries.order_eq_orderTop_of_ne_zero hA).symm))
+  rw [ramificationNumber, ramificationNumber, ← key, map_sub,
+    LaurentSeries.mapRingHom_ofPowerSeries, LaurentSeries.mapRingHom_single, φ.map_one]
+
+/-- If `f - T` has order `n`, then the ramification number of `f` is `n - 1`. -/
+theorem ramificationNumber_eq_of_order_sub_X_eq {f : R⟦X⟧} {n : ℕ}
+    (h : (f - X).order = (n : ℕ∞)) : f.ramificationNumber = n - 1 := by
+  have hf : f ≠ X := by
+    rintro rfl
+    simp at h
+  have ht := orderTop_ofPowerSeries_sub_X hf
+  rw [← HahnSeries.ofPowerSeries_X, ← map_sub, HahnSeries.orderTop_ofPowerSeries] at ht
+  have h' : ((n : ℤ) : WithTop ℤ) = ((f.ramificationNumber + 1 : ℤ) : WithTop ℤ) :=
+    (congrArg (WithTop.map fun n : ℕ ↦ (n : ℤ)) h).symm.trans ht
+  rw [WithTop.coe_inj] at h'
+  omega
+
 end CommRing
 
 end PowerSeries
@@ -202,7 +242,7 @@ theorem substEquiv_conj {w f : PowerSeries R} (hw : w.constantCoeff = 0)
     exact hw'.mul hf'
   rw [PowerSeries.conj, substEquiv_subst (PowerSeries.constantCoeff_compInv w)
       (PowerSeries.isUnit_coeff_one_compInv w) h0 h1, substEquiv_subst hf hf' hw hw',
-    PowerSeries.compInv_eq_substInvOfIsUnit hw', ← substEquiv_symm hw hw']
+    ← substEquiv_symm hw hw']
 
 /-- Let `w, f` have zero constant term and invertible linear coefficient. Then
 `w ∘ f ∘ w^{∘-1} = W⁻¹(f(w))`, where `W : x ↦ x(w)`. -/

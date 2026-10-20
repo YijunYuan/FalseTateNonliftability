@@ -41,6 +41,9 @@ ramification numbers of the iterates `τ^{p^k}` (Yuan, Proposition 5.1) exclude 
 * `FalseTateNonliftability.not_finiteLiftable_falseTateExtension`,
   `FalseTateNonliftability.not_finiteLiftable_falseTate`: Yuan, Proposition 1.3, for every
   uniformizer `π` of `ℚ_p` and for `π = p`.
+* `FalseTateNonliftability.not_finiteLiftable_falseTateExtension_of_orderOf`: Yuan,
+  Proposition 1.3 with `δ` replaced by any `σ ∈ Gal(K_FT/ℚ_p(π^{1/p^∞}))` such that `χ(σ) mod p`
+  has order `p - 1`, which includes every generator of the torsion subgroup of this group.
 * `FalseTateNonliftability.not_isLiftable_falseTateExtension`,
   `FalseTateNonliftability.not_isLiftable_falseTate`: Yuan, Theorem A, for every uniformizer `π`
   of `ℚ_p` and for `π = p`.
@@ -123,6 +126,33 @@ theorem hasRamificationLimit_coordinateFamily_series_kummerGenerator :
   · simp_rw [hd, Int.cast_natCast]
     exact kummerRamificationBreak_tendsto_padic p
 
+/-- Yuan, Proposition 1.3, for a uniformizer `π` of `ℚ_p` and every `σ ∈ Gal(K_FT/K_Kum)` such
+that `χ(σ) mod p` has order `p - 1` in `𝔽_pˣ`, for instance every generator of the torsion
+subgroup of `Gal(K_FT/K_Kum)` (the elements `δ` of Yuan, Lemma 1.2 (3)): let `F/ℚ_p` be a finite
+totally ramified extension with absolute ramification index `e`, and let `u` be a uniformizer of
+`X_{ℚ_p}(K_FT)`, `K_FT = ℚ_p(π^{1/p^∞}, ζ_{p^∞})`. There are no
+`P, F_τ, F_σ ∈ (𝒪_F ⧸ 𝔪_F ^ (e + 1))((T))` with reductions `P̄ = T^p`, `F̄_τ = f_{τ,u}` and
+`F̄_σ = f_{σ,u}` such that `F_τ ∘ P = P ∘ F_τ` and `F_σ ∘ P = P ∘ F_σ`. -/
+theorem not_finiteLiftable_falseTateExtension_of_orderOf
+    {σ : falseTateKummerFixing p (π : ℚ_[p])}
+    (hσ : orderOf (Units.map (PadicInt.toZMod : ℤ_[p] →+* ZMod p).toMonoidHom
+      (padicCyclotomicCharacter p (π : ℚ_[p]) σ.val)) = p - 1) :
+    ¬ CoordinateFamily.FiniteLiftable
+      (IsLiftable.coordinateFamily p ℚ_[p] (falseTateExtension p (π : ℚ_[p])) F u hu)
+      {(τ p π).val, σ.val} (absoluteRamificationIdx p (spectralIntegerRing ℚ_[p] F)) := by
+  rintro ⟨L⟩
+  have hτ : (τ p π).val ∈ ({(τ p π).val, σ.val} : Set _) := Set.mem_insert _ _
+  have hσ' : σ.val ∈ ({(τ p π).val, σ.val} : Set _) := Set.mem_insert_of_mem _ rfl
+  have hP := L.residue_frobenius
+  rw [(Fact.out : Nat.card (ResidueField (spectralIntegerRing ℚ_[p] F)) = p)] at hP
+  refine Truncation.false_of_commute p hP (L.residue_lift ⟨_, hτ⟩) (L.residue_lift ⟨_, hσ'⟩)
+    (L.commute ⟨_, hτ⟩) (L.commute ⟨_, hσ'⟩)
+    (hasRamificationLimit_coordinateFamily_series_kummerGenerator p π F hu)
+    (kummerRamificationLimit_notMem_range_intCast p)
+    (CoordinateFamily.constantCoeff_series _ _) ?_
+  rw [IsLiftable.orderOf_coeff_one_coordinateFamily_series]
+  exact orderOf_coeff_one_coordinateSeries_falseTateKummerFixing u hu hσ
+
 /-- **Yuan, Proposition 1.3**, for a uniformizer `π` of `ℚ_p`: let `F/ℚ_p` be a finite totally
 ramified extension with absolute ramification index `e`, and let `u` be a uniformizer of
 `X_{ℚ_p}(K_FT)`, `K_FT = ℚ_p(π^{1/p^∞}, ζ_{p^∞})`. There are no
@@ -131,19 +161,9 @@ ramified extension with absolute ramification index `e`, and let `u` be a unifor
 theorem not_finiteLiftable_falseTateExtension :
     ¬ CoordinateFamily.FiniteLiftable
       (IsLiftable.coordinateFamily p ℚ_[p] (falseTateExtension p (π : ℚ_[p])) F u hu)
-      {(τ p π).val, (δ p π).val} (absoluteRamificationIdx p (spectralIntegerRing ℚ_[p] F)) := by
-  rintro ⟨L⟩
-  have hτ : (τ p π).val ∈ ({(τ p π).val, (δ p π).val} : Set _) := Set.mem_insert _ _
-  have hδ : (δ p π).val ∈ ({(τ p π).val, (δ p π).val} : Set _) := Set.mem_insert_of_mem _ rfl
-  have hP := L.residue_frobenius
-  rw [(Fact.out : Nat.card (ResidueField (spectralIntegerRing ℚ_[p] F)) = p)] at hP
-  refine Truncation.false_of_commute p hP (L.residue_lift ⟨_, hτ⟩) (L.residue_lift ⟨_, hδ⟩)
-    (L.commute ⟨_, hτ⟩) (L.commute ⟨_, hδ⟩)
-    (hasRamificationLimit_coordinateFamily_series_kummerGenerator p π F hu)
-    (kummerRamificationLimit_notMem_range_intCast p)
-    (CoordinateFamily.constantCoeff_series _ _) ?_
-  rw [IsLiftable.orderOf_coeff_one_coordinateFamily_series]
-  exact orderOf_coeff_one_coordinateSeries_tameGenerator u hu
+      {(τ p π).val, (δ p π).val} (absoluteRamificationIdx p (spectralIntegerRing ℚ_[p] F)) :=
+  not_finiteLiftable_falseTateExtension_of_orderOf p π F hu
+    (orderOf_map_toZMod_padicCyclotomicCharacter_tameGenerator p π)
 
 /-- **Yuan, Theorem A**, for a uniformizer `π` of `ℚ_p`: for every finite totally ramified
 extension `F/ℚ_p`, the action of `Gal(K_FT/ℚ_p)` on the field of norms `X_{ℚ_p}(K_FT)` of

@@ -15,7 +15,7 @@ public import FalseTateNonliftability.Mathlib.RingTheory.LaurentSeries.Derivativ
 
 Let `O` be a discrete valuation ring with maximal ideal `𝔪`, uniformizer `ϖ` and residue field
 `κ = 𝔽_p`, where `p` is a prime with `p ≠ 0` in `O`, and let `e = v_ϖ(p)` be the absolute
-ramification index of `O`; in Yuan, `O = O_F` for a finite totally ramified extension `F/ℚ_p`. Let
+ramification index of `O`; in Yuan, `O = 𝒪_F` for a finite totally ramified extension `F/ℚ_p`. Let
 `R_r = (O ⧸ 𝔪 ^ (r + 1))((T))`, so that `R_e` is the ring `R` of Yuan, §1.4, and let `P ∈ R_e`
 reduce to `T ^ p`. By Yuan, Lemma 2.4, `P' ≠ 0`, and there is a unique `s = s(P) ∈ {1, …, e}`
 with `P' ∈ ϖ ^ s R_e ∖ ϖ ^ (s + 1) R_e`; `s(P)` is the derivative level of `P` and
@@ -28,7 +28,8 @@ Definition 2.5). Moreover:
    `P_H = H ∘ P ∘ H^{∘-1}` reduces to `T ^ p`, `s(P_H) = s(P)`, `h_{P_H} ∘ H̄ = (H̄')^(p - 1) h_P`
    (equation (2.3)) and `v_T(h_{P_H}) = v_T(h_P)`;
 3. if `s < e`, then `h_P = A'` for some `A ∈ κ((T))`; if `s = e`, then `h_P = c T^(p - 1) + A'`
-   with `c ∈ κˣ` and `A ∈ κ((T))`, hence `h_P' ≠ 0` and `v_T(h_P') ≤ p - 2`.
+   with `A ∈ κ((T))`, where `c = p / ϖ ^ e mod 𝔪 ∈ κˣ` does not depend on `P`, hence `h_P' ≠ 0`
+   and `v_T(h_P') ≤ p - 2`.
 
 Yuan, Theorem 3.1: if `G ∘ P = P ∘ G`, `s(P) = e`, and the reduction `f` of `G` satisfies
 `f = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ∈ κˣ`, `d ≥ 1` and `d ≡ -1 (mod p)`, then
@@ -56,9 +57,9 @@ In the namespace `FalseTateNonliftability.Truncation`:
 * `mapRingHom_residue_conj`, `derivativeLevel_conj`, `subst_normalizedDerivative_conj`,
   `order_normalizedDerivative_conj`: Yuan, Lemma 2.4 (2).
 * `exists_normalizedDerivative_eq_derivative`,
-  `exists_normalizedDerivative_eq_single_add_derivative`,
+  `exists_normalizedDerivative_eq_single_add_derivative`, `coeff_layer_C_natCast_ne_zero`,
   `derivative_normalizedDerivative_ne_zero`, `order_derivative_normalizedDerivative_le`: Yuan,
-  Lemma 2.4 (3).
+  Lemma 2.4 (3), with the constant `c = p / ϖ ^ e mod 𝔪 ≠ 0`.
 * `order_normalizedDerivative_le`: `v_T(h_P) ≤ p - 1 - d` (Yuan, Theorem 3.1).
 
 Over a field `k` of characteristic `p`:
@@ -280,7 +281,9 @@ private theorem coeff_normalizedDerivative_of_eq {P : LaurentSeries (Truncation 
   rw [normalizedDerivative, hs, coeff_layer_eq_of_coeff_eq_mul hDP hpe
     (coeff_derivative_natCast_mul_sub_one p P ℓ), map_mul, map_intCast, ← hP, mapRingHom_coeff]
 
-private theorem coeff_layer_C_natCast_ne_zero [NeZero (p : O)]
+/-- If `p ≠ 0` in `O` and `e ≤ r`, the constant `c = p / ϖ ^ e mod 𝔪 ∈ κ` of Yuan, Lemma 2.4 (the
+constant coefficient of the layer `ϖ⁻ᵉ p` of `p` in `R_r`) is nonzero. -/
+theorem coeff_layer_C_natCast_ne_zero [NeZero (p : O)]
     (her : absoluteRamificationIdx p O ≤ r) :
     (layer (absoluteRamificationIdx p O) (HahnSeries.C (p : Truncation O r))).coeff 0 ≠ 0 := by
   rw [ne_eq, coeff_layer_eq_zero_iff (C_mem_layerIdeal O
@@ -408,16 +411,18 @@ theorem exists_normalizedDerivative_eq_derivative {P : LaurentSeries (Truncation
       (Nat.succ_le_succ (derivativeLevel_le P)))
   exact ⟨A, hA.symm⟩
 
-/-- Yuan, Lemma 2.4 (3): if `p ≠ 0` in `O`, `P` reduces to `T ^ p` and `s(P) = e`, then
-`h_P = c T^(p - 1) + A'` for some `c ≠ 0` in `κ` and `A ∈ κ((T))`. -/
-theorem exists_normalizedDerivative_eq_single_add_derivative [NeZero (p : O)]
+/-- Yuan, Lemma 2.4 (3): if `P` reduces to `T ^ p` and `s(P) = e`, then `h_P = c T^(p - 1) + A'`
+for some `A ∈ κ((T))`, where `c = p / ϖ ^ e mod 𝔪 ∈ κ`, the constant coefficient of the layer
+`ϖ⁻ᵉ p` of `p`, does not depend on `P`. If `p ≠ 0` in `O`, then `c ≠ 0`
+(`coeff_layer_C_natCast_ne_zero`). -/
+theorem exists_normalizedDerivative_eq_single_add_derivative
     {P : LaurentSeries (Truncation O r)}
     (hP : mapRingHom (residue O r) P = HahnSeries.single (p : ℤ) 1)
     (hs : derivativeLevel P = absoluteRamificationIdx p O) :
-    ∃ c : ResidueField O, c ≠ 0 ∧ ∃ A : LaurentSeries (ResidueField O),
-      normalizedDerivative P =
-        HahnSeries.single ((p : ℤ) - 1) c + derivative (ResidueField O) A := by
-  refine ⟨_, coeff_layer_C_natCast_ne_zero p (hs ▸ derivativeLevel_le P), ?_⟩
+    ∃ A : LaurentSeries (ResidueField O), normalizedDerivative P =
+      HahnSeries.single ((p : ℤ) - 1)
+          ((layer (absoluteRamificationIdx p O) (HahnSeries.C (p : Truncation O r))).coeff 0) +
+        derivative (ResidueField O) A := by
   have := charP_residueField p (O := O)
   obtain ⟨A, hA⟩ := (exists_derivative_iff p (normalizedDerivative P -
       HahnSeries.single ((p : ℤ) - 1)

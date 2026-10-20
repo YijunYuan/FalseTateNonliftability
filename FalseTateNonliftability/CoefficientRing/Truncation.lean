@@ -14,7 +14,7 @@ public import Mathlib.RingTheory.DiscreteValuationRing.Basic
 /-!
 # The coefficient ring `A`, its truncations and their layers
 
-Let `O` be a local ring with maximal ideal `𝔪` and residue field `κ`; in Yuan, `O = O_F` is the
+Let `O` be a local ring with maximal ideal `𝔪` and residue field `κ`; in Yuan, `O = 𝒪_F` is the
 ring of integers of a finite extension `F` of `ℚ_p`, a discrete valuation ring with uniformizer
 `ϖ`. The coefficient ring `A` of Yuan, Definition 1.1, is the `ϖ`-adic completion of `O⟦T⟧[1/T]`,
 that is, the `𝔪`-adic completion of the ring `O((T))` of Laurent series. If `𝔪` is principal,

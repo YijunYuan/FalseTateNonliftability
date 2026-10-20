@@ -49,6 +49,9 @@ If `L/K` is totally ramified, then `Aut(L/K)` fixes the constants `κ_L ⊆ X_K(
   `FalseTateNonliftability.FieldOfNorms.isUnit_coeff_one_coordinateSeries`: Yuan, Lemma 2.2 (1).
 * `FalseTateNonliftability.FieldOfNorms.aut_laurentEquiv`: Yuan, Lemma 2.2 (2).
 * `FalseTateNonliftability.FieldOfNorms.coordinateSeries_mul`: Yuan, Lemma 2.2 (3).
+* `FalseTateNonliftability.FieldOfNorms.isOfFinOrder_substEquiv_coordinateSeries_iff`: the
+  automorphism `a ↦ a ∘ f_{g,u}` of `κ_L((T))` has finite order if and only if `f_{g ^ n, u} = T`
+  for some `n > 0`.
 * `FalseTateNonliftability.FieldOfNorms.exists_laurentEquiv_eq`: every uniformizer is `ev_u(V)`
   with `V(0) = 0` and `V'(0) ≠ 0`.
 * `FalseTateNonliftability.FieldOfNorms.laurentEquiv_substEquiv`: `ev_u(a ∘ V) = ev_{u'}(a)` for
@@ -314,6 +317,13 @@ def coordinateFamily : CoordinateFamily (integralClosureResidueField K L) (L ≃
 theorem coordinateFamily_series (g : L ≃ₐ[K] L) :
     (coordinateFamily K L u hu).series g = coordinateSeries K L u hu g :=
   rfl
+
+/-- The automorphism `a ↦ a ∘ f_{g,u}` of `κ_L((T))` has finite order if and only if
+`f_{g ^ n, u} = T` for some `n > 0`. -/
+theorem isOfFinOrder_substEquiv_coordinateSeries_iff (g : L ≃ₐ[K] L) :
+    IsOfFinOrder (LaurentSeries.substEquiv (coordinateSeries K L u hu g)) ↔
+      ∃ n, 0 < n ∧ coordinateSeries K L u hu (g ^ n) = X :=
+  (coordinateFamily K L u hu).isOfFinOrder_substEquiv_series_iff g
 
 variable {u' : FieldOfNorms K L} (hu' : FieldOfNorms.valuation K L u' = exp (-1 : ℤ))
   {V : PowerSeries (integralClosureResidueField K L)}
