@@ -10,28 +10,33 @@ public import FalseTateNonliftability.Mathlib.NumberTheory.Padics.Continuity
 public import FalseTateNonliftability.Mathlib.RingTheory.LaurentSeries.Derivative
 
 /-!
-# The `p`-adic limit of ramification numbers and invariant exact differentials
+# Integrality constraint for invariant exact differentials
 
-Let `κ` be a finite field of characteristic `p` and let `f ∈ T + T ^ 2 κ⟦T⟧` be such that the
-automorphism `σ : x ↦ x(f)` of `κ((T))` has infinite order. Suppose that the ramification numbers
-`d_n = i(σ ^ (p ^ n))` converge in `ℤ_p` to `b`. If `σ` fixes a nonzero exact differential
-`ω = a dT`, that is, `a(f) f' = a` and `a = U'` for some `U ∈ κ((T))`, then
-`b = -v_T(a) - 1 ∈ ℤ`.
+Let `κ` be a finite field of characteristic `p`, let `f ∈ T + T ^ 2 κ⟦T⟧`, and assume that the
+automorphism `σ : x ↦ x(f)` of `κ((T))` has infinite order. The ramification numbers
+`d_n = i(σ ^ (p ^ n)) = v_T(f^{∘p^n} - T) - 1` (`PowerSeries.ramificationNumber`) are then
+positive integers tending to `∞`. The group `⟨σ⟩` acts on differentials by
+`σ(a dT) = a(f) f' dT`; a differential `a dT` is exact if `a = U'` for some `U ∈ κ((T))`, and
+`ord_T(a dT) = v_T(a)`. Yuan, Proposition 4.3: if the `d_n` converge in `ℤ_p` to `b` and `σ` fixes
+a nonzero exact differential `ω`, then `b = -ord_T(ω) - 1 ∈ ℤ`.
 
-If `p ∤ v_T(U)`, then `σ(U) - U = B ^ p` for some `B`, and the orbit sums
-`x_n = ∑_{j < p ^ n} σ ^ j (B)` satisfy `x_n ^ p = σ ^ (p ^ n) (U) - U` and
-`σ(x_n) - x_n = σ ^ (p ^ n) (B) - B`; they are approximate invariants of `σ` with
-`p v_T(x_n) = v_T(U) + d_n`.
+The primitive `U` of `ω` can be chosen with `p ∤ v_T(U)`. Since `d(σ(U) - U) = 0`, one has
+`σ(U) - U = B ^ p` for some `B ∈ κ((T))`, and the orbit sums `x_n = ∑_{j < p ^ n} σ ^ j (B)`
+satisfy `x_n ^ p = σ ^ (p ^ n) (U) - U` and `σ(x_n) - x_n = σ ^ (p ^ n) (B) - B`. Hence
+`p v_T(x_n) = v_T(U) + d_n` (Lemma 3.2), the `x_n` are approximate invariants of `σ`, and Lemma 4.2
+gives `(v_T(U) + b) / p = 0`.
 
 ## Main results
 
-* `LaurentSeries.padic_ramification_limit_eq_of_invariant_exact_differential`: Yuan,
-  Proposition 4.3.
+* `LaurentSeries.padic_ramification_limit_eq_of_invariant_exact_differential`: the `p`-adic limit
+  of the ramification numbers `i(σ ^ (p ^ n))` is `-ord_T(ω) - 1` for every nonzero exact
+  differential `ω` fixed by `σ` (Yuan, Proposition 4.3).
 
 ## References
 
-* Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  Proposition 4.3.
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Lemma 3.2, Lemma 4.2 and Proposition 4.3.
+* J.-P. Serre, *Local Fields*, Chapter IV, §1 (the ramification numbers `i(σ)`).
 -/
 
 @[expose] public section
@@ -72,8 +77,9 @@ private theorem sum_pow_apply_pow_char (p : ℕ) [Fact p.Prime] [CharP κ p]
   rw [sum_pow_char]
   simp only [← map_pow, hB, sum_pow_apply_sub]
 
-/-- Let `κ` have characteristic `p` and let `g = T + O(T ^ 2)` have ramification number
-`d ≥ 1`. If `A ≠ 0` and `p ∤ v_T(A)`, then `A(g) - A ≠ 0` has order `v_T(A) + d`. -/
+/-- Let `κ` have characteristic `p` and let `g ∈ T + T ^ 2 κ⟦T⟧` have ramification number
+`d ≥ 1`. If `A ≠ 0` and `p ∤ v_T(A)`, then `A(g) - A ≠ 0` and `v_T(A(g) - A) = v_T(A) + d`
+(Yuan, Lemma 3.2). -/
 private theorem ne_zero_and_order_substEquiv_sub (p : ℕ) [CharP κ p] {g : PowerSeries κ}
     (hg : 1 ≤ g.ramificationNumber) {A : LaurentSeries κ} (hA : A ≠ 0)
     (hpA : ¬ (p : ℤ) ∣ A.order) :
@@ -102,10 +108,10 @@ private theorem ne_zero_and_order_substEquiv_sub (p : ℕ) [CharP κ p] {g : Pow
   exact ⟨HahnSeries.ne_zero_of_coeff_ne_zero (hc ▸ hb), order_eq_of_sub_single_mem hb hmem⟩
 
 /-- **Integrality constraint for invariant exact differentials** (Yuan, Proposition 4.3). Let `κ`
-be a finite field of characteristic `p` and `f = T + O(T ^ 2)` such that `σ : x ↦ x(f)` has
-infinite order, and suppose that the ramification numbers `i(σ ^ (p ^ n))` converge in `ℤ_p` to
-`b`. If `σ` fixes a nonzero exact differential `ω = a dT`, that is, `a = U'` for some `U` and
-`a(f) f' = a`, then `b = -v_T(a) - 1`. -/
+be a finite field of characteristic `p` and let `f ∈ T + T ^ 2 κ⟦T⟧` be such that `σ : x ↦ x(f)`
+has infinite order, and suppose that the ramification numbers `i(σ ^ (p ^ n))` converge in `ℤ_p`
+to `b`. If `σ` fixes a nonzero exact differential `ω = a dT`, that is, `a ≠ 0`, `a = U'` for some
+`U ∈ κ((T))` and `a(f) f' = a`, then `b = -v_T(a) - 1`. -/
 theorem padic_ramification_limit_eq_of_invariant_exact_differential [Finite κ] (p : ℕ)
     [Fact p.Prime] [CharP κ p] {f : PowerSeries κ} (hf1 : f.coeff 1 = 1)
     (hf : ¬ IsOfFinOrder (substEquiv f)) {b : ℤ_[p]}

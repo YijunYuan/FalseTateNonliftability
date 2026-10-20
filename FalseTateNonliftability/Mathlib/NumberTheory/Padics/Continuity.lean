@@ -12,14 +12,24 @@ public import Mathlib.Topology.Instances.ZMod
 /-!
 # Continuity of the reduction `ℤ_p → ℤ/pℤ` and division by `p`
 
-The reduction `ℤ_p → ℤ/pℤ` is continuous for the discrete topology on `ℤ/pℤ`. Multiplication by
-`p` is a closed embedding of `ℤ_p` into itself; hence if `p x_n → b` in `ℤ_p`, then `x_n → c` for
-some `c` with `p c = b`.
+Let `p` be a prime number. The reduction `ℤ_p → ℤ/pℤ` is locally constant, hence continuous for
+the discrete topology on `ℤ/pℤ`. Multiplication by `p` is a closed embedding of `ℤ_p` into itself.
+Consequently, if a sequence `(p x_n)` converges in `ℤ_p` to `b`, then `b = p c` for some `c ∈ ℤ_p`
+and `x_n → c`.
+
+This file is a candidate for upstreaming to Mathlib (`Mathlib.NumberTheory.Padics.RingHoms`).
 
 ## Main results
 
 * `PadicInt.continuous_toZMod`: the reduction `ℤ_p → ℤ/pℤ` is continuous.
-* `PadicInt.exists_tendsto_of_prime_mul_tendsto`: if `p x_n → b`, then `x_n → c` with `p c = b`.
+* `PadicInt.exists_tendsto_of_prime_mul_tendsto`: if `p x_n → b` in `ℤ_p`, then `x_n → c` for some
+  `c` with `p c = b`.
+
+## References
+
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Lemma 4.2 (`p`-adic powers of principal units) and the proof of Proposition 4.3 (the limit of
+  `(q + d_n) / p` in `ℤ_p`).
 -/
 
 @[expose] public section
@@ -44,7 +54,8 @@ theorem continuous_toZMod : Continuous (toZMod : ℤ_[p] → ZMod p) := by
   filter_upwards [heq] with y hy
   exact hy.symm
 
-/-- If `p x_n` converges to `b` in `ℤ_p`, then `x_n` converges to some `c` with `p c = b`. -/
+/-- If `(p x_n)` converges to `b` in `ℤ_p`, then `(x_n)` converges to some `c ∈ ℤ_p` with
+`p c = b`. -/
 theorem exists_tendsto_of_prime_mul_tendsto {x : ℕ → ℤ_[p]} {b : ℤ_[p]}
     (h : Tendsto (fun n ↦ (p : ℤ_[p]) * x n) atTop (𝓝 b)) :
     ∃ c : ℤ_[p], (p : ℤ_[p]) * c = b ∧ Tendsto x atTop (𝓝 c) := by

@@ -14,16 +14,19 @@ public import FontaineWintenberger.Ramification.Lower.Teichmuller
 # The tame generator and its linear coefficient
 
 Let `p` be an odd prime, `π` a uniformizer of `ℚ_p`, `K_FT = ℚ_p(π^{1/p^∞}, ζ_{p^∞})`,
-`K_Kum = ℚ_p(π^{1/p^∞})`, `χ : Gal(K_FT/ℚ_p) → ℤ_pˣ` the cyclotomic character and `τ` the generator
-of `Gal(K_FT/ℚ_p(ζ_{p^∞})) ≅ ℤ_p` with Kummer exponent `1`. The character `χ` restricts to an
-isomorphism `Gal(K_FT/K_Kum) ≅ ℤ_pˣ ≅ μ_{p-1} × (1 + p ℤ_p)`. The tame generator `δ` is the element
-of `Gal(K_FT/K_Kum)` whose character `χ(δ) = ω(g)` is the Teichmüller representative of a fixed
-generator `g` of `𝔽_pˣ`; it generates the torsion subgroup of `Gal(K_FT/K_Kum)`, and
+`K_Kum = ℚ_p(π^{1/p^∞})`, `χ : Gal(K_FT/ℚ_p) → ℤ_pˣ` the `p`-adic cyclotomic character and `τ` the
+generator of `Gal(K_FT/ℚ_p(ζ_{p^∞})) ≅ ℤ_p` with Kummer exponent `1`. The character `χ` restricts
+to an isomorphism `Gal(K_FT/K_Kum) ≅ ℤ_pˣ ≅ μ_{p-1} × (1 + p ℤ_p)`. The tame generator `δ` is the
+element of `Gal(K_FT/K_Kum)` whose character `χ(δ) = ω(g)` is the Teichmüller representative of a
+fixed generator `g` of `𝔽_pˣ`; it generates the torsion subgroup of `Gal(K_FT/K_Kum)`, and
 `δ τ δ⁻¹ = τ^{χ(δ)}` (Yuan, Lemma 1.2 (3)).
 
-Lemma 5.3 of Yuan: for every uniformizer `u` of the field of norms `X_{ℚ_p}(K_FT)`, whose residue
+Yuan, Lemma 5.3: for every uniformizer `u` of the field of norms `X_{ℚ_p}(K_FT)`, whose residue
 field `κ_L` is `𝔽_p` as `K_FT/ℚ_p` is totally ramified, the coordinate series of `δ` is
-`f_{δ,u} = χ(δ) T + O(T²)`. Hence its linear coefficient has multiplicative order `p - 1`.
+`f_{δ,u} = χ(δ) T + O(T²)`. Hence its linear coefficient has multiplicative order `p - 1`. This
+follows from `f_{τ,u} = T + α T^{2p} + O(T^{2p+1})` with `α ≠ 0` (`d_0 = 2p - 1`, Yuan,
+Proposition 5.1) by comparing the coefficients of `T^{2p}` in
+`f_{τ,u} ∘ f_{δ,u} = f_{δ,u} ∘ f_{τ^{χ(δ)},u}`.
 
 ## Main definitions
 
@@ -42,12 +45,20 @@ field `κ_L` is `𝔽_p` as `K_FT/ℚ_p` is totally ramified, the coordinate ser
 * `FalseTateNonliftability.orderOf_coeff_one_coordinateSeries_tameGenerator`: `f_{δ,u}'(0)` has
   multiplicative order `p - 1` (Yuan, Lemma 5.3).
 
+## Implementation notes
+
+Yuan, Lemma 1.2 (3) lets `δ` be any generator of the torsion subgroup of `Gal(K_FT/K_Kum)`. Here
+`δ` is the element with `χ(δ) = ω(g)` for a generator `g` of `𝔽_pˣ` chosen once and for all; the
+proofs use only that `χ(δ) mod p` generates `𝔽_pˣ`.
+
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  Lemma 1.2 and Lemma 5.3.
+  Lemma 1.2, Proposition 5.1 and Lemma 5.3.
 * T. Liu, *On lattices in semi-stable representations: a proof of a conjecture of Breuil*,
-  Lemma 5.1.2.
+  Compos. Math. 144 (2008), 61–88, Lemma 5.1.2.
+* F. Viviani, *Ramification groups and Artin conductors of radical extensions of ℚ*, J. Théor.
+  Nombres Bordeaux 16 (2004), 779–816, Corollary 6.2.
 -/
 
 @[expose] public section
@@ -253,10 +264,10 @@ private theorem exists_natCast_coeff_coordinateSeries_sub_X_eq (a : ℤ_[p]) :
   obtain ⟨N, hN, hv⟩ := exists_natCast_valuation_aut_sub_le u hu a (2 * p)
   refine ⟨N, hN, fun j hj ↦ ?_⟩
   have hp := (Fact.out : p.Prime).two_le
-  have hpow : FieldOfNorms.coordinateSeries ℚ_[p] (falseTateExtension p (π : ℚ_[p])) u hu
-      ((τ p π).val ^ N) = iterate (FieldOfNorms.coordinateSeries ℚ_[p]
-        (falseTateExtension p (π : ℚ_[p])) u hu (τ p π).val) N :=
-    (FieldOfNorms.coordinateFamily ℚ_[p] (falseTateExtension p (π : ℚ_[p])) u hu).series_pow _ N
+  have hpow :=
+    (FieldOfNorms.coordinateFamily ℚ_[p] (falseTateExtension p (π : ℚ_[p])) u hu).series_pow
+      (τ p π).val N
+  simp only [FieldOfNorms.coordinateFamily_series] at hpow
   rw [map_sub, ← FieldOfNorms.coeff_coordinateSeries_eq_of_valuation_le u hu _ _ hv
     (show j < 2 * p + 2 by omega), ← map_sub, hpow]
   exact coeff_iterate_sub_X (FieldOfNorms.constantCoeff_coordinateSeries _ _ u hu _) (by omega)
@@ -299,15 +310,12 @@ theorem coeff_one_coordinateSeries_tameGenerator :
 theorem orderOf_coeff_one_coordinateSeries_tameGenerator :
     orderOf ((FieldOfNorms.coordinateSeries ℚ_[p] (falseTateExtension p (π : ℚ_[p])) u hu
       (δ p π).val).coeff 1) = p - 1 := by
-  rw [coeff_one_coordinateSeries_tameGenerator]
-  let ψ : ZMod p →* integralClosureResidueField ℚ_[p] (falseTateExtension p (π : ℚ_[p])) :=
-    (algebraMap 𝓀[ℚ_[p]] _).toMonoidHom.comp (padicResidueFieldEquiv p).symm.toMonoidHom
-  have hψ : Function.Injective ψ :=
-    (algebraMap 𝓀[ℚ_[p]] _).injective.comp (padicResidueFieldEquiv p).symm.injective
-  rw [show algebraMap 𝓀[ℚ_[p]] _ ((padicResidueFieldEquiv p).symm _) = ψ _ from rfl,
-    orderOf_injective ψ hψ, ← orderOf_map_toZMod_padicCyclotomicCharacter_tameGenerator p π,
-    ← orderOf_units]
-  rfl
+  rw [coeff_one_coordinateSeries_tameGenerator,
+    ← orderOf_map_toZMod_padicCyclotomicCharacter_tameGenerator p π, ← orderOf_units]
+  -- `𝔽_p → 𝓀[ℚ_p] → κ_L` is injective
+  exact orderOf_injective
+    ((algebraMap 𝓀[ℚ_[p]] _).comp (padicResidueFieldEquiv p).symm.toRingHom).toMonoidHom
+    (RingHom.injective _) _
 
 end LinearCoefficient
 

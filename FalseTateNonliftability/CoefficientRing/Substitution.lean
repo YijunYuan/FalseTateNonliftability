@@ -11,60 +11,72 @@ public import FalseTateNonliftability.Mathlib.RingTheory.PowerSeries.Composition
 /-!
 # Substitution and coordinate changes in the coefficient ring `A`
 
-Let `O` be a local principal ideal ring with maximal ideal `𝔪` and residue field `κ`, for
-instance the ring of integers of a finite extension of `ℚ_p`, and let `A` be the `𝔪`-adic
-completion of `O((T))` (`FalseTateNonliftability.CoefficientRing O`). Over each truncation
-`O ⧸ 𝔪 ^ (r + 1)` substitution is `LaurentSeries.subst`.
+Let `O` be a local principal ideal ring with maximal ideal `𝔪` and residue field `κ` (in Yuan, the
+ring of integers of a finite extension `F` of `ℚ_p`), and let `A` be the `𝔪`-adic completion of
+`O((T))` (`FalseTateNonliftability.CoefficientRing O`, Yuan, Definition 1.1). For Laurent series
+`Q` and `G`, write `Q ∘ G = Q(G)` for the substitution of `G` for the variable. An element `G ∈ A`
+is admissible if its reduction `Ḡ ∈ κ((T))` is nonzero with `v_T(Ḡ) ≥ 1`. Yuan, Lemma 2.1 over
+`A`: for admissible `G`, the substitutions `Q ↦ Q(G)` on the rings `(O ⧸ 𝔪 ^ (r + 1))((T))`
+(`LaurentSeries.subst`) are compatible, and their inverse limit is the unique `O`-algebra
+endomorphism `Q ↦ Q(G)` of `A` sending `T` to `G` that is `T`-adically continuous modulo every
+`𝔪 ^ (r + 1)`; moreover `(Q ∘ G) ∘ H = Q ∘ (G ∘ H)`.
 
-An element `G ∈ A` is admissible if its image in `κ((T))` has finite positive order; then so
-are its reductions modulo every `𝔪 ^ (r + 1)`. The substitutions `f ↦ f(G)` on the rings
-`(O ⧸ 𝔪 ^ (r + 1))((T))` are compatible, and their inverse limit is an `O`-algebra endomorphism
-`f ↦ f(G)` of `A` sending `T` to `G`. It is the only `O`-algebra endomorphism of `A` sending `T`
-to `G` that induces a `T`-adically continuous endomorphism of every `(O ⧸ 𝔪 ^ (r + 1))((T))`,
-and composition of substitutions is substitution at the composite (Yuan, Lemma 2.1, over `A`).
-
-Let `R` be a local Artinian ring with principal maximal ideal, and let `H` be a power series over
-`R` with `H(0) = 0` and `H'(0)` a unit. The conjugate of a Laurent series `P` by `H` is
-`H ∘ P ∘ H^{∘-1}`, where `f ∘ G` denotes substitution of `G` in `f`. On `A` the conjugate of
-`P ∈ A` by a power series `H` over `O` is defined in the same way, and it reduces modulo every
-`𝔪 ^ (r + 1)` to the conjugate by the reduction of `H`. Conjugation by `H` preserves
-admissibility, is inverted by conjugation by `H^{∘-1}`, preserves composition and hence
-commutation, and it commutes with coefficient maps. On power series over the residue field it is
-`PowerSeries.conj`. Every power series `w` over `κ` with `w(0) = 0` and `w'(0) ≠ 0` lifts
-coefficientwise to a power series `H` over `O` with `H(0) = 0` and `H'(0)` a unit. These are the
-ingredients of Yuan, Proposition 2.3: if `π' = ev_π(w)` is another uniformizer of the field of
-norms, conjugation by such a lift `H` transports lifts with respect to `π` to lifts with respect to
-`π'`, in `A` and modulo every power of `𝔪`.
+Let `H` be a power series with `H(0) = 0` and invertible linear coefficient, and let `H^{∘-1}` be
+its compositional inverse (Yuan, Lemma 2.1 (3)). The conjugate of a Laurent series `P` by `H` is
+`H ∘ P ∘ H^{∘-1}`, both over a local Artinian principal ideal ring and over `A`. Conjugation by `H`
+preserves admissibility and composition, hence commutation, it is inverted by conjugation by
+`H^{∘-1}`, it commutes with reduction of coefficients, and on power series over `κ` it is
+`PowerSeries.conj`. Every such power series over `κ` is the reduction of one over `O`. These are
+the ingredients of Yuan, Proposition 2.3: if `π' = ev_π(V)` is another uniformizer of the field of
+norms and `H` lifts `V`, conjugation by `H` transports lifts with respect to `π` to lifts with
+respect to `π'`, in `A` and modulo every power of `𝔪`.
 
 ## Main definitions
 
-* `CoefficientRing.X`: the variable `T` of `A`.
-* `CoefficientRing.IsAdmissible G`: the image of `G` in `κ((T))` has finite positive order.
-* `CoefficientRing.subst G`: the substitution `f ↦ f(G)`; the identity if `G` is not admissible.
+* `FalseTateNonliftability.CoefficientRing.X`: the variable `T` of `A`.
+* `FalseTateNonliftability.CoefficientRing.IsAdmissible G`: the reduction of `G` to `κ((T))` is
+  nonzero with positive valuation.
+* `FalseTateNonliftability.CoefficientRing.subst G`: the substitution `Q ↦ Q(G)` in `A`.
 * `LaurentSeries.conj H P`: the conjugate `H ∘ P ∘ H^{∘-1}` of a Laurent series `P`.
-* `CoefficientRing.conj H P`: the conjugate `H ∘ P ∘ H^{∘-1}` of `P ∈ A`.
+* `FalseTateNonliftability.CoefficientRing.conj H P`: the conjugate `H ∘ P ∘ H^{∘-1}` of `P ∈ A`.
 
 ## Main results
 
-* `CoefficientRing.reduction_subst`, `CoefficientRing.residue_subst`: substitution commutes with
-  reduction modulo `𝔪 ^ (r + 1)` and with reduction to `κ((T))`.
-* `CoefficientRing.subst_X`: `T(G) = G`.
-* `CoefficientRing.subst_unique`: uniqueness of substitution.
-* `CoefficientRing.subst_comp_subst`: `f(G)(H) = f(G(H))`.
+* `FalseTateNonliftability.CoefficientRing.reduction_subst`,
+  `FalseTateNonliftability.CoefficientRing.residue_subst`: substitution commutes with reduction
+  modulo `𝔪 ^ (r + 1)` and with reduction to `κ((T))`.
+* `FalseTateNonliftability.CoefficientRing.subst_X`: `T(G) = G` (Yuan, Lemma 2.1 (1), over `A`).
+* `FalseTateNonliftability.CoefficientRing.subst_unique`: uniqueness of substitution (Yuan,
+  Lemma 2.1 (1), over `A`).
+* `FalseTateNonliftability.CoefficientRing.subst_comp_subst`: `(Q ∘ G) ∘ H = Q ∘ (G ∘ H)` (Yuan,
+  Lemma 2.1 (2), over `A`).
 * `LaurentSeries.conj_eq_iff_subst`: `H ∘ P ∘ H^{∘-1} = Q` if and only if `H ∘ P = Q ∘ H`.
-* `LaurentSeries.conj_subst`, `LaurentSeries.conj_commute_iff`: conjugation preserves
-  composition, and preserves and reflects commutation of admissible series.
+* `LaurentSeries.conj_subst`, `LaurentSeries.conj_commute_iff`: conjugation preserves composition,
+  and preserves and reflects commutation of admissible series.
 * `LaurentSeries.mapRingHom_conj`, `LaurentSeries.conj_ofPowerSeries`: conjugation commutes with
   coefficient maps and is `PowerSeries.conj` on power series.
-* `CoefficientRing.reduction_conj`, `CoefficientRing.residue_conj`: conjugation in `A` reduces to
+* `FalseTateNonliftability.CoefficientRing.reduction_conj`,
+  `FalseTateNonliftability.CoefficientRing.residue_conj`: conjugation in `A` reduces to
   conjugation over `O ⧸ 𝔪 ^ (r + 1)` and over `κ`.
-* `CoefficientRing.conj_subst`, `CoefficientRing.conj_commute_iff`: the same laws in `A`.
-* `CoefficientRing.exists_map_residue_eq`, `Truncation.exists_map_residue_eq`: coefficientwise
-  lifts of coordinate changes over `κ`.
+* `FalseTateNonliftability.CoefficientRing.conj_subst`,
+  `FalseTateNonliftability.CoefficientRing.conj_commute_iff`: the same laws in `A`.
+* `FalseTateNonliftability.CoefficientRing.exists_map_residue_eq`,
+  `FalseTateNonliftability.Truncation.exists_map_residue_eq`: coordinate changes over `κ` lift to
+  `O` and to `O ⧸ 𝔪 ^ (r + 1)` (Yuan, proof of Proposition 2.3).
+
+## Implementation notes
+
+`CoefficientRing.subst G` is defined for every `G ∈ A` and is the identity if `G` is not
+admissible, and `conj H P` is defined for every power series `H`; their lemmas assume that `G` is
+admissible and that `H(0) = 0` and `H'(0)` is a unit. The Laurent series part of the file is stated
+over local Artinian principal ideal rings, the coefficient rings of `LaurentSeries.subst`, which
+include `κ` and the truncations `O ⧸ 𝔪 ^ (r + 1)` of a discrete valuation ring `O`.
 
 ## References
 
-* Yuan, Lemma 2.1 and Proposition 2.3.
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Lemma 2.1 and Proposition 2.3.
+* L. Berger, *Lifting the field of norms*, J. Éc. polytech. Math. 1 (2014), 29–38.
 -/
 
 public section
@@ -86,10 +98,12 @@ variable {O : Type*} [CommRing O] [IsLocalRing O]
 @[expose] def X : CoefficientRing O :=
   algebraMap (LaurentSeries O) (CoefficientRing O) (HahnSeries.single 1 1)
 
+/-- The reduction of `T ∈ A` modulo `𝔪 ^ (r + 1)` is `T`. -/
 @[simp]
 theorem reduction_X (r : ℕ) : reduction O r X = HahnSeries.single 1 1 := by
   rw [X, reduction_algebraMap_laurentSeries, mapRingHom_single, map_one]
 
+/-- The image of `P ∈ O⟦T⟧` in `κ((T))` is the coefficientwise reduction of `P`. -/
 @[simp]
 theorem residue_algebraMap_powerSeries (P : PowerSeries O) :
     residue O (algebraMap (PowerSeries O) (CoefficientRing O) P) =
@@ -97,10 +111,12 @@ theorem residue_algebraMap_powerSeries (P : PowerSeries O) :
   rw [IsScalarTower.algebraMap_apply (PowerSeries O) (LaurentSeries O),
     residue_algebraMap_laurentSeries, coe_algebraMap, mapRingHom_ofPowerSeries]
 
-/-- An element `G` of `A` is admissible if its image in `κ((T))` has finite positive order. -/
+/-- An element `G` of `A` is admissible if its reduction `Ḡ ∈ κ((T))` is nonzero with
+`v_T(Ḡ) ≥ 1`. -/
 @[expose] def IsAdmissible (G : CoefficientRing O) : Prop :=
   LaurentSeries.IsAdmissible (residue O G)
 
+/-- `G ∈ A` is admissible if and only if its reduction to `κ((T))` is admissible. -/
 theorem isAdmissible_iff_isAdmissible_residue (G : CoefficientRing O) :
     IsAdmissible G ↔ LaurentSeries.IsAdmissible (residue O G) :=
   Iff.rfl
@@ -166,9 +182,9 @@ theorem subst_X {G : CoefficientRing O} (hG : IsAdmissible G) : subst G X = G :=
     rw [reduction_subst, reduction_X,
       LaurentSeries.subst_X ((isAdmissible_iff_reduction r G).mp hG)]
 
-/-- `subst G` is the only `O`-algebra endomorphism of `A` sending `T` to `G` that induces, modulo
-every `𝔪 ^ (r + 1)`, an endomorphism of `(O ⧸ 𝔪 ^ (r + 1))((T))` continuous for the `T`-adic
-topology (Yuan, Lemma 2.1 (1), over `A`). -/
+/-- For admissible `G`, `subst G` is the only `O`-algebra endomorphism of `A` sending `T` to `G`
+that induces, modulo every `𝔪 ^ (r + 1)`, an endomorphism of `(O ⧸ 𝔪 ^ (r + 1))((T))` continuous
+for the `T`-adic topology (Yuan, Lemma 2.1 (1), over `A`). -/
 theorem subst_unique {G : CoefficientRing O} (hG : IsAdmissible G)
     (F : CoefficientRing O →ₐ[O] CoefficientRing O)
     (Φ : (r : ℕ) →
@@ -187,7 +203,8 @@ theorem IsAdmissible.subst {G H : CoefficientRing O} (hG : IsAdmissible G)
   rw [isAdmissible_iff_isAdmissible_residue, residue_subst]
   exact LaurentSeries.IsAdmissible.subst hG hH
 
-/-- Composition of substitutions: `f(G)(H) = f(G(H))` (Yuan, Lemma 2.1 (2), over `A`). -/
+/-- Composition of substitutions: `f(G)(H) = f(G(H))` for admissible `G` and `H` (Yuan,
+Lemma 2.1 (2), over `A`). -/
 theorem subst_comp_subst {G H : CoefficientRing O} (hG : IsAdmissible G) (hH : IsAdmissible H) :
     (subst H).comp (subst G) = subst (subst H G) :=
   AlgHom.ext fun f ↦ ext_reduction O fun r ↦ by
@@ -250,7 +267,7 @@ theorem subst_ofPowerSeries_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coef
       subst P (HahnSeries.ofPowerSeries ℤ R H) :=
   ((conj_eq_iff_subst hH hl).mp rfl).symm
 
-/-- Conjugation preserves admissibility. -/
+/-- Conjugation by `H` preserves admissibility. -/
 theorem IsAdmissible.conj {P : LaurentSeries R} (hP : IsAdmissible P)
     (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) : IsAdmissible (LaurentSeries.conj H P) :=
   ((isAdmissible_ofPowerSeries hH hl).subst hP).subst (isAdmissible_ofPowerSeries_compInv H)
@@ -269,6 +286,7 @@ theorem subst_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) (P : Lau
       ← substEquiv_X hH hl, AlgEquiv.symm_apply_apply, subst_X_left]
     exact AlgHom.ext fun f ↦ ((substEquiv H).symm_apply_apply f).symm
 
+/-- `f ∘ (H ∘ P ∘ H^{∘-1}) = ((f ∘ H) ∘ P) ∘ H^{∘-1}`. -/
 theorem subst_conj_apply (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
     (P f : LaurentSeries R) :
     subst (conj H P) f = (substEquiv H).symm (subst P (substEquiv H f)) :=
@@ -290,6 +308,7 @@ theorem conj_compInv_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
     substEquiv_ofPowerSeries hH hl, PowerSeries.subst_compInv_left hH hl,
     HahnSeries.ofPowerSeries_X, subst_X hP, subst_ofPowerSeries_compInv hH hl]
 
+/-- Conjugation by `H` is injective on admissible series. -/
 theorem conj_inj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) {P G : LaurentSeries R}
     (hP : IsAdmissible P) (hG : IsAdmissible G) : conj H P = conj H G ↔ P = G :=
   ⟨fun h ↦ by rw [← conj_compInv_conj hH hl hP, h, conj_compInv_conj hH hl hG],
@@ -303,13 +322,13 @@ theorem conj_commute_iff (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
   rw [← conj_subst hH hl hP hG, ← conj_subst hH hl hG hP,
     conj_inj hH hl (hG.subst hP) (hP.subst hG)]
 
-/-- Conjugation commutes with coefficient maps. -/
+/-- Conjugation commutes with coefficient maps: `φ(H ∘ P ∘ H^{∘-1}) = φH ∘ φP ∘ (φH)^{∘-1}`. -/
 theorem mapRingHom_conj (φ : R →+* S) (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
     (P : LaurentSeries R) : mapRingHom φ (conj H P) = conj (H.map φ) (mapRingHom φ P) := by
   rw [conj, conj, mapRingHom_subst, mapRingHom_subst, mapRingHom_ofPowerSeries,
     mapRingHom_ofPowerSeries, PowerSeries.map_compInv φ hH hl]
 
-/-- On power series `f` with `f(0) = 0`, conjugation is `PowerSeries.conj`. -/
+/-- On admissible power series `f` with `f(0) = 0`, conjugation is `PowerSeries.conj`. -/
 theorem conj_ofPowerSeries {f : PowerSeries R} (hf : f.constantCoeff = 0)
     (hfadm : IsAdmissible (HahnSeries.ofPowerSeries ℤ R f)) (H : PowerSeries R) :
     conj H (HahnSeries.ofPowerSeries ℤ R f) =
@@ -335,8 +354,8 @@ open IsLocalRing (ResidueField)
 
 variable {O : Type*} [CommRing O] [IsLocalRing O]
 
-/-- A power series `w` over the residue field of `O` with `w(0) = 0` and `w'(0) ≠ 0` is the
-coefficientwise reduction of a power series `H` over `O` with `H(0) = 0` and `H'(0)` a unit. -/
+/-- A power series `w` over `κ` with `w(0) = 0` and `w'(0) ≠ 0` is the coefficientwise reduction of
+a power series `H` over `O` with `H(0) = 0` and `H'(0)` a unit. -/
 theorem CoefficientRing.exists_map_residue_eq (w : PowerSeries (ResidueField O))
     (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :
     ∃ H : PowerSeries O, H.constantCoeff = 0 ∧ IsUnit (H.coeff 1) ∧
@@ -351,9 +370,8 @@ theorem CoefficientRing.exists_map_residue_eq (w : PowerSeries (ResidueField O))
   refine ⟨H - PowerSeries.C H.constantCoeff, by simp, by simpa using hl, ?_⟩
   rw [map_sub, PowerSeries.map_C, hc, map_zero, sub_zero, hH]
 
-/-- A power series `w` over the residue field of `O` with `w(0) = 0` and `w'(0) ≠ 0` is the
-coefficientwise reduction of a power series `H` over `O ⧸ 𝔪 ^ (r + 1)` with `H(0) = 0` and
-`H'(0)` a unit. -/
+/-- A power series `w` over `κ` with `w(0) = 0` and `w'(0) ≠ 0` is the coefficientwise reduction of
+a power series `H` over `O ⧸ 𝔪 ^ (r + 1)` with `H(0) = 0` and `H'(0)` a unit. -/
 theorem Truncation.exists_map_residue_eq (r : ℕ) (w : PowerSeries (ResidueField O))
     (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) :
     ∃ H : PowerSeries (Truncation O r), H.constantCoeff = 0 ∧ IsUnit (H.coeff 1) ∧
@@ -376,7 +394,7 @@ the compositional inverse of `H` (`PowerSeries.compInv`). -/
 
 variable {H : PowerSeries O}
 
-/-- Conjugation commutes with reduction modulo `𝔪 ^ (r + 1)`. -/
+/-- Conjugation in `A` commutes with reduction modulo `𝔪 ^ (r + 1)`. -/
 theorem reduction_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) (r : ℕ)
     (P : CoefficientRing O) :
     reduction O r (conj H P) =
@@ -385,7 +403,7 @@ theorem reduction_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) (r :
     reduction_algebraMap_powerSeries, PowerSeries.map_compInv _ hH hl]
   rfl
 
-/-- Conjugation commutes with reduction to `κ((T))`. -/
+/-- Conjugation in `A` commutes with reduction to `κ((T))`. -/
 theorem residue_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
     (P : CoefficientRing O) :
     residue O (conj H P) =
@@ -425,6 +443,7 @@ theorem conj_compInv_conj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1))
         (constantCoeff_map_eq_zero _ hH) (isUnit_coeff_one_map _ hl)
         ((isAdmissible_iff_reduction r P).mp hP)]
 
+/-- Conjugation by `H` is injective on admissible elements of `A`. -/
 theorem conj_inj (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) {P G : CoefficientRing O}
     (hP : IsAdmissible P) (hG : IsAdmissible G) : conj H P = conj H G ↔ P = G :=
   ⟨fun h ↦ by rw [← conj_compInv_conj hH hl hP, h, conj_compInv_conj hH hl hG],

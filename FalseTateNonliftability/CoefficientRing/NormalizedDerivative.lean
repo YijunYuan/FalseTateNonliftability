@@ -11,68 +11,79 @@ public import FalseTateNonliftability.Mathlib.Algebra.CharP.CharAndCard
 public import FalseTateNonliftability.Mathlib.RingTheory.LaurentSeries.Derivative
 
 /-!
-# The derivative level, the normalized derivative and its valuation bound
+# The derivative level, the normalized derivative and the valuation bound at level `e`
 
-Let `O` be a discrete valuation ring with maximal ideal `𝔪` and residue field `κ`, let `p` be a
-prime with `p ≠ 0` in `O` and `κ = 𝔽_p`, and let `e = v(p)` be the absolute ramification index
-of `O`. In `R_r = (O ⧸ 𝔪 ^ (r + 1))((T))` let `Λ_j = 𝔪 ^ j R_r`. The derivative level `s(P)` of
-`P ∈ R_r` is the least `s` with `P' ∉ Λ_{s + 1}`, and the normalized derivative of `P` is the
-layer `h_P = ϖ⁻ˢ P' ∈ κ((T))` of `P'` in `Λ_s ⧸ Λ_{s + 1} ≃ κ((T))` (Yuan, Definition 2.5).
+Let `O` be a discrete valuation ring with maximal ideal `𝔪`, uniformizer `ϖ` and residue field
+`κ = 𝔽_p`, where `p` is a prime with `p ≠ 0` in `O`, and let `e = v_ϖ(p)` be the absolute
+ramification index of `O`; in Yuan, `O = O_F` for a finite totally ramified extension `F/ℚ_p`. Let
+`R_r = (O ⧸ 𝔪 ^ (r + 1))((T))`, so that `R_e` is the ring `R` of Yuan, §1.4, and let `P ∈ R_e`
+reduce to `T ^ p`. By Yuan, Lemma 2.4, `P' ≠ 0`, and there is a unique `s = s(P) ∈ {1, …, e}`
+with `P' ∈ ϖ ^ s R_e ∖ ϖ ^ (s + 1) R_e`; `s(P)` is the derivative level of `P` and
+`h_P = ϖ⁻ˢ P' ∈ κ((T))ˣ` (see `Truncation.layer`) its normalized derivative (Yuan,
+Definition 2.5). Moreover:
 
-Let `P ∈ R_e` reduce to `T ^ p`. Then `P' ≠ 0`, and `s = s(P)` is the unique integer with
-`P' ∈ Λ_s ∖ Λ_{s + 1}`; it satisfies `1 ≤ s ≤ e`. By Yuan, Lemma 2.4:
+1. if `G ∈ R_e` commutes with `P`, `G ∘ P = P ∘ G`, and its reduction `f` lies in `T κ⟦T⟧` with
+   nonzero linear coefficient, then `h_P ∘ f = (f')^(p - 1) h_P` (equation (2.2));
+2. if `H ∈ T (O ⧸ 𝔪 ^ (e + 1))⟦T⟧` has invertible linear coefficient and reduction `H̄`, then
+   `P_H = H ∘ P ∘ H^{∘-1}` reduces to `T ^ p`, `s(P_H) = s(P)`, `h_{P_H} ∘ H̄ = (H̄')^(p - 1) h_P`
+   (equation (2.3)) and `v_T(h_{P_H}) = v_T(h_P)`;
+3. if `s < e`, then `h_P = A'` for some `A ∈ κ((T))`; if `s = e`, then `h_P = c T^(p - 1) + A'`
+   with `c ∈ κˣ` and `A ∈ κ((T))`, hence `h_P' ≠ 0` and `v_T(h_P') ≤ p - 2`.
 
-1. if `G ∈ R_e` commutes with `P` and its reduction `f` lies in `T κ⟦T⟧` and has nonzero linear
-   coefficient, then `h_P ∘ f = (f')^(p - 1) h_P`;
-2. if `H` is a power series over `O ⧸ 𝔪 ^ (e + 1)` with `H(0) = 0` and `H'(0)` a unit, with
-   reduction `H̄`, then `P_H = H ∘ P ∘ H^{∘-1}` reduces to `T ^ p`, `s(P_H) = s(P)`,
-   `h_{P_H} ∘ H̄ = (H̄')^(p - 1) h_P` and `v_T(h_{P_H}) = v_T(h_P)`;
-3. if `s < e`, then `h_P = A'` for some `A ∈ κ((T))`; if `s = e`, then
-   `h_P = c T^(p - 1) + A'` for some `c ∈ κˣ` and `A ∈ κ((T))`, and hence `h_P' ≠ 0` and
-   `v_T(h_P') ≤ p - 2`.
-
-Except for `P' ≠ 0` and `1 ≤ s(P)`, these statements are proved over every truncation `R_r`.
-
-Let `k` be a field of characteristic `p`, let `d ≥ 1` with `d ≡ -1 (mod p)`, and let
-`g = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ∈ kˣ`. If `h ∈ k((T))` satisfies
-`h ∘ g = (g')^(p - 1) h`, `h' ≠ 0` and `v_T(h') ≤ p - 2`, then `v_T(h) ≤ p - 1 - d`. Hence, if
-`P, G ∈ R_r` commute, `P` reduces to `T ^ p`, `s(P) = e`, and the reduction `f` of `G` satisfies
+Yuan, Theorem 3.1: if `G ∘ P = P ∘ G`, `s(P) = e`, and the reduction `f` of `G` satisfies
 `f = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ∈ κˣ`, `d ≥ 1` and `d ≡ -1 (mod p)`, then
-`v_T(h_P) ≤ p - 1 - d` (Yuan, Theorem 3.1, where `r = e`).
+`v_T(h_P) ≤ p - 1 - d`. Its core holds over every field `k` of characteristic `p`: if
+`h ∈ k((T))` satisfies `h ∘ f = (f')^(p - 1) h`, `h' ≠ 0` and `v_T(h') ≤ p - 2`, then
+`v_T(h) ≤ p - 1 - d`.
 
 ## Main definitions
 
-* `absoluteRamificationIdx p O`: the absolute ramification index `e = v(p)` of `O`.
-* `Truncation.derivativeLevel P`: the derivative level `s(P)`.
-* `Truncation.normalizedDerivative P`: the normalized derivative `h_P`.
+* `FalseTateNonliftability.absoluteRamificationIdx p O`: the absolute ramification index
+  `e = v_ϖ(p)` of `O`.
+* `FalseTateNonliftability.Truncation.derivativeLevel P`: the derivative level `s(P)` (Yuan,
+  Definition 2.5).
+* `FalseTateNonliftability.Truncation.normalizedDerivative P`: the normalized derivative `h_P`
+  (Yuan, Definition 2.5).
 
 ## Main results
 
-* `Truncation.derivative_ne_zero`, `Truncation.one_le_derivativeLevel`,
-  `Truncation.derivativeLevel_le`, `Truncation.derivativeLevel_eq_iff`: the derivative level.
-* `Truncation.subst_normalizedDerivative_of_commute`: Lemma 2.4 (1).
-* `Truncation.mapRingHom_residue_conj`, `Truncation.derivativeLevel_conj`,
-  `Truncation.subst_normalizedDerivative_conj`, `Truncation.order_normalizedDerivative_conj`:
-  Lemma 2.4 (2).
-* `Truncation.exists_normalizedDerivative_eq_derivative`,
-  `Truncation.exists_normalizedDerivative_eq_single_add_derivative`,
-  `Truncation.derivative_normalizedDerivative_ne_zero`,
-  `Truncation.order_derivative_normalizedDerivative_le`: Lemma 2.4 (3).
-* `LaurentSeries.order_le_of_subst_eq_derivative_pow_mul`: the bound `v_T(h) ≤ p - 1 - d` over a
-  field of characteristic `p`.
-* `Truncation.order_normalizedDerivative_le`: Yuan, Theorem 3.1.
+In the namespace `FalseTateNonliftability.Truncation`:
 
-## Implementation details
+* `derivative_ne_zero`, `one_le_derivativeLevel`, `derivativeLevel_le`,
+  `derivativeLevel_eq_iff`: `P' ≠ 0`, `1 ≤ s(P) ≤ e`, and `s(P)` is the unique `s` with
+  `P' ∈ ϖ ^ s R_e ∖ ϖ ^ (s + 1) R_e` (Yuan, Lemma 2.4).
+* `subst_normalizedDerivative_of_commute`: `h_P ∘ f = (f')^(p - 1) h_P` (Yuan, Lemma 2.4 (1)).
+* `mapRingHom_residue_conj`, `derivativeLevel_conj`, `subst_normalizedDerivative_conj`,
+  `order_normalizedDerivative_conj`: Yuan, Lemma 2.4 (2).
+* `exists_normalizedDerivative_eq_derivative`,
+  `exists_normalizedDerivative_eq_single_add_derivative`,
+  `derivative_normalizedDerivative_ne_zero`, `order_derivative_normalizedDerivative_le`: Yuan,
+  Lemma 2.4 (3).
+* `order_normalizedDerivative_le`: `v_T(h_P) ≤ p - 1 - d` (Yuan, Theorem 3.1).
 
-The isomorphism `Λ_s ⧸ Λ_{s + 1} ≃ κ((T))` is multiplication by `ϖ ^ s` for a uniformizer `ϖ` of
-`O` fixed in `Truncation.gradedLayerEquiv`; another uniformizer multiplies `h_P` by a nonzero
-constant. The residue field hypothesis `κ = 𝔽_p` is the instance argument
-`[Fact (Nat.card (ResidueField O) = p)]`; `charP_of_natCard_eq_prime` gives
-`CharP (ResidueField O) p`.
+Over a field `k` of characteristic `p`:
+
+* `LaurentSeries.order_le_of_subst_eq_derivative_pow_mul`: `v_T(h) ≤ p - 1 - d` (Yuan, proof of
+  Theorem 3.1).
+
+## Implementation notes
+
+* `derivativeLevel P` is the least `s` with `P' ∉ 𝔪 ^ (s + 1) R_r`; it is defined for every
+  `P ∈ R_r` and every `r`, with value `0` if `P' = 0`. Similarly `absoluteRamificationIdx p O` is
+  `0` if `p = 0` in `O`. Except for `P' ≠ 0` and `1 ≤ s(P)`, which need `r = e`, the statements of
+  Lemma 2.4 and Theorem 3.1 hold over every `R_r`.
+* `h_P` depends on the uniformizer `ϖ` fixed in `Truncation.gradedLayerEquiv`: another uniformizer
+  multiplies `h_P` by a nonzero constant. Lemma 2.4 and Theorem 3.1 are unaffected.
+* The residue field hypothesis `κ = 𝔽_p` is the instance argument
+  `[Fact (Nat.card (ResidueField O) = p)]`, and `p ≠ 0` in `O` is `[NeZero (p : O)]`, following
+  the convention that Prop-valued hypotheses on the types are instances. From `κ = 𝔽_p` one gets
+  `CharP κ p` (`charP_of_natCard_eq_prime`) and `f(T ^ p) = f ^ p` for `f ∈ κ((T))`; this is the
+  step that uses `q = p` for the residue field `𝔽_q` of Yuan, Definition 1.1.
 
 ## References
 
-* Yuan, Lemma 2.4, Definition 2.5 and Theorem 3.1.
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  §1.4, Lemma 2.4, Definition 2.5 and Theorem 3.1.
 -/
 
 @[expose] public section
@@ -91,8 +102,8 @@ namespace FalseTateNonliftability
 
 open LaurentSeries
 
-/-- The absolute ramification index `e = v(p)` of a discrete valuation ring `O`, where `v` is the
-normalized valuation of `O`; it is `0` if `p = 0` in `O`. -/
+/-- The absolute ramification index `e = v_ϖ(p)` of a discrete valuation ring `O`, where `v_ϖ` is
+the normalized valuation of `O`; it is `0` if `p = 0` in `O`. -/
 def absoluteRamificationIdx (p : ℕ) (O : Type*) [CommRing O] [IsDomain O]
     [IsDiscreteValuationRing O] : ℕ :=
   (IsDiscreteValuationRing.addVal O (p : O)).toNat
@@ -136,12 +147,12 @@ section LocalRing
 
 variable {O : Type*} [CommRing O] [IsLocalRing O] {r : ℕ}
 
-/-- The derivative level `s(P)` of `P ∈ (O ⧸ 𝔪 ^ (r + 1))((T))`: the least `s` such that
-`P' ∉ Λ_{s + 1}`; it is `0` if `P' = 0` (Yuan, Definition 2.5). -/
+/-- The derivative level `s(P)` of `P ∈ R_r = (O ⧸ 𝔪 ^ (r + 1))((T))`: the least `s` such that
+`P' ∉ 𝔪 ^ (s + 1) R_r`; it is `0` if `P' = 0` (Yuan, Definition 2.5). -/
 def derivativeLevel (P : LaurentSeries (Truncation O r)) : ℕ :=
   sInf {s | derivative (Truncation O r) P ∉ layerIdeal O r (s + 1)}
 
-/-- `P' ∈ Λ_{s(P)}`. -/
+/-- `P' ∈ 𝔪 ^ s(P) R_r`. -/
 theorem derivative_mem_layerIdeal_derivativeLevel (P : LaurentSeries (Truncation O r)) :
     derivative (Truncation O r) P ∈ layerIdeal O r (derivativeLevel P) := by
   cases h : derivativeLevel P with
@@ -152,7 +163,7 @@ theorem derivative_mem_layerIdeal_derivativeLevel (P : LaurentSeries (Truncation
     have hs : s < derivativeLevel P := by omega
     simpa using Nat.notMem_of_lt_sInf hs
 
-/-- `P' ∉ Λ_{s(P) + 1}` if `P' ≠ 0`. -/
+/-- `P' ∉ 𝔪 ^ (s(P) + 1) R_r` if `P' ≠ 0`. -/
 theorem derivative_notMem_layerIdeal_derivativeLevel_add_one {P : LaurentSeries (Truncation O r)}
     (h : derivative (Truncation O r) P ≠ 0) :
     derivative (Truncation O r) P ∉ layerIdeal O r (derivativeLevel P + 1) :=
@@ -166,7 +177,8 @@ theorem derivativeLevel_le (P : LaurentSeries (Truncation O r)) : derivativeLeve
   · exact Nat.sInf_le (by
       rwa [Set.mem_ofPred_eq, layerIdeal_eq_bot O (Nat.lt_succ_self r), Ideal.mem_bot])
 
-/-- If `P' ≠ 0`, then `s(P)` is the unique `s` with `P' ∈ Λ_s ∖ Λ_{s + 1}` (Yuan, Lemma 2.4). -/
+/-- If `P' ≠ 0`, then `s(P)` is the unique `s` with `P' ∈ 𝔪 ^ s R_r ∖ 𝔪 ^ (s + 1) R_r` (Yuan,
+Lemma 2.4). -/
 theorem derivativeLevel_eq_iff {P : LaurentSeries (Truncation O r)}
     (h : derivative (Truncation O r) P ≠ 0) {s : ℕ} :
     derivativeLevel P = s ↔ derivative (Truncation O r) P ∈ layerIdeal O r s ∧
@@ -186,9 +198,9 @@ section DiscreteValuationRing
 
 variable {O : Type*} [CommRing O] [IsDomain O] [IsDiscreteValuationRing O] {r : ℕ}
 
-/-- The normalized derivative `h_P = ϖ⁻ˢ P' ∈ κ((T))` of `P ∈ (O ⧸ 𝔪 ^ (r + 1))((T))`, where
-`s = s(P)` is the derivative level of `P`: the layer of `P'` in `Λ_s ⧸ Λ_{s + 1} ≃ κ((T))`
-(Yuan, Definition 2.5). -/
+/-- The normalized derivative `h_P = ϖ⁻ˢ P' ∈ κ((T))` of `P ∈ R_r = (O ⧸ 𝔪 ^ (r + 1))((T))`,
+where `s = s(P)` is the derivative level of `P`: the preimage of `P' mod ϖ ^ (s + 1) R_r` under
+`Λ_s : κ((T)) ≃ ϖ ^ s R_r ⧸ ϖ ^ (s + 1) R_r` (Yuan, Definition 2.5). -/
 def normalizedDerivative (P : LaurentSeries (Truncation O r)) : LaurentSeries (ResidueField O) :=
   layer (derivativeLevel P) (derivative (Truncation O r) P)
 
@@ -213,8 +225,8 @@ private theorem derivative_conj_mem_layerIdeal_iff {P : LaurentSeries (Truncatio
   rw [← algEquiv_mem_layerIdeal_iff O (substEquiv H), ← Ideal.mul_unit_mem_iff_mem _ hDH, hchain,
     Ideal.unit_mul_mem_iff_mem _ (hDH.map (subst P))]
 
-/-- Yuan, Lemma 2.4 (2): for a power series `H` with `H(0) = 0` and `H'(0)` a unit, conjugation by
-`H` preserves the derivative level, `s(H ∘ P ∘ H^{∘-1}) = s(P)`. -/
+/-- Yuan, Lemma 2.4 (2): for admissible `P` and a power series `H` with `H(0) = 0` and `H'(0)` a
+unit, `s(H ∘ P ∘ H^{∘-1}) = s(P)`. -/
 theorem derivativeLevel_conj {P : LaurentSeries (Truncation O r)} (hP : IsAdmissible P)
     {H : PowerSeries (Truncation O r)} (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) :
     derivativeLevel (conj H P) = derivativeLevel P := by
@@ -237,7 +249,7 @@ private theorem natCast_mem_maximalIdeal_pow {k : ℕ} (hk : k ≤ absoluteRamif
   rw [← map_natCast (mk O r), mk_mem_maximalIdeal_pow_iff O hkr]
   exact Ideal.pow_le_pow_right hk (natCast_mem_maximalIdeal_pow_absoluteRamificationIdx p)
 
-/-- Yuan, Lemma 2.4: if `p ≠ 0` in `O` and `P ∈ (O ⧸ 𝔪 ^ (e + 1))((T))` reduces to `T ^ p`,
+/-- Yuan, Lemma 2.4: if `p ≠ 0` in `O` and `P ∈ R_e = (O ⧸ 𝔪 ^ (e + 1))((T))` reduces to `T ^ p`,
 then `P' ≠ 0`. -/
 theorem derivative_ne_zero [NeZero (p : O)]
     {P : LaurentSeries (Truncation O (absoluteRamificationIdx p O))}
@@ -297,9 +309,9 @@ private theorem subst_single_eq_pow (f : LaurentSeries (ResidueField O)) :
     Nat.finite_of_card_ne_zero (hκ ▸ (Fact.out : p.Prime).ne_zero)
   simpa only [hκ] using subst_single_natCard_eq_pow f
 
-/-- Yuan, Lemma 2.4 (1), equation (2.2): let `P` reduce to `T ^ p` and let `G` commute with `P`,
-`G ∘ P = P ∘ G`, where the reduction `f` of `G` lies in `T κ⟦T⟧` and has nonzero linear
-coefficient. Then `h_P ∘ f = (f')^(p - 1) h_P`. -/
+/-- Yuan, Lemma 2.4 (1), equation (2.2): let `κ = 𝔽_p`, let `P` reduce to `T ^ p` and let `G`
+commute with `P`, `G ∘ P = P ∘ G`, where the reduction `f` of `G` lies in `T κ⟦T⟧` and has nonzero
+linear coefficient. Then `h_P ∘ f = (f')^(p - 1) h_P`. -/
 theorem subst_normalizedDerivative_of_commute {P G : LaurentSeries (Truncation O r)}
     (hP : mapRingHom (residue O r) P = HahnSeries.single (p : ℤ) 1) (hG : IsAdmissible G)
     (hG1 : (mapRingHom (residue O r) G).coeff 1 ≠ 0) (hcomm : subst P G = subst G P) :
@@ -383,7 +395,7 @@ theorem order_normalizedDerivative_conj {P : LaurentSeries (Truncation O r)}
       HahnSeries.order_mul (pow_ne_zero _ (isUnit_derivative_ofPowerSeries _ hl').ne_zero) h0,
       HahnSeries.order_pow, order_derivative_ofPowerSeries hl', smul_zero, zero_add]
 
-/-- Yuan, Lemma 2.4 (3): if `s(P) < e`, then `h_P = A'` for some `A ∈ κ((T))`. -/
+/-- Yuan, Lemma 2.4 (3): if `κ = 𝔽_p` and `s(P) < e`, then `h_P = A'` for some `A ∈ κ((T))`. -/
 theorem exists_normalizedDerivative_eq_derivative {P : LaurentSeries (Truncation O r)}
     (hs : derivativeLevel P < absoluteRamificationIdx p O) :
     ∃ A : LaurentSeries (ResidueField O),
@@ -451,8 +463,8 @@ theorem order_derivative_normalizedDerivative_le [NeZero (p : O)]
     (derivative (ResidueField O) (normalizedDerivative P)).order ≤ (p : ℤ) - 2 :=
   HahnSeries.order_le_of_coeff_ne_zero (coeff_derivative_normalizedDerivative_ne_zero p hP hs)
 
-/-- Yuan, Lemma 2.4: if `p ≠ 0` in `O` and `P ∈ (O ⧸ 𝔪 ^ (e + 1))((T))` reduces to `T ^ p`, then
-`1 ≤ s(P)`. -/
+/-- Yuan, Lemma 2.4: if `p ≠ 0` in `O`, `κ = 𝔽_p` and `P ∈ R_e = (O ⧸ 𝔪 ^ (e + 1))((T))` reduces
+to `T ^ p`, then `1 ≤ s(P)`. -/
 theorem one_le_derivativeLevel [NeZero (p : O)]
     {P : LaurentSeries (Truncation O (absoluteRamificationIdx p O))}
     (hP : mapRingHom (residue O (absoluteRamificationIdx p O)) P = HahnSeries.single (p : ℤ) 1) :
@@ -505,9 +517,9 @@ section Field
 
 variable {k : Type*} [Field k]
 
-/-- Let `k` have characteristic `p`, let `g = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ≠ 0`,
-`d ≥ 1` and `d ≡ -1 (mod p)`, and let `h ∈ k((T))` satisfy `h ∘ g = (g')^(p - 1) h`, `h' ≠ 0` and
-`v_T(h') ≤ p - 2`. Then `v_T(h) ≤ p - 1 - d` (Yuan, proof of Theorem 3.1). -/
+/-- Let `k` be a field of characteristic `p`, let `g = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with
+`α ≠ 0`, `d ≥ 1` and `d ≡ -1 (mod p)`, and let `h ∈ k((T))` satisfy `h ∘ g = (g')^(p - 1) h`,
+`h' ≠ 0` and `v_T(h') ≤ p - 2`. Then `v_T(h) ≤ p - 1 - d` (Yuan, proof of Theorem 3.1). -/
 theorem order_le_of_subst_eq_derivative_pow_mul (p : ℕ) [CharP k p] {g : LaurentSeries k}
     {d : ℤ} (hd : 1 ≤ d) (hdiv : (p : ℤ) ∣ d + 1) {α : k} (hα : α ≠ 0)
     (hg : g - HahnSeries.single (1 : ℤ) 1 - HahnSeries.single (d + 1) α ∈
@@ -547,8 +559,8 @@ open LaurentSeries
 variable {O : Type*} [CommRing O] [IsDomain O] [IsDiscreteValuationRing O] {r : ℕ}
   (p : ℕ) [Fact p.Prime] [Fact (Nat.card (ResidueField O) = p)] [NeZero (p : O)]
 
-/-- **Theorem 3.1** (Yuan), valuation bound at level `e`. Let `p ≠ 0` in `O`, let `κ = 𝔽_p` and
-`e = v(p)`. Let `P, G ∈ (O ⧸ 𝔪 ^ (r + 1))((T))`, where `P` reduces to `T ^ p`,
+/-- **Valuation bound at level `e`** (Yuan, Theorem 3.1). Let `p ≠ 0` in `O`, let `κ = 𝔽_p` and
+`e = v_ϖ(p)`. Let `P, G ∈ R_r = (O ⧸ 𝔪 ^ (r + 1))((T))`, where `P` reduces to `T ^ p`,
 `G ∘ P = P ∘ G` and `s(P) = e`, and let the reduction `f` of `G` satisfy
 `f = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ≠ 0`, `d ≥ 1` and `d ≡ -1 (mod p)`. Then
 `v_T(h_P) ≤ p - 1 - d`. -/

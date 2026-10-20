@@ -17,17 +17,20 @@ Let `R` be a commutative ring, let `δ ∈ R` with `δ ^ r = 0`, and let `G = U 
 `U, Y ∈ R((T))`, where `U` is a unit with `U = O(T ^ a)` for some `a > 0` and `Y = O(T ^ (-c))`
 with `c ≥ 0`. Then `G ^ n = O(T ^ (a n - (r - 1) (a + c)))`, so for every power series
 `f = ∑ fₙ Xⁿ` over `R` the sum `f(G) = ∑ fₙ Gⁿ` converges coefficientwise, and `f ↦ f(G)` is an
-`R`-algebra homomorphism `R⟦X⟧ → R((T))`. As `G` is a unit, it extends along the localization
-`R⟦X⟧ → R((T))` to an `R`-algebra endomorphism of `R((T))` sending `T` to `G`. This extension is
-continuous for the `T`-adic topology, satisfies the chain rule `f(G)' = f'(G) G'` and commutes
-with coefficient maps.
+`R`-algebra homomorphism `R⟦X⟧ → R((T))`. As `G` is a unit and `R((T))` is the localization of
+`R⟦T⟧` at `T`, it extends to an `R`-algebra endomorphism `f ↦ f(G)` of `R((T))` sending `T` to
+`G`. This endomorphism is continuous for the `T`-adic topology, satisfies the chain rule
+`f(G)' = f'(G) G'` and commutes with coefficient maps.
 
-If `δ` generates a maximal ideal, every `G ∈ R((T))` whose reduction modulo `δ` has finite order
-`a` is of this form: `U = G - ∑_{j < a} G_j T ^ j` is a unit of order `a`, and `G - U` is a
-multiple of `δ`. This is the construction of substitution `LaurentSeries.subst`.
+If `δ` generates a maximal ideal of `R` and the reduction of `G ∈ R((T))` modulo `δ` has finite
+order `a`, then `G = U + δ Y`, where `U = G - ∑_{j < a} G_j T ^ j` is a unit of order `a` and
+`Y = O(T ^ (-c))` for some `c ≥ 0`. For `a > 0` this gives the substitution `f ↦ f(G)`
+(`LaurentSeries.subst`), the map `Q ↦ Q ∘ G` of Yuan, Lemma 2.1.
 
 ## Main definitions
 
+* `LaurentSeries.summableFamilyOfLinearOrderBound`: a family `(fₙ)` with
+  `fₙ = O(T ^ (a n - d))`, `a > 0`, as a summable family.
 * `LaurentSeries.nilpotentPowerFamily`: the summable family `(bₙ Gⁿ)ₙ`.
 * `LaurentSeries.nilpotentPowerSeriesEval`: the evaluation `R⟦X⟧ →ₐ[R] R((T))`, `f ↦ f(G)`.
 * `LaurentSeries.nilpotentLaurentEval`: its extension `R((T)) →ₐ[R] R((T))`.
@@ -42,9 +45,17 @@ multiple of `δ`. This is the construction of substitution `LaurentSeries.subst`
 * `LaurentSeries.mapRingHom_nilpotentLaurentEval`: compatibility with coefficient maps.
 * `LaurentSeries.exists_nilpotentLaurentEval_data`: the decomposition `G = U + δ Y`.
 
+## Implementation notes
+
+The definitions take the decomposition `G = U + δ Y`, the integers `r`, `a`, `c` and the bounds
+as arguments. They are the construction behind `LaurentSeries.subst`
+(`FalseTateNonliftability.LaurentSeries.Substitution`), which depends on `G` alone and through
+which the rest of the library uses them.
+
 ## References
 
-* Yuan, Lemma 2.1.
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Lemma 2.1 (1), (2) (convergence of `Q ∘ G = ∑ aᵢ Gⁱ` and the chain rule).
 -/
 
 @[expose] public section
@@ -102,7 +113,7 @@ theorem nilpotent_perturbation_orderTop_pow
       rw [Nat.cast_sub hkn]
       have hkR : (k : ℤ) ≤ (r - 1 : ℕ) := by exact_mod_cast hkr'
       have hac : 0 ≤ a + c := by omega
-      nlinarith
+      linarith [mul_le_mul_of_nonneg_right hkR hac]
     have hprod : (((-c) * k + a * (n - k : ℕ) : ℤ) : WithTop ℤ) ≤
         ((HahnSeries.C δ * Y) ^ k * U ^ (n - k)).orderTop := by
       calc
@@ -143,7 +154,7 @@ def summableFamilyOfLinearOrderBound (f : ℕ → LaurentSeries R) (a d : ℤ)
       ((hf n).trans (HahnSeries.orderTop_le_of_coeff_ne_zero hn))
     have ha' : 1 ≤ a := ha
     have hn0 : (0 : ℤ) ≤ n := Nat.cast_nonneg n
-    have hnle : (n : ℤ) ≤ j + d := by nlinarith
+    have hnle : (n : ℤ) ≤ j + d := by linarith [mul_le_mul_of_nonneg_right ha' hn0]
     change n ≤ (j + d).toNat
     omega
 
@@ -160,6 +171,7 @@ def nilpotentPowerFamily
     (fun n ↦ (nilpotent_perturbation_orderTop_pow δ U Y r hr hδ a c ha hc hU hY n).trans
       (HahnSeries.orderTop_le_orderTop_smul (b n) ((U + HahnSeries.C δ * Y) ^ n)))
 
+/-- The `n`-th member of the family `(bₙ Gⁿ)ₙ` is `bₙ Gⁿ`. -/
 @[simp]
 theorem nilpotentPowerFamily_apply
     (δ : R) (U Y : LaurentSeries R) (r : ℕ) (hr : 1 ≤ r) (hδ : δ ^ r = 0)
@@ -191,9 +203,6 @@ variable (δ : R) (U Y : LaurentSeries R) (r : ℕ) (hr : 1 ≤ r) (hδ : δ ^ r
   (hU : (a : WithTop ℤ) ≤ U.orderTop)
   (hY : ((-c : ℤ) : WithTop ℤ) ≤ Y.orderTop)
 
-local notation "G" => U + HahnSeries.C δ * Y
-local notation "family" => nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY
-
 private theorem constant_smul_mul (b d : R) (x y : LaurentSeries R) :
     (b • x) * (d • y) = (b * d) • (x * y) := by
   rw [← HahnSeries.C_mul_eq_smul, ← HahnSeries.C_mul_eq_smul,
@@ -201,13 +210,15 @@ private theorem constant_smul_mul (b d : R) (x y : LaurentSeries R) :
   ring
 
 private theorem productFamily_support_subset (f g : PowerSeries R) (j : ℤ) :
-    ((family (fun n ↦ (f * g).coeff n)).coeff j).support ⊆
-      (((family (fun n ↦ f.coeff n)).mul (family (fun n ↦ g.coeff n))).coeff j).support.image
-        (fun ij ↦ ij.1 + ij.2) := by
+    ((nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY (fun n ↦ (f * g).coeff n)).coeff
+        j).support ⊆
+      (((nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY (fun n ↦ f.coeff n)).mul
+        (nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY (fun n ↦ g.coeff n))).coeff
+          j).support.image (fun ij ↦ ij.1 + ij.2) := by
   intro n hn
   rw [Finsupp.mem_support_iff, SummableFamily.coeff_def] at hn
   obtain ⟨ij, hij, hne⟩ : ∃ ij ∈ antidiagonal n,
-      f.coeff ij.1 • g.coeff ij.2 • (G ^ n).coeff j ≠ 0 := by
+      f.coeff ij.1 • g.coeff ij.2 • ((U + HahnSeries.C δ * Y) ^ n).coeff j ≠ 0 := by
     refine exists_ne_zero_of_sum_ne_zero ?_
     simpa [PowerSeries.coeff_mul, sum_smul, mul_smul,
       nilpotentPowerFamily_apply, HahnSeries.coeff_smul] using hn
@@ -218,11 +229,12 @@ private theorem productFamily_support_subset (f g : PowerSeries R) (j : ℤ) :
     HahnSeries.coeff_smul, mul_smul]
   exact hne
 
-/-- The sum of the family attached to `f g` is the product of the sums of the families attached to
-`f` and `g`. -/
+/-- For power series `f` and `g`, the sum of the family `((f g)ₙ Gⁿ)ₙ` is the product of the sums
+of the families `(fₙ Gⁿ)ₙ` and `(gₙ Gⁿ)ₙ`. -/
 theorem hsum_nilpotentPowerFamily_mul (f g : PowerSeries R) :
-    (family (fun n ↦ (f * g).coeff n)).hsum =
-      ((family (fun n ↦ f.coeff n)).mul (family (fun n ↦ g.coeff n))).hsum := by
+    (nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY (fun n ↦ (f * g).coeff n)).hsum =
+      ((nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY (fun n ↦ f.coeff n)).mul
+        (nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY (fun n ↦ g.coeff n))).hsum := by
   ext j
   simp only [SummableFamily.coeff_hsum_eq_sum, SummableFamily.mul_toFun,
     nilpotentPowerFamily_apply, HahnSeries.coeff_smul,
@@ -244,7 +256,8 @@ theorem hsum_nilpotentPowerFamily_mul (f g : PowerSeries R) :
     simp_all
   · intro i hi his
     have hz : ∀ m n : ℕ, (⟨m + n, (m, n)⟩ : Σ _ : ℕ, ℕ × ℕ) = i →
-        g.coeff n • (f.coeff m • (G ^ m * G ^ n).coeff j) = 0 := by
+        g.coeff n • (f.coeff m •
+          ((U + HahnSeries.C δ * Y) ^ m * (U + HahnSeries.C δ * Y) ^ n).coeff j) = 0 := by
       intro m n
       contrapose!
       simp only [Set.Finite.coe_toFinset, Set.mem_image, Function.mem_support,
@@ -256,29 +269,33 @@ theorem hsum_nilpotentPowerFamily_mul (f g : PowerSeries R) :
     exact hz i.snd.1 i.snd.2 (Sigma.eq hi.2 (by simp))
 
 private theorem family_monomial (n : ℕ) (b : R) :
-    family (fun k ↦ (PowerSeries.monomial n b).coeff k) =
-      SummableFamily.single n (b • G ^ n) := by
+    nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY
+        (fun k ↦ (PowerSeries.monomial n b).coeff k) =
+      SummableFamily.single n (b • (U + HahnSeries.C δ * Y) ^ n) := by
   ext k
   by_cases hk : k = n <;>
     simp [nilpotentPowerFamily_apply, PowerSeries.coeff_monomial, hk]
 
 /-- The evaluation `f ↦ f(G) = ∑ fₙ Gⁿ` of power series at `G = U + δ Y`. -/
 def nilpotentPowerSeriesEval : PowerSeries R →ₐ[R] LaurentSeries R where
-  toFun f := (family (fun n ↦ f.coeff n)).hsum
+  toFun f := (nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY (fun n ↦ f.coeff n)).hsum
   map_one' := by
-    change (family (fun n ↦ (PowerSeries.C (1 : R)).coeff n)).hsum = 1
+    change (nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY
+      (fun n ↦ (PowerSeries.C (1 : R)).coeff n)).hsum = 1
     rw [show (PowerSeries.C (1 : R)) = PowerSeries.monomial 0 1 from
         congrFun PowerSeries.monomial_zero_eq_C.symm 1,
       family_monomial, SummableFamily.hsum_single]
     simp
   map_zero' := by
-    have hzero : family (fun n ↦ (0 : PowerSeries R).coeff n) = 0 := by
+    have hzero : nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY
+        (fun n ↦ (0 : PowerSeries R).coeff n) = 0 := by
       ext n
       simp [nilpotentPowerFamily_apply]
     rw [hzero, SummableFamily.hsum_zero]
   map_add' f g := by
-    have hadd : family (fun n ↦ (f + g).coeff n) =
-        family (fun n ↦ f.coeff n) + family (fun n ↦ g.coeff n) := by
+    have hadd : nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY (fun n ↦ (f + g).coeff n) =
+        nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY (fun n ↦ f.coeff n) +
+          nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY (fun n ↦ g.coeff n) := by
       ext n
       simp [nilpotentPowerFamily_apply, add_smul]
     rw [hadd, SummableFamily.hsum_add]
@@ -288,7 +305,8 @@ def nilpotentPowerSeriesEval : PowerSeries R →ₐ[R] LaurentSeries R where
   commutes' b := by
     simp only [PowerSeries.algebraMap_eq, HahnSeries.algebraMap_apply',
       HahnSeries.ofPowerSeries_C]
-    change (family (fun n ↦ (PowerSeries.C b).coeff n)).hsum = HahnSeries.C b
+    change (nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY
+      (fun n ↦ (PowerSeries.C b).coeff n)).hsum = HahnSeries.C b
     rw [show PowerSeries.C b = PowerSeries.monomial 0 b from
         congrFun PowerSeries.monomial_zero_eq_C.symm b,
       family_monomial, SummableFamily.hsum_single]
@@ -297,15 +315,16 @@ def nilpotentPowerSeriesEval : PowerSeries R →ₐ[R] LaurentSeries R where
 /-- `f(G)` is the sum of the family `(fₙ Gⁿ)ₙ`. -/
 theorem nilpotentPowerSeriesEval_apply (f : PowerSeries R) :
     nilpotentPowerSeriesEval δ U Y r hr hδ a c ha hc hU hY f =
-      (family (fun n ↦ f.coeff n)).hsum := rfl
+      (nilpotentPowerFamily δ U Y r hr hδ a c ha hc hU hY (fun n ↦ f.coeff n)).hsum := rfl
 
 /-- The coefficient of `T ^ j` in `f(G)` is `∑ₙ fₙ (Gⁿ)_j`, a finite sum. -/
 theorem nilpotentPowerSeriesEval_coeff (f : PowerSeries R) (j : ℤ) :
     (nilpotentPowerSeriesEval δ U Y r hr hδ a c ha hc hU hY f).coeff j =
-      ∑ᶠ n : ℕ, f.coeff n • (G ^ n).coeff j := by
+      ∑ᶠ n : ℕ, f.coeff n • ((U + HahnSeries.C δ * Y) ^ n).coeff j := by
   simp only [nilpotentPowerSeriesEval_apply, SummableFamily.coeff_hsum,
     nilpotentPowerFamily_apply, HahnSeries.coeff_smul]
 
+/-- A constant `b` evaluates to `b`. -/
 @[simp]
 theorem nilpotentPowerSeriesEval_C (b : R) :
     nilpotentPowerSeriesEval δ U Y r hr hδ a c ha hc hU hY (PowerSeries.C b) =
@@ -314,9 +333,11 @@ theorem nilpotentPowerSeriesEval_C (b : R) :
     HahnSeries.ofPowerSeries_C] using
     (nilpotentPowerSeriesEval δ U Y r hr hδ a c ha hc hU hY).commutes b
 
+/-- `X(G) = G`. -/
 @[simp]
 theorem nilpotentPowerSeriesEval_X :
-    nilpotentPowerSeriesEval δ U Y r hr hδ a c ha hc hU hY PowerSeries.X = G := by
+    nilpotentPowerSeriesEval δ U Y r hr hδ a c ha hc hU hY PowerSeries.X =
+      U + HahnSeries.C δ * Y := by
   rw [PowerSeries.X_eq, nilpotentPowerSeriesEval_apply, family_monomial,
     SummableFamily.hsum_single]
   simp
@@ -337,7 +358,7 @@ noncomputable section
 
 variable {R : Type*} [CommRing R]
 
-/-- Adding a nilpotent constant multiple to a unit preserves invertibility. -/
+/-- If `U` is a unit and `δ` is nilpotent, then `U + δ Y` is a unit. -/
 theorem isUnit_nilpotent_perturbation (δ : R) (U Y : LaurentSeries R)
     (hδ : IsNilpotent δ) (hUunit : IsUnit U) : IsUnit (U + HahnSeries.C δ * Y) := by
   have hC : IsNilpotent (HahnSeries.C δ : LaurentSeries R) := hδ.map HahnSeries.C
@@ -357,43 +378,46 @@ variable (δ : R) (U Y : LaurentSeries R) (r : ℕ) (hr : 1 ≤ r) (hδ : δ ^ r
   (hU : (a : WithTop ℤ) ≤ U.orderTop)
   (hY : ((-c : ℤ) : WithTop ℤ) ≤ Y.orderTop) (hUunit : IsUnit U)
 
-local notation "G" => U + HahnSeries.C δ * Y
-local notation "powerEval" => nilpotentPowerSeriesEval δ U Y r hr hδ a c ha hc hU hY
-local notation "gUnit" => IsUnit.unit
-  (isUnit_nilpotent_perturbation δ U Y (Exists.intro r hδ) hUunit)
-
 /-- The evaluation `f ↦ f(G)` of Laurent series at `G = U + δ Y`: the extension of
 `nilpotentPowerSeriesEval` along the localization `R⟦X⟧ → R((T))`, as `G` is a unit. -/
 def nilpotentLaurentEval : LaurentSeries R →ₐ[R] LaurentSeries R :=
-  IsLocalization.Away.liftAlgHom (S := LaurentSeries R) (f := powerEval) PowerSeries.X <| by
+  IsLocalization.Away.liftAlgHom (S := LaurentSeries R)
+    (f := nilpotentPowerSeriesEval δ U Y r hr hδ a c ha hc hU hY) PowerSeries.X <| by
     rw [nilpotentPowerSeriesEval_X]
     exact isUnit_nilpotent_perturbation δ U Y ⟨r, hδ⟩ hUunit
-
-local notation "laurentEval" => nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit
 
 /-- On power series, `nilpotentLaurentEval` is `nilpotentPowerSeriesEval`. -/
 @[simp]
 theorem nilpotentLaurentEval_ofPowerSeries (f : PowerSeries R) :
-    laurentEval (HahnSeries.ofPowerSeries ℤ R f) = powerEval f := by
+    nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit
+        (HahnSeries.ofPowerSeries ℤ R f) =
+      nilpotentPowerSeriesEval δ U Y r hr hδ a c ha hc hU hY f := by
   simp only [nilpotentLaurentEval, IsLocalization.Away.liftAlgHom_apply]
   exact IsLocalization.Away.lift_eq _ _ f
 
+/-- A constant `b` evaluates to `b`. -/
 @[simp]
 theorem nilpotentLaurentEval_C (b : R) :
-    laurentEval (HahnSeries.C b) = HahnSeries.C b := by
+    nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit (HahnSeries.C b) =
+      HahnSeries.C b := by
   simpa only [HahnSeries.ofPowerSeries_C, nilpotentPowerSeriesEval_C] using
     nilpotentLaurentEval_ofPowerSeries δ U Y r hr hδ a c ha hc hU hY hUunit (PowerSeries.C b)
 
 /-- `T(G) = G`. -/
 @[simp]
-theorem nilpotentLaurentEval_X : laurentEval (HahnSeries.single (1 : ℤ) (1 : R)) = G := by
+theorem nilpotentLaurentEval_X :
+    nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit
+        (HahnSeries.single (1 : ℤ) (1 : R)) =
+      U + HahnSeries.C δ * Y := by
   simpa only [HahnSeries.ofPowerSeries_X, nilpotentPowerSeriesEval_X] using
     nilpotentLaurentEval_ofPowerSeries δ U Y r hr hδ a c ha hc hU hY hUunit PowerSeries.X
 
 /-- `T⁻¹(G) = G⁻¹`. -/
 @[simp]
 theorem nilpotentLaurentEval_X_inv :
-    laurentEval (HahnSeries.single (-1 : ℤ) (1 : R)) = (↑(gUnit⁻¹) : LaurentSeries R) := by
+    nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit
+        (HahnSeries.single (-1 : ℤ) (1 : R)) =
+      (↑(isUnit_nilpotent_perturbation δ U Y ⟨r, hδ⟩ hUunit).unit⁻¹ : LaurentSeries R) := by
   apply Units.eq_inv_of_mul_eq_one_left
   rw [IsUnit.unit_spec, ← nilpotentLaurentEval_X δ U Y r hr hδ a c ha hc hU hY hUunit,
     ← map_mul]
@@ -401,7 +425,8 @@ theorem nilpotentLaurentEval_X_inv :
 
 /-- `(T ^ n)(G) = G ^ n` for `n ∈ ℤ`. -/
 theorem nilpotentLaurentEval_single_one (n : ℤ) :
-    laurentEval (HahnSeries.single n (1 : R)) = (↑(gUnit ^ n) : LaurentSeries R) := by
+    nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit (HahnSeries.single n (1 : R)) =
+      (↑((isUnit_nilpotent_perturbation δ U Y ⟨r, hδ⟩ hUunit).unit ^ n) : LaurentSeries R) := by
   induction n using Int.induction_on with
   | zero => simp
   | succ n ih =>
@@ -417,7 +442,9 @@ theorem nilpotentLaurentEval_single_one (n : ℤ) :
 
 /-- `(b T ^ n)(G) = b G ^ n` for `n ∈ ℤ`. -/
 theorem nilpotentLaurentEval_single (n : ℤ) (b : R) :
-    laurentEval (HahnSeries.single n b) = HahnSeries.C b * (↑(gUnit ^ n) : LaurentSeries R) := by
+    nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit (HahnSeries.single n b) =
+      HahnSeries.C b *
+        (↑((isUnit_nilpotent_perturbation δ U Y ⟨r, hδ⟩ hUunit).unit ^ n) : LaurentSeries R) := by
   have hs : (HahnSeries.single n b : LaurentSeries R) =
       HahnSeries.C b * HahnSeries.single n 1 := by
     simp only [HahnSeries.C_apply, HahnSeries.single_mul_single, zero_add, mul_one]
@@ -447,13 +474,11 @@ variable (δ : R) (U Y : LaurentSeries R) (r : ℕ) (hr : 1 ≤ r) (hδ : δ ^ r
   (hU : (a : WithTop ℤ) ≤ U.orderTop)
   (hY : ((-c : ℤ) : WithTop ℤ) ≤ Y.orderTop)
 
-local notation "D" => ((r - 1 : ℕ) : ℤ) * (a + c)
-local notation "powerEval" => nilpotentPowerSeriesEval δ U Y r hr hδ a c ha hc hU hY
-
-/-- If `f = O(X ^ N)`, then `f(G) = O(T ^ (a N - D))`. -/
+/-- If `f = O(X ^ N)`, then `f(G) = O(T ^ (a N - (r - 1) (a + c)))`. -/
 theorem nilpotentPowerSeriesEval_mem_orderAddSubgroup (N : ℕ) (f : PowerSeries R)
     (hf : ∀ n : ℕ, n < N → f.coeff n = 0) :
-    powerEval f ∈ orderAddSubgroup (a * N - D) := by
+    nilpotentPowerSeriesEval δ U Y r hr hδ a c ha hc hU hY f ∈
+      orderAddSubgroup (a * N - ((r - 1 : ℕ) : ℤ) * (a + c)) := by
   rw [mem_orderAddSubgroup_iff_coeff]
   intro j hj
   rw [nilpotentPowerSeriesEval_coeff]
@@ -462,20 +487,19 @@ theorem nilpotentPowerSeriesEval_mem_orderAddSubgroup (N : ℕ) (f : PowerSeries
   by_cases hn : n < N
   · rw [hf n hn, zero_smul]
   · have hNn : (N : ℤ) ≤ n := by exact_mod_cast Nat.le_of_not_gt hn
-    have hbound : j < a * n - D :=
-      hj.trans_le (sub_le_sub_right (mul_le_mul_of_nonneg_left hNn ha.le) D)
+    have hbound : j < a * n - ((r - 1 : ℕ) : ℤ) * (a + c) :=
+      hj.trans_le (sub_le_sub_right (mul_le_mul_of_nonneg_left hNn ha.le) _)
     have hpow := nilpotent_perturbation_orderTop_pow δ U Y r hr hδ a c ha hc hU hY n
     rw [HahnSeries.coeff_eq_zero_of_lt_orderTop
       ((WithTop.coe_lt_coe.mpr hbound).trans_le hpow), smul_zero]
 
 variable (hUunit : IsUnit U)
 
-local notation "laurentEval" => nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit
-
-/-- If `f = O(T ^ N)` with `N ≥ 0`, then `f(G) = O(T ^ (a N - D))`. -/
+/-- If `f = O(T ^ N)` with `N ≥ 0`, then `f(G) = O(T ^ (a N - (r - 1) (a + c)))`. -/
 theorem nilpotentLaurentEval_mem_orderAddSubgroup (N : ℕ) (f : LaurentSeries R)
     (hf : f ∈ orderAddSubgroup (N : ℤ)) :
-    laurentEval f ∈ orderAddSubgroup (a * N - D) := by
+    nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit f ∈
+      orderAddSubgroup (a * N - ((r - 1 : ℕ) : ℤ) * (a + c)) := by
   have hf0 : f ∈ orderAddSubgroup 0 :=
     orderAddSubgroup_antitone (show (0 : ℤ) ≤ N by omega) hf
   rw [← ofPowerSeries_mk_coeff_of_mem_orderAddSubgroup_zero f hf0,
@@ -487,22 +511,24 @@ theorem nilpotentLaurentEval_mem_orderAddSubgroup (N : ℕ) (f : LaurentSeries R
 
 /-- For every `M` there is `N ≥ 0` such that `f = O(T ^ N)` implies `f(G) = O(T ^ M)`. -/
 theorem nilpotentLaurentEval_exists_order_bound (M : ℤ) :
-    ∃ N : ℕ, ∀ f : LaurentSeries R,
-      f ∈ orderAddSubgroup (N : ℤ) → laurentEval f ∈ orderAddSubgroup M := by
-  let N : ℕ := (M + D).toNat
-  have hN : M + D ≤ (N : ℤ) := by omega
+    ∃ N : ℕ, ∀ f : LaurentSeries R, f ∈ orderAddSubgroup (N : ℤ) →
+      nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit f ∈ orderAddSubgroup M := by
+  let N : ℕ := (M + ((r - 1 : ℕ) : ℤ) * (a + c)).toNat
+  have hN : M + ((r - 1 : ℕ) : ℤ) * (a + c) ≤ (N : ℤ) := by omega
   have hN0 : (0 : ℤ) ≤ N := Nat.cast_nonneg N
   have ha' : 1 ≤ a := ha
-  have hbound : M ≤ a * N - D := by nlinarith
+  have hbound : M ≤ a * N - ((r - 1 : ℕ) : ℤ) * (a + c) := by
+    linarith [mul_le_mul_of_nonneg_right ha' hN0]
   refine ⟨N, fun f hf ↦ ?_⟩
   exact orderAddSubgroup_antitone hbound
     (nilpotentLaurentEval_mem_orderAddSubgroup δ U Y r hr hδ a c ha hc hU hY hUunit N f hf)
 
 /-- The evaluation `f ↦ f(G)` is continuous for the `T`-adic topology. -/
-theorem continuous_nilpotentLaurentEval : Continuous laurentEval := by
+theorem continuous_nilpotentLaurentEval :
+    Continuous (nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit) := by
   refine continuous_iff_continuousAt.mpr fun x ↦ ?_
   refine ((orderTopology_hasBasis_nhds x).tendsto_iff
-    (orderTopology_hasBasis_nhds (laurentEval x))).mpr fun M _ ↦ ?_
+    (orderTopology_hasBasis_nhds _)).mpr fun M _ ↦ ?_
   obtain ⟨N, hN⟩ :=
     nilpotentLaurentEval_exists_order_bound δ U Y r hr hδ a c ha hc hU hY hUunit M
   refine ⟨(N : ℤ), trivial, ?_⟩
@@ -537,30 +563,35 @@ variable (δ : R) (U Y : LaurentSeries R) (r : ℕ) (hr : 1 ≤ r) (hδ : δ ^ r
   (hU : (a : WithTop ℤ) ≤ U.orderTop)
   (hY : ((-c : ℤ) : WithTop ℤ) ≤ Y.orderTop) (hUunit : IsUnit U)
 
-local notation "G" => U + HahnSeries.C δ * Y
-local notation "laurentEval" => nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit
-
 private theorem derivative_nilpotentLaurentEval_single (j : ℤ) (b : R) :
-    derivative R (laurentEval (HahnSeries.single j b)) =
-      laurentEval (derivative R (HahnSeries.single j b)) * derivative R G := by
+    derivative R
+        (nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit (HahnSeries.single j b)) =
+      nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit
+          (derivative R (HahnSeries.single j b)) *
+        derivative R (U + HahnSeries.C δ * Y) := by
   rw [nilpotentLaurentEval_single, derivative_mul, derivative_C, zero_mul, zero_add,
     derivative_units_zpow, derivative_single, nilpotentLaurentEval_single]
   simp only [map_mul, map_intCast, IsUnit.unit_spec]
   ring
 
 private theorem derivative_nilpotentLaurentEval_truncLT (f : LaurentSeries R) (n : ℤ) :
-    derivative R (laurentEval (HahnSeries.truncLT n f)) =
-      laurentEval (derivative R (HahnSeries.truncLT n f)) * derivative R G := by
+    derivative R
+        (nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit (HahnSeries.truncLT n f)) =
+      nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit
+          (derivative R (HahnSeries.truncLT n f)) *
+        derivative R (U + HahnSeries.C δ * Y) := by
   simp only [truncLT_eq_sum_Ico, map_sum,
     derivative_nilpotentLaurentEval_single, Finset.sum_mul]
 
 /-- The chain rule `f(G)' = f'(G) G'`. -/
 theorem derivative_nilpotentLaurentEval (f : LaurentSeries R) :
-    derivative R (laurentEval f) = laurentEval (derivative R f) * derivative R G := by
+    derivative R (nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit f) =
+      nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit (derivative R f) *
+        derivative R (U + HahnSeries.C δ * Y) := by
   have ht := tendsto_truncLT_orderTopology f
   have hE := continuous_nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit
   apply tendsto_nhds_unique_of_forall
-    ((continuous_derivative.tendsto (laurentEval f)).comp ((hE.tendsto f).comp ht))
+    ((continuous_derivative.tendsto _).comp ((hE.tendsto f).comp ht))
     (((hE.tendsto (derivative R f)).comp
       ((continuous_derivative.tendsto f).comp ht)).mul tendsto_const_nhds)
   intro n
@@ -595,31 +626,39 @@ variable (ψ : R →+* S)
   (hU : (a : WithTop ℤ) ≤ U.orderTop)
   (hY : ((-c : ℤ) : WithTop ℤ) ≤ Y.orderTop) (hUunit : IsUnit U)
 
-local notation "evalR" => nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit
-local notation "evalS" => nilpotentLaurentEval (ψ δ) (mapRingHom ψ U) (mapRingHom ψ Y)
-  r hr (Eq.trans (Eq.symm (map_pow ψ δ r)) (Eq.trans (congrArg ψ hδ) (map_zero ψ))) a c ha hc
-  (le_trans hU (orderTop_le_mapRingHom ψ U)) (le_trans hY (orderTop_le_mapRingHom ψ Y))
-  (IsUnit.map (mapRingHom ψ) hUunit)
+private theorem mapRingHom_algHom_apply {E : LaurentSeries R →ₐ[R] LaurentSeries R}
+    {E' : LaurentSeries S →ₐ[S] LaurentSeries S} (hE : Continuous E) (hE' : Continuous E')
+    (hX : mapRingHom ψ (E (HahnSeries.single (1 : ℤ) (1 : R))) =
+      E' (HahnSeries.single (1 : ℤ) (1 : S))) (f : LaurentSeries R) :
+    mapRingHom ψ (E f) = E' (mapRingHom ψ f) := by
+  have hER (b : R) : E (HahnSeries.C b) = HahnSeries.C b := by
+    simpa only [HahnSeries.algebraMap_apply', PowerSeries.algebraMap_eq,
+      HahnSeries.ofPowerSeries_C] using E.commutes b
+  have hES (b : S) : E' (HahnSeries.C b) = HahnSeries.C b := by
+    simpa only [HahnSeries.algebraMap_apply', PowerSeries.algebraMap_eq,
+      HahnSeries.ofPowerSeries_C] using E'.commutes b
+  have heq : (mapRingHom ψ).comp E.toRingHom = E'.toRingHom.comp (mapRingHom ψ) := by
+    apply continuous_ringHom_ext ((mapRingHom ψ).comp E.toRingHom)
+      (E'.toRingHom.comp (mapRingHom ψ)) ((continuous_mapRingHom ψ).comp hE)
+      (hE'.comp (continuous_mapRingHom ψ))
+    · intro b
+      change mapRingHom ψ (E (HahnSeries.C b)) = E' (mapRingHom ψ (HahnSeries.C b))
+      rw [hER, mapRingHom_C, hES]
+    · change mapRingHom ψ (E (HahnSeries.single (1 : ℤ) (1 : R))) =
+        E' (mapRingHom ψ (HahnSeries.single (1 : ℤ) (1 : R)))
+      rw [mapRingHom_single, map_one ψ, hX]
+  exact RingHom.congr_fun heq f
 
 /-- Evaluation commutes with coefficient maps: `ψ(f(G)) = ψ(f)(ψ(G))`. -/
 theorem mapRingHom_nilpotentLaurentEval (f : LaurentSeries R) :
-    mapRingHom ψ (evalR f) = evalS (mapRingHom ψ f) := by
-  have hR := continuous_nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit
-  have hS : Continuous evalS := continuous_nilpotentLaurentEval _ _ _ _ _ _ _ _ _ _ _ _ _
-  have heq : (mapRingHom ψ).comp (evalR).toRingHom =
-      (evalS).toRingHom.comp (mapRingHom ψ) := by
-    apply continuous_ringHom_ext
-      ((mapRingHom ψ).comp (evalR).toRingHom)
-      ((evalS).toRingHom.comp (mapRingHom ψ))
-      ((continuous_mapRingHom ψ).comp hR) (hS.comp (continuous_mapRingHom ψ))
-    · intro b
-      change mapRingHom ψ (evalR (HahnSeries.C b)) = evalS (mapRingHom ψ (HahnSeries.C b))
-      simp only [nilpotentLaurentEval_C, mapRingHom_C]
-    · change mapRingHom ψ (evalR (HahnSeries.single (1 : ℤ) (1 : R))) =
-        evalS (mapRingHom ψ (HahnSeries.single (1 : ℤ) (1 : R)))
-      simp only [nilpotentLaurentEval_X, mapRingHom_single, map_one, map_add,
-        map_mul, mapRingHom_C]
-  exact RingHom.congr_fun heq f
+    mapRingHom ψ (nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit f) =
+      nilpotentLaurentEval (ψ δ) (mapRingHom ψ U) (mapRingHom ψ Y) r hr
+        (Eq.trans (Eq.symm (map_pow ψ δ r)) (Eq.trans (congrArg ψ hδ) (map_zero ψ))) a c ha hc
+        (le_trans hU (orderTop_le_mapRingHom ψ U)) (le_trans hY (orderTop_le_mapRingHom ψ Y))
+        (IsUnit.map (mapRingHom ψ) hUunit) (mapRingHom ψ f) :=
+  mapRingHom_algHom_apply ψ (continuous_nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit)
+    (continuous_nilpotentLaurentEval _ _ _ _ _ _ _ _ _ _ _ _ _)
+    (by simp only [nilpotentLaurentEval_X, map_add, map_mul, mapRingHom_C]) f
 
 end Evaluation
 

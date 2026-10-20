@@ -16,17 +16,21 @@ public import FontaineWintenberger.Ramification.Fields.TotallyRamified
 # The coordinate family of the field of norms
 
 Let `K` be a complete discretely valued field with perfect residue field of characteristic `p`,
-and let `L/K` be an infinite APF extension. Let `κ_L` be the residue field of the integral closure
-of `𝒪[K]` in `L`. For a uniformizer `u` of the field of norms `X_K(L)`, the map
-`ev_u : κ_L((T)) ≃ X_K(L)` sends `T` to `u`, and for `g ∈ Aut(L/K)` the coordinate series
-`f_{g,u} ∈ T κ_L⟦T⟧` is the power series with `ev_u(f_{g,u}) = g(u)` (Yuan, §1.4).
+let `L/K` be an infinite separable APF extension, and let `X_K(L)` be the field of norms of
+Fontaine and Wintenberger, a complete discretely valued field of characteristic `p` with
+valuation `v` on which `Aut(L/K)` acts by continuous automorphisms. Let `κ_L` be the residue field
+of the integral closure of `𝒪[K]` in `L`; it is the residue field of `X_K(L)` and embeds in
+`X_K(L)` as the field of constants. For a uniformizer `u` of `X_K(L)` let
+`ev_u : κ_L((T)) ≃ X_K(L)` be the isomorphism over `κ_L` sending `T` to `u`. The coordinate series
+of `g ∈ Aut(L/K)` is the power series `f_{g,u} ∈ κ_L⟦T⟧` with `ev_u(f_{g,u}) = g(u)`
+(Yuan, §1.4).
 
+Since `g(u)` is again a uniformizer, `f_{g,u}(0) = 0` and `f_{g,u}'(0) ≠ 0` (Yuan, Lemma 2.2 (1)).
 If `L/K` is totally ramified, then `Aut(L/K)` fixes the constants `κ_L ⊆ X_K(L)`, and
-(Yuan, Lemma 2.2):
-1. `f_{g,u}(0) = 0` and `f_{g,u}'(0) ≠ 0`, as `g(u)` is again a uniformizer;
-2. `g(ev_u(a)) = ev_u(a ∘ f_{g,u})` for every `a ∈ κ_L((T))`;
-3. `f_{gh,u} = f_{h,u} ∘ f_{g,u}`;
-4. if `u' = ev_u(V)` is another uniformizer, then `f_{g,u'} = V ∘ f_{g,u} ∘ V^{∘-1}`.
+(Yuan, Lemma 2.2 (2)–(4)):
+* `g(ev_u(a)) = ev_u(a ∘ f_{g,u})` for every `a ∈ κ_L((T))`;
+* `f_{gh,u} = f_{h,u} ∘ f_{g,u}`, so the `f_{g,u}` form a coordinate family indexed by `Aut(L/K)`;
+* if `u' = ev_u(V)` is another uniformizer, then `f_{g,u'} = V ∘ f_{g,u} ∘ V^{∘-1}`.
 
 ## Main definitions
 
@@ -38,23 +42,32 @@ If `L/K` is totally ramified, then `Aut(L/K)` fixes the constants `κ_L ⊆ X_K(
 ## Main results
 
 * `FalseTateNonliftability.FieldOfNorms.laurentEquiv_coordinateSeries`: `ev_u(f_{g,u}) = g(u)`.
-* `FalseTateNonliftability.FieldOfNorms.aut_residueConstants`: `Aut(L/K)` fixes the constants
-  of `X_K(L)`.
+* `FalseTateNonliftability.FieldOfNorms.aut_residueConstants`: for `L/K` totally ramified,
+  `Aut(L/K)` fixes the constants of `X_K(L)`.
 * `FalseTateNonliftability.FieldOfNorms.valuation_ofPowerSeries_coordinateSeries`,
   `FalseTateNonliftability.FieldOfNorms.constantCoeff_coordinateSeries`,
-  `FalseTateNonliftability.FieldOfNorms.isUnit_coeff_one_coordinateSeries`: Lemma 2.2 (1).
-* `FalseTateNonliftability.FieldOfNorms.aut_laurentEquiv`: Lemma 2.2 (2).
-* `FalseTateNonliftability.FieldOfNorms.coordinateSeries_mul`: Lemma 2.2 (3).
+  `FalseTateNonliftability.FieldOfNorms.isUnit_coeff_one_coordinateSeries`: Yuan, Lemma 2.2 (1).
+* `FalseTateNonliftability.FieldOfNorms.aut_laurentEquiv`: Yuan, Lemma 2.2 (2).
+* `FalseTateNonliftability.FieldOfNorms.coordinateSeries_mul`: Yuan, Lemma 2.2 (3).
 * `FalseTateNonliftability.FieldOfNorms.exists_laurentEquiv_eq`: every uniformizer is `ev_u(V)`
   with `V(0) = 0` and `V'(0) ≠ 0`.
 * `FalseTateNonliftability.FieldOfNorms.laurentEquiv_substEquiv`: `ev_u(a ∘ V) = ev_{u'}(a)` for
   `u' = ev_u(V)`.
-* `FalseTateNonliftability.FieldOfNorms.coordinateFamily_eq_conj`: Lemma 2.2 (4).
+* `FalseTateNonliftability.FieldOfNorms.coordinateSeries_eq_conj`,
+  `FalseTateNonliftability.FieldOfNorms.coordinateFamily_eq_conj`: Yuan, Lemma 2.2 (4).
+
+## Implementation notes
+
+A uniformizer of `X_K(L)` is an element `u` together with a proof `hu : v(u) = exp (-1)`, as in
+the isomorphism `ev_u = FieldOfNorms.laurentEquiv K L u hu` of FontaineWintenberger; the
+coordinate series take the same two arguments.
 
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
   §1.4 and Lemma 2.2.
+* J.-P. Wintenberger, *Le corps des normes de certaines extensions infinies de corps locaux;
+  applications*, Ann. Sci. École Norm. Sup. (4) 16 (1983), 59–89.
 -/
 
 @[expose] public section
@@ -66,6 +79,7 @@ open scoped PowerSeries
 
 namespace FalseTateNonliftability
 
+/-- `exp (-1) ≤ 1` in `ℤᵐ⁰`. -/
 private theorem exp_neg_one_le_one : exp (-1 : ℤ) ≤ (1 : ℤᵐ⁰) := by
   rw [← exp_zero]
   exact exp_le_exp.mpr (by omega)
@@ -126,7 +140,8 @@ variable (K : Type*) [NontriviallyNormedField K] [IsPerfectResidueLocalField K]
   (L : Type*) [Field L] [Algebra K L] [Algebra.IsSeparable K L] [IsAPF K L]
   [Fact (¬ Module.Finite K L)]
 
-/-- The automorphisms of a totally ramified extension `L/K` fix the constants `κ_L ⊆ X_K(L)`. -/
+/-- For a totally ramified extension `L/K`, every `g ∈ Aut(L/K)` fixes the constants
+`κ_L ⊆ X_K(L)`. -/
 theorem aut_residueConstants [IsTotallyRamified K L] (g : L ≃ₐ[K] L)
     (a : integralClosureResidueField K L) :
     FieldOfNorms.aut K L g (residueConstants K L a) = residueConstants K L a := by
@@ -170,7 +185,7 @@ theorem coordinateSeries_eq_iff (g : L ≃ₐ[K] L)
     (FieldOfNorms.laurentEquiv K L u hu).injective.eq_iff,
     HahnSeries.ofPowerSeries_injective.eq_iff, eq_comm]
 
-/-- `g(u)` is a uniformizer: `v_T(f_{g,u}) = 1`. -/
+/-- `g(u)` is a uniformizer: `v_T(f_{g,u}) = 1` (Yuan, Lemma 2.2 (1)). -/
 theorem valuation_ofPowerSeries_coordinateSeries (g : L ≃ₐ[K] L) :
     Valued.v (HahnSeries.ofPowerSeries ℤ _ (coordinateSeries K L u hu g)) = exp (-1 : ℤ) := by
   rw [← FieldOfNorms.laurentEquiv_valuation K L u hu, laurentEquiv_coordinateSeries,
@@ -294,6 +309,7 @@ def coordinateFamily : CoordinateFamily (integralClosureResidueField K L) (L ≃
   isUnit_coeff_one_series := isUnit_coeff_one_coordinateSeries K L u hu
   series_mul := coordinateSeries_mul K L u hu
 
+/-- The series of the coordinate family in `u` are the coordinate series `f_{g,u}`. -/
 @[simp]
 theorem coordinateFamily_series (g : L ≃ₐ[K] L) :
     (coordinateFamily K L u hu).series g = coordinateSeries K L u hu g :=

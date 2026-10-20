@@ -1,6 +1,6 @@
-# FalseTateNonliftability 升级与重构方案（v0 草案，待逐条讨论）
+# FalseTateNonliftability 升级与重构方案（v1，已执行）
 
-> 状态：**草案，尚未执行**。按 FontaineWintenberger / FalseTateExtension 的做法，A–I 逐节与作者讨论定稿后再按 §I 分阶段执行；每阶段一个分支。
+> 状态：A–I 已与作者讨论定稿并执行完毕（2026-10-20 至 2026-10-21）；执行过程、与方案的偏差和最终数据见文末"执行记录"。以下各节保留讨论时的原文。
 >
 > 范围 = instruction.pdf §3：形式化 FalseTateLift.pdf 的 Theorem A（含 Definition 1.1、Proposition 1.3、Proposition 2.3）。
 >
@@ -503,3 +503,54 @@ U1 与 R1–R6 之间可以合并一次，确保 GitHub 上的本项目先有一
 6. **目录重组（D-1）已落实**，`scripts/check_layers.py` 生效。与 §D 树的差异：`LaurentSeries/Substitution` 拆为 `Evaluation.lean`（`nilpotentLaurentEval` 的构造、连续性、链式法则、与系数映射交换、可容许级数的分解 `G = U + δY`）与 `Substitution.lean`（`IsAdmissible`、`subst`、`substEquiv` 的公开接口），因为合并后约 1500 行；上游候选 `Mathlib/RingTheory/LaurentSeries/Map.lean`（不是 `HahnSeries/Map`）收 `mapRingHom`、主理想商与不涉及求值的系数映射引理，`CoefficientRing/Quotient` 的 Laurent 部分也进这里，`AdicCompletion` 部分进 `Mathlib/RingTheory/AdicCompletion/Quotient.lean`；`Topology.lean` 另收散落的通用 `orderAddSubgroup` 引理、截断收敛与 `continuous_algHom_ext_X`；`PowerSeries/UnitCompactness` 的通用紧性进 `Mathlib/RingTheory/PowerSeries/Compactness.lean`；`Graded` 并入 `CoefficientRing/Truncation.lean`（约 1080 行，6 s）。`Mathlib/.../Derivative.lean` 的 Leibniz 法则暂仍经截断极限证明（只依赖 `Topology`，不再依赖求值），改为系数证明留到下一步。合并时去掉的重复：`derivative_coeff`（保留 `coeff_derivative`）；三份私有 `constantCoeff_map_eq_zero`/`isUnit_coeff_one_map`（改为 `Composition.lean` 中的公开 `PowerSeries.constantCoeff_map_eq_zero`/`PowerSeries.isUnit_coeff_one_map`）；`mapRingHom_subst'`（`mapRingHom_subst` 现对所有 `G` 成立，`semiconj_mapRingHom_subst`、`mapRingHom_subst_iterate` 随之去掉可容许性假设）；私有的 `ofPowerSeries_mem_orderAddSubgroup_one` 与 `coeff_one_subst`。
 7. **`Mathlib/` 层（C4、细化 5）已落实。** Leibniz 法则改为系数证明（`T (fg)'` 与 `T f' g + f T g'` 在 `T^n` 处的系数都是 `n ∑_{i+j=n} f_i g_j`），`Mathlib/.../LaurentSeries/Derivative.lean` 只 import Mathlib；`continuous_derivative` 移到 `Topology.lean`，`mapRingHom_derivative` 移到 `Map.lean`（依赖顺序 `Derivative < Topology < Map`）。C4 按 (b)：`orderTopology R` 保留为 def，在命名空间 `LaurentSeries.OrderTopology` 中给出 scoped instance（`TopologicalSpace`，priority high，使域上打开 scope 时也选它；`IsTopologicalRing`、`T2Space`），用 `open scoped LaurentSeries.OrderTopology` 激活（不要在 `namespace LaurentSeries` 里写 `open scoped OrderTopology`：与 Mathlib 的 `OrderTopology` 同名，linter 报歧义）；`orderTopology_eq_valued`：域上它等于 `Valued (LaurentSeries K) ℤᵐ⁰` 的拓扑（命题相等）。打开 scope 的文件：`Topology`、`Map`（一条引理）、`LaurentSeries/{Evaluation, Substitution, Taylor}`、`PowerSeries/PrincipalUnits`（`Limits` 段）、`CoefficientRing/Substitution`；`Liftability/FieldOfNorms` 用 Valued 拓扑，不打开。`continuous_ringHom_ext`（环同态版，在常数与 `T` 上一致）进 `Topology.lean`，`continuous_algHom_ext_X` 由它推出，`Evaluation` 里的私有副本删除。新增上游候选文件 `Mathlib/Algebra/CharP/CharAndCard.lean`（`charP_of_natCard_eq_prime`）与 `Mathlib/NumberTheory/Padics/Continuity.lean`（`PadicInt.continuous_toZMod`、`PadicInt.exists_tendsto_of_prime_mul_tendsto`）；`HahnSeries.orderTop_ofPowerSeries`、`pow_mem_orderAddSubgroup`、`pow_sub_one_mem_orderAddSubgroup`、`sub_single_coeff_mem_orderAddSubgroup`、`continuous_ofPowerSeries`（取代 `tendsto_ofPowerSeries_orderTopology`）进 `Topology.lean`；`continuous_subst_of_constantCoeff_zero` 与 TameGenerator 的低次系数引理（`coeff_subst_eq_sum`、`coeff_subst_sub_coeff_of_dvd_inner/outer`、`coeff_iterate_sub_X` 等）进 `Composition.lean`。`subst_single_natCard` 与 `subst_single_natCard_eq_pow` 两份重复合并为 `LaurentSeries.subst_single_natCard_eq_pow`（需要项目的 `subst`，放 `LaurentSeries/Substitution.lean`）。`Evaluation` 的 `backward.isDefEq.respectTransparency` 已去掉（支撑集包含改用 `Finsupp.mem_support_iff`，不再展开 `SummableFamily.coeff_support`）。
 8. **死代码（D-2）与命名（E-3）已落实。** 依赖闭包按 `ConstantInfo.getUsedConstantsAsSet`（含定理证明）从以下根出发计算：docstring 引用论文编号结果（Def 1.1、Lemma 1.2、Prop 1.3、Lemma 2.1–2.4、Prop 2.3、Def 2.5、Thm 3.1、Lemma 3.2/3.3、Thm 3.4、Lemma 4.1/4.2、Prop 4.3、Prop 5.1、Lemma 5.3、Theorem A、§6）的声明、`FalseTate/Main.lean` 的全部定理、`CoefficientRing O` 上的 `IsLocalRing`/`IsDiscreteValuationRing`/`IsAdicComplete` 实例（D-3）。未达声明删除 78 条，例外：(a) `Mathlib/` 层的自然 API（`principalQuotientEquiv` 及其 simp 引理、`orderTopology_hasBasis_nhds_zero`、C4 要求的 `orderTopology_eq_valued`、`iterate`/`compInv`/`conj` 的基本律）保留；(b) 判定为论文陈述的保留并在 docstring 中补引用，使其成为闭包的根：`Truncation.derivativeLevel_eq_iff`（Lemma 2.4 中 `s(P)` 的唯一性）、`CoefficientRing.residueFieldEquiv(_residue)`（Def 1.1 "剩余域为 `𝔽_q((T))`"）、`CoefficientRing.subst_X`/`subst_unique`/`subst_comp_subst`（论文"同一代换形式在 `A_{ℚ_p}` 上成立"，即 `A` 上的 Lemma 2.1）、`isLiftable_iff_exists_uniformizer`/`isLiftable_iff_forall_uniformizer`（Prop 2.3）。`CoefficientRing.substEquiv` 一族与 `A` 上 `conj` 的未用引理、`Truncation.factor_*`/`residueFieldEquiv`、`layer_add/neg/sub`、`exists_unique_first_layer`（被 `derivativeLevel_eq_iff` 取代）、`CoordinateFamily.map_id/map_map/conj_conj` 等均删除。仅被 `simp` 当作 `rfl` 引理使用的声明不出现在证明项中（例：`TameGenerator` 的私有 `toZMod_padicValuationSubringEquiv`、`Map` 的 `principalReduction_coeff`），删除后编译失败即恢复。命名：库中已无填充词与 blueprint 标签；`Evaluation` 的局部记号 `sourceEval`/`targetEval` 改为 `evalR`/`evalS`。§E 表中 `padicBinomialSeries → binomialSeries` **未执行**：Mathlib 已有 `PowerSeries.binomialSeries`（本定义正是它在 `κ⟦X⟧` 中的像），同名会冲突。
+
+---
+
+## 执行记录（2026-10-20 至 2026-10-21）
+
+### 各阶段
+
+| 阶段 | 提交 | 内容 |
+|---|---|---|
+| U0 | `361689b` | 依赖改钉 FW `b7d6a18`、FTE `817737a`、Mathlib `1e75e9d`（按 A-1 不设单独的升级阶段，此后三个提交允许不编译）；40 个文件版权头、`LICENSE`（Apache 2.0）、`CLAUDE.md`、本方案、`scripts/check_layers.py`、CI 加脚本、`.gitignore` 加 `*.pdf`。 |
+| 上游补充 | FW `1f7caa5`、FTE `01c06ba`（两仓库的本地分支 `nonliftability-upstream`，**未推送 GitHub**） | FW：`Ramification/Lower/IntegralClosure`（从 `APF/Tower/AlgebraicResidue` 拆出与 APF 无关的部分，新 abbrev `integralClosureResidueField`）；`Ramification/Fields/TotallyRamified`：Prop class `IsTotallyRamified K L`（`L/K` 代数即可，有限时与 `f = 1`、`e = [L : K]` 等价，中间域继承）与 `IntermediateField.HasSameResidueField`（Berger 的"相同剩余域"，诱导剩余域同构；`HasSameResidueField ⊥ F ↔ IsTotallyRamified K₀ F`）。FTE：`Fact (Irreducible (p : 𝒪[ℚ_[p]]))`、`instance : IsTotallyRamified ℚ_[p] (falseTateExtension p π)`，目标 (5) 改用 class 陈述。 |
+| R1（C1） | `a9690c6` | 新代换接口：`LaurentSeries.subst G`、`substEquiv P` 对所有输入定义（不可容许时取恒等），系数环为 `[IsLocalRing] [IsArtinianRing] [IsPrincipalIdealRing]`，`IsAdmissible` 是 Prop 而非证明参数；一条自然性引理 `mapRingHom_subst` 取代下游三份约化证明；钉上游补充的两个提交。 |
+| 迁移（R2、R3） | `ae08032` | 全库迁移到新接口，三条链并行：(1) Mathlib 层 `PowerSeries.iterate/compInv/conj`，§3（Taylor、Lemma 3.2/3.3、Theorem 3.4、`ramificationNumber` 及其增长），§4 推广到任意有限域（C5）；(2) `Truncation O r = O ⧸ 𝔪 ^ (r + 1)`、`CoefficientRing O`（极大理想完备化，完备 DVR，D-3）、层 `ϖ⁻ʲX`、`derivativeLevel P`/`normalizedDerivative P`（C2）、Lemma 2.4、Theorem 3.1、§6 两种情形，`CoordinateFamily`、`Lift`/`Liftable`/`FiniteLiftable`、Prop 2.3 抽象版；(3) `X_K(L)` 的坐标族（Lemma 2.2），按 A2 新路重做的 Prop 5.1（`FalseTate/RamificationNumbers`：FW Transfer + FTE `ramificationOrder_tauPowRestrict`）与 Lemma 5.3（`FalseTate/TameGenerator`）。 |
+| 汇合 | `5d2db52` | `IsLiftable p K L F`（B-1/B-2，`Liftability/IsLiftable`）与 Prop 2.3 的 field-of-norms 版本；`FalseTate/Main`：Prop 1.3 与 Theorem A（任意 uniformizer `π` 及 `π = p` 两版），以及摘要里 `F = ℚ_p` 时仅 `τ` 即无模 `p²` 提升的陈述；删除旧 `CoefficientRing/Liftability`、`FieldOfNorms/*`、`FalseTate/{TheoremA,DerivativeLevel}`。全库重新编译通过。 |
+| 目录、Mathlib 层、死代码（R4、R5） | `4247868` | 七层目录与每层聚合文件，`check_layers.py` 生效（细化 6）；`Mathlib/` 层（细化 7：Leibniz 法则的系数证明、`T` 进拓扑 scoped instance、系数映射、adic completion 的商、单位紧性、幂级数合成、char `p` 与 `p` 进通用引理）；最后一个 `set_option` 去掉；论文结果依赖闭包之外的 78 条声明删除（细化 8）。 |
+| 文档（R6） | 工作区，未提交 | 三个代理按层并行（Mathlib/LaurentSeries/PowerSeries 17 个文件；Differential/CoefficientRing 9 个；Liftability/FalseTate 10 个）：模块 docstring 按 Mathlib 模板重写（标题、带记号的数学陈述、Main definitions、Main results 带论文编号、只在真实设计选择处写 Implementation notes、References 用 "Y. Yuan, *…*, Lemma 2.1 (1)" 格式），补齐约 140 条缺失的声明 docstring，修正若干不准确的 docstring（`Λ_j` 的记号、`isOfFinOrder_*` 的措辞、"M. Viviani" → "F. Viviani"）。证明体的性能修改：`LaurentSeries/Evaluation` 去掉全部 8 个局部记号（8.0 s → 3.5 s，公开陈述的类型哈希不变）；4 个 `nlinarith` 改 `linarith`（显式乘积提示），`FalseTate/RamificationNumbers` 的 2 个 `nlinarith` 改 `Int.le_of_dvd` + `omega`；`Taylor` 的 2 个 `convert` 改 `exact`/`rw`；`coeff_one_coordinateSeries_kummerGenerator` 等不再重复陈述 `(τ p π).val`。最后：README（目标表）、根文件 docstring、`CLAUDE.md`、`docs/BUILD_TIMES.md`、`docs/MATHLIB_REUSE.md`、本记录；全量构建零警告，再做干净构建计时。 |
+
+### 与方案的偏差及原因
+
+1. **`IsLiftable` 的签名**是 `IsLiftable p K L F`，比 B3-1 多显式 `p`，`K` 多 `[NormedAlgebra ℚ_[p] K] [IsPerfectResidueLocalField K]`（细化 3：`K` 的范数延拓 `ℚ_p` 的范数，`𝓀[K]` 才与 `K` 在 `K^alg` 中的剩余域像典范等同）。`L` 只要求 `[Algebra.IsSeparable K L]`，不要求 `[IsGalois K L]`，群取 `Aut(L/K) = L ≃ₐ[K] L`：定义与 Prop 2.3 都不需要 Galois，`ℚ_p^FT/ℚ_p` 的 Galois 性由 FTE 实例给出。
+2. **`e` 的定义**：C2 设想用 FTE 的 `absoluteRamificationIdx p K`（对赋范域 `K`）。抽象层 `CoefficientRing/` 不得 import FTE（D-1），且需要对抽象 DVR `O` 陈述，故在 `CoefficientRing/NormalizedDerivative` 定义 `absoluteRamificationIdx p O := (addVal O p).toNat`；`F` 的整数环写作 `spectralIntegerRing ℚ_[p] F`，`absoluteRamificationIdx_spectralIntegerRing` 给出 `e = [F : ℚ_p]`。
+3. **C1.4 的记号 `f ∘ₛ G` 未引入**：代码写 `subst G Q`，docstring 写 `Q ∘ G`，对应关系写在 `Liftability/Defs` 的 Implementation notes 和 `CLAUDE.md`。
+4. **C3 的 `IsTangent`、`HasInfiniteOrder` 未单独定义**：切于恒等与无限阶只作为 §6 数值前提出现，与 `d_k ≡ -1 (mod p)`、`d_{k+1} ≥ (p + 1) d_k`、`d_k → b` 一起打包进 structure `PowerSeries.HasRamificationGrowth`、`PowerSeries.HasRamificationLimit`（E 表"前提打包进 structure"）；`PowerSeries.ramificationNumber` 按 C3 定义，`X` 的值取 `-1`（论文 `i = ∞`）。
+5. **文件拆分**比 §D 树多：`LaurentSeries/Evaluation`（构造）与 `Substitution`（接口）分开；`Liftability/` 分 `CoordinateFamily`、`Defs`、`CoordinateChange`、`FieldOfNorms`、`IsLiftable` 五个文件；`Mathlib/` 层 8 个文件（细化 2、6、7）。
+6. **E 表 `padicBinomialSeries → binomialSeries` 未执行**（细化 8：与 Mathlib 的 `PowerSeries.binomialSeries` 同名冲突）。
+7. **F 的目标线**：单文件 < 30 s 达成（最慢 `Liftability/IsLiftable` 14 s，基线 `TheoremA` 31–58 s）；"全量 < 2 min CPU" **未达成**（228 s，基线 290 s）。`IsLiftable` 约 6 s 花在实例查询 `Algebra 𝓀[K₀] (integralClosureResidueField K₀ E)` 上（FW 的 `integralClosure_algebraMap_isLocalHom` 与 `ResidueField.instAlgebra` 的查询走两条 semiring 实例路径），修法在 FW；`RamificationNumbers`、`TameGenerator` 每提一次 `(τ p π).val : L ≃ₐ[K] L` 约 0.3 s。`nlinarith` 归零，`convert` 剩 2 个（`LaurentSeries/NormalForm` 的 `convert … using 1; abel`，两边是三四个长 Laurent 级数之和，`using 1` 只产生一个等式目标，代价很小）。
+8. **G-5 的 CI**：加了 `check_layers.py`，没有加"零警告"检查（`lean-action` 只构建）。
+
+### 最终数据（2026-10-21）
+
+| 指标 | 基线（`9a13337`） | 最终 |
+|---|---|---|
+| Lean 文件 | 40 + 根文件 | 36 + 根文件（七层，各一个聚合文件） |
+| 总行数 | 12 400 | 10 801 |
+| 声明（同一脚本统计：theorem/lemma；def/abbrev/structure/class/instance） | 692（594；98），`private` 41 | 689（595；94），`private` 139；公开声明全部有 docstring |
+| 干净全量编译（本项目，20 核） | 6 min 50 s 墙钟 / 290 s CPU | 3 min 01 s 墙钟 / 228 s CPU |
+| 单文件最大 | `TheoremA` 31 s（`lake env lean` 58 s） | `Liftability/IsLiftable` 14 s |
+| 警告 / `sorry` / `set_option` | 125 / 0 / 1 | 0 / 0 / 0 |
+| 填充词 / blueprint 标签 / 超过 100 字符的行 | ≈ 880 / 40 / 85 | 0 / 0 / 0 |
+| `nlinarith` / `convert` / `erw` | 12 / 8 / 2 | 0 / 2 / 0 |
+| 陈述中的 `letI` | ≥ 19 | 0 |
+| 主定理的公理 | — | `propext`、`Classical.choice`、`Quot.sound` |
+
+干净编译日志里 `Mathlib/` 层 6 个叶子模块显示 73–91 s，与基线的五个 112–176 s 一样是并行构建首次加载 Mathlib `.olean` 的伪影，逐个重测为 1.3–2.5 s（`docs/BUILD_TIMES.md`）。
+
+### 遗留
+
+- FW `1f7caa5` 与 FTE `01c06ba` 只在本地分支 `nonliftability-upstream`，推送到 GitHub 之前，全新克隆本仓库无法构建（README 已注明）。
+- 文档阶段的改动尚未提交。
+- 全量 CPU 目标（< 2 min）未达成；`IsLiftable` 的实例查询应在 FW 修。
+- `~/fw-workspace/projects/FalseTateNonliftability` 的旧拷贝（G-6）未处理，请作者决定删除或改为 symlink。

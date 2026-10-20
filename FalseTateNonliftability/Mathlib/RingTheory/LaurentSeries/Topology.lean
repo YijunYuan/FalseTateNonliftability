@@ -14,14 +14,17 @@ public import Mathlib.Topology.Algebra.OpenSubgroup
 /-!
 # The `T`-adic topology on Laurent series over a commutative ring
 
-Let `R` be a commutative ring. The additive subgroups `orderAddSubgroup m` of Laurent series
-`f = O(T ^ m)` in `R((T))`, `m ∈ ℤ`, form a basis of neighborhoods of zero for a Hausdorff ring
-topology on `R((T))`, also when `R` has nilpotent elements. A family converges for this topology if
-and only if, for every `m`, its coefficients in all degrees below `m` are eventually those of the
-limit. The truncations `∑_{j < n} f_j T ^ j` of `f` converge to `f`, so a continuous ring
-homomorphism from `R((T))` to a Hausdorff ring is determined by its values on the constants and on
-`T`. The derivative `d / dT` is continuous. Over a field `K`, the topology is the topology of the
-`T`-adic valuation of `K((T))`.
+Let `R` be a commutative ring. For `m ∈ ℤ`, write `f = O(T ^ m)` if the Laurent series
+`f ∈ R((T))` has no terms of degree below `m`. The additive subgroups `orderAddSubgroup m` of the
+series `f = O(T ^ m)` form a basis of neighborhoods of `0` for a Hausdorff ring topology on
+`R((T))`, the `T`-adic topology. A family converges for this topology if and only if, for every
+`m`, its coefficients in all degrees below `m` are eventually those of the limit. The truncations
+`∑_{j < n} f_j T ^ j` of `f` converge to `f`, so a continuous ring homomorphism from `R((T))` to a
+Hausdorff ring is determined by its values on the constants and at `T`. The derivative is
+continuous. Over a field `K`, the `T`-adic topology is the topology of the `T`-adic valuation of
+`K((T))`.
+
+This file is a candidate for upstreaming to Mathlib (`Mathlib.RingTheory.LaurentSeries`).
 
 ## Main definitions
 
@@ -39,13 +42,13 @@ homomorphism from `R((T))` to a Hausdorff ring is determined by its values on th
 * `LaurentSeries.continuous_ringHom_ext`, `LaurentSeries.continuous_algHom_ext_X`: continuous
   homomorphisms from `R((T))` to a Hausdorff ring that agree on the constants and at `T` are
   equal.
-* `LaurentSeries.continuous_derivative`: `d / dT` is continuous.
+* `LaurentSeries.continuous_derivative`: the derivative is continuous.
 * `LaurentSeries.continuous_ofPowerSeries`: over a discrete ring, `R⟦T⟧ → R((T))` is continuous for
   the topology of coefficientwise convergence on `R⟦T⟧`.
 * `LaurentSeries.orderTopology_eq_valued`: over a field, the `T`-adic topology is the topology of
   the valuation.
 
-## Implementation details
+## Implementation notes
 
 Over a field `K`, Mathlib equips `LaurentSeries K` with the topology of its `T`-adic valuation
 (`LaurentSeries.valued`), so `orderTopology R` is only a scoped instance, activated by
@@ -54,6 +57,11 @@ field when the scope is open. The two topologies on `LaurentSeries K` are equal
 (`orderTopology_eq_valued`) but not definitionally equal: do not open the scope where the valued
 topology of `LaurentSeries K` is used, and rewrite with `orderTopology_eq_valued` where the two
 meet.
+
+## References
+
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Lemma 2.1 (1) (convergence and continuity of substitution in `R_{ℚ_p}`).
 -/
 
 @[expose] public section
@@ -67,7 +75,8 @@ noncomputable section
 
 variable {R : Type*} [CommRing R]
 
-/-- The additive subgroup of Laurent series whose order is at least `m`. -/
+/-- The additive subgroup of the Laurent series `f = O(T ^ m)`, whose terms all have degree at
+least `m`. -/
 def orderAddSubgroup (m : ℤ) : AddSubgroup (LaurentSeries R) where
   carrier := {f | (m : WithTop ℤ) ≤ f.orderTop}
   zero_mem' := by simp
@@ -79,6 +88,7 @@ def orderAddSubgroup (m : ℤ) : AddSubgroup (LaurentSeries R) where
     intro f hf
     simpa only [Set.mem_ofPred_eq, HahnSeries.orderTop_neg] using hf
 
+/-- `f = O(T ^ m)` if and only if the order of `f` is at least `m`. -/
 @[simp]
 theorem mem_orderAddSubgroup (m : ℤ) (f : LaurentSeries R) :
     f ∈ orderAddSubgroup m ↔ (m : WithTop ℤ) ≤ f.orderTop := Iff.rfl
@@ -89,6 +99,7 @@ theorem mem_orderAddSubgroup_iff_coeff (m : ℤ) (f : LaurentSeries R) :
   simpa only [mem_orderAddSubgroup, WithTop.coe_lt_coe] using
     (HahnSeries.le_orderTop_iff_forall (x := f) (i := (m : WithTop ℤ)))
 
+/-- If `m ≤ n`, then `f = O(T ^ n)` implies `f = O(T ^ m)`. -/
 theorem orderAddSubgroup_antitone : Antitone (orderAddSubgroup (R := R)) := by
   intro m n hmn f hf
   exact (WithTop.coe_le_coe.mpr hmn).trans hf
@@ -111,6 +122,7 @@ theorem mem_orderAddSubgroup_order (f : LaurentSeries R) :
   · change (f.order : WithTop ℤ) ≤ f.orderTop
     exact (HahnSeries.order_eq_orderTop_of_ne_zero hf).le
 
+/-- `1 = O(1)`. -/
 theorem one_mem_orderAddSubgroup_zero : (1 : LaurentSeries R) ∈ orderAddSubgroup 0 := by
   rw [← HahnSeries.single_zero_one]
   exact HahnSeries.orderTop_single_le
@@ -137,7 +149,8 @@ theorem pow_sub_one_mem_orderAddSubgroup {f : LaurentSeries R} {m : ℤ} (hm : 0
     rw [pow_succ, show f ^ n * f - 1 = (f ^ n - 1) * f + (f - 1) by ring]
     exact add_mem (by simpa only [add_zero] using mul_mem_orderAddSubgroup ih hf0) hf
 
-/-- The subgroups `orderAddSubgroup m` form a basis of neighborhoods of zero of a ring topology. -/
+/-- The subgroups `orderAddSubgroup m`, `m ∈ ℤ`, form a basis of neighborhoods of `0` of a ring
+topology on `R((T))`. -/
 theorem orderRingSubgroupsBasis : RingSubgroupsBasis (orderAddSubgroup (R := R)) := by
   apply RingSubgroupsBasis.of_comm
   · intro m n
@@ -169,6 +182,7 @@ namespace OrderTopology
 scoped instance (priority := high) instTopologicalSpace : TopologicalSpace (LaurentSeries R) :=
   orderTopology R
 
+/-- The `T`-adic topology is a ring topology. -/
 scoped instance instIsTopologicalRing : IsTopologicalRing (LaurentSeries R) :=
   (orderRingSubgroupsBasis (R := R)).toRingFilterBasis.isTopologicalRing
 
@@ -190,7 +204,7 @@ end OrderTopology
 
 open scoped LaurentSeries.OrderTopology
 
-/-- The subgroups `orderAddSubgroup m` form a basis of neighborhoods of zero. -/
+/-- The subgroups `orderAddSubgroup m`, `m ∈ ℤ`, form a basis of neighborhoods of `0`. -/
 theorem orderTopology_hasBasis_nhds_zero :
     (𝓝 (0 : LaurentSeries R)).HasBasis (fun _ : ℤ ↦ True)
       (fun m ↦ (orderAddSubgroup (R := R) m : Set (LaurentSeries R))) :=
@@ -201,10 +215,12 @@ theorem orderTopology_hasBasis_nhds (f : LaurentSeries R) :
     (𝓝 f).HasBasis (fun _ : ℤ ↦ True) (fun m ↦ {g | g - f ∈ orderAddSubgroup m}) :=
   (orderRingSubgroupsBasis (R := R)).hasBasis_nhds f
 
+/-- The subgroup `orderAddSubgroup m` is open. -/
 theorem isOpen_orderAddSubgroup (m : ℤ) :
     IsOpen (orderAddSubgroup (R := R) m : Set (LaurentSeries R)) :=
   ((orderRingSubgroupsBasis (R := R)).openAddSubgroup m).isOpen
 
+/-- The subgroup `orderAddSubgroup m` is closed. -/
 theorem isClosed_orderAddSubgroup (m : ℤ) :
     IsClosed (orderAddSubgroup (R := R) m : Set (LaurentSeries R)) :=
   (orderAddSubgroup m).isClosed_of_isOpen (isOpen_orderAddSubgroup m)
@@ -220,7 +236,8 @@ theorem tendsto_orderTopology_iff {ι : Type*} {l : Filter ι}
 
 /-! ### Lower bounds on the order -/
 
-/-- The order of `z ∈ R⟦T⟧` as a Laurent series is its order as a power series. -/
+/-- The order of a power series `z ∈ R⟦T⟧` as a Laurent series is its order as a power
+series. -/
 theorem _root_.HahnSeries.orderTop_ofPowerSeries {R : Type*} [Semiring R] (z : PowerSeries R) :
     (HahnSeries.ofPowerSeries ℤ R z).orderTop = WithTop.map (fun n : ℕ ↦ (n : ℤ)) z.order := by
   rw [HahnSeries.ofPowerSeries_apply, HahnSeries.orderTop_embDomain]
@@ -236,7 +253,7 @@ theorem _root_.HahnSeries.orderTop_ofPowerSeries {R : Type*} [Semiring R] (z : P
     rw [← PowerSeries.coe_toNat_order hz] at hle
     exact_mod_cast hle
 
-/-- A power series has no terms of negative degree. -/
+/-- A power series is `O(1)`: it has no terms of negative degree. -/
 theorem ofPowerSeries_mem_orderAddSubgroup_zero (P : PowerSeries R) :
     HahnSeries.ofPowerSeries ℤ R P ∈ orderAddSubgroup 0 := by
   rw [mem_orderAddSubgroup_iff_coeff]
@@ -440,7 +457,7 @@ theorem derivative_mem_orderAddSubgroup (m : ℤ) (f : LaurentSeries R)
   intro j hj
   rw [coeff_derivative, (mem_orderAddSubgroup_iff_coeff m f).mp hf (j + 1) (by omega), mul_zero]
 
-/-- The derivative `d / dT` is continuous for the `T`-adic topology. -/
+/-- The derivative is continuous for the `T`-adic topology. -/
 theorem continuous_derivative : Continuous (derivative R : LaurentSeries R → LaurentSeries R) := by
   refine continuous_iff_continuousAt.mpr fun f ↦ ?_
   refine ((orderTopology_hasBasis_nhds f).tendsto_iff

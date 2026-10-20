@@ -13,48 +13,58 @@ public import FalseTateNonliftability.LaurentSeries.NormalForm
 /-!
 # The two obstructions to commuting lifts modulo `𝔪 ^ (e + 1)`
 
-Let `κ` be a field and `p` a prime. A power series `f ∈ κ⟦T⟧` has ramification growth at `p` if
-`f = T + O(T²)`, the automorphism `a ↦ a ∘ f` of `κ((T))` has infinite order, and the
-ramification numbers `d_k = v_T(f^{∘p^k} - T) - 1` satisfy `d_k ≡ -1 (mod p)` and
-`d_{k+1} ≥ (p + 1) d_k` for every `k ≥ 0`. For the coordinate series of the Kummer generator `τ`
-on the field of norms of the false Tate curve extension these are Yuan, Proposition 5.1.
+Let `κ` be a field and `p` a prime. For `f ∈ T + T ^ 2 κ⟦T⟧`, let `σ : a ↦ a ∘ f` be the
+corresponding automorphism of `κ((T))` and `d_k = i(σ ^ (p ^ k)) = v_T(f^{∘p^k} - T) - 1` its
+ramification numbers. The series `f` has ramification growth at `p` if `σ` has infinite order and
+`d_k ≡ -1 (mod p)` and `d_{k + 1} ≥ (p + 1) d_k` for every `k ≥ 0`; it has ramification limit `b`
+if moreover `d_k → b` in `ℤ_p`. By Yuan, Proposition 5.1, the coordinate series of the Kummer
+generator `τ` on the field of norms of the false Tate curve extension has ramification limit
+`(p - 1) / (p + 1) ∉ ℤ`.
 
-Let `O` be a discrete valuation ring with residue field `κ = 𝔽_p`, `p ≠ 0` in `O`, and let
-`e = v(p)` be its absolute ramification index. Let `P, G ∈ (O ⧸ 𝔪 ^ (e + 1))((T))` with
-`G ∘ P = P ∘ G`, where `P` reduces to `T ^ p`.
+Let `O` be a discrete valuation ring with residue field `κ = 𝔽_p`, `p ≠ 0` in `O`, and
+`e = v_ϖ(p)`, and let `P, G ∈ (O ⧸ 𝔪 ^ (e + 1))((T))` with `G ∘ P = P ∘ G`, where `P` reduces to
+`T ^ p`. The two cases of the proof of Yuan, Proposition 1.3, in §6 show that no such `P`, `G`
+and `D` below exist if `f` has ramification limit `b ∉ ℤ`; for the coordinate series of `τ` and
+of the tame generator `δ` (Lemma 5.3) this is Proposition 1.3.
 
-1. If `G` reduces to a power series `f` with ramification growth at `p`, then the derivative level
-   of `P` satisfies `s(P) < e` (Yuan, §6, proof of Proposition 1.3, case 1).
-2. Let `G` reduce to a power series `f = T + O(T²)` such that `a ↦ a ∘ f` has infinite order and
-   the ramification numbers `d_k` converge in `ℤ_p` to some `b ∉ ℤ`, and let
-   `D ∈ (O ⧸ 𝔪 ^ (e + 1))((T))` with `D ∘ P = P ∘ D` reduce to a power series `g ∈ T κ⟦T⟧` whose
-   linear coefficient has multiplicative order `p - 1`. Then `s(P) ≥ e` (Yuan, §6, proof of
-   Proposition 1.3, case 2). Indeed, if `s(P) < e`, then `a ↦ a ∘ f` fixes a nonzero exact
-   differential (Yuan, Lemma 4.1), and then `b ∈ ℤ` (Yuan, Proposition 4.3).
-
-If `f` satisfies the hypotheses of both cases, such `P, G, D` do not exist. For the coordinate
-series of the Kummer generator `τ` and of the tame generator `δ` of the false Tate curve extension
-this is Yuan, Proposition 1.3.
+1. If `G` reduces to a power series `f` with ramification growth at `p`, then `s(P) < e`: if
+   `s(P) = e`, then Theorem 3.4 puts `f^{∘p^k}` in normal form after a coordinate change, and
+   Theorem 3.1 and Lemma 2.4 (2) give `v_T(h_P) ≤ p - 1 - d_k` for all `k`, while `d_k → ∞`.
+2. If `G` reduces to `f ∈ T + T ^ 2 κ⟦T⟧` such that `σ` has infinite order and `d_k → b ∉ ℤ` in
+   `ℤ_p`, and `D ∈ (O ⧸ 𝔪 ^ (e + 1))((T))` with `D ∘ P = P ∘ D` reduces to `g ∈ T κ⟦T⟧` whose
+   linear coefficient has multiplicative order `p - 1`, then `s(P) ≥ e`: if `s(P) < e`, then `σ`
+   fixes a nonzero exact differential (Lemma 2.4 (3) and Lemma 4.1), and then `b ∈ ℤ`
+   (Proposition 4.3).
 
 ## Main definitions
 
 * `PowerSeries.HasRamificationGrowth p f`: `f` has ramification growth at `p`.
-* `PowerSeries.HasRamificationLimit p f b`: `f` has ramification growth at `p` and its ramification
-  numbers converge to `b` in `ℤ_p`.
+* `PowerSeries.HasRamificationLimit p f b`: `f` has ramification growth at `p` and its
+  ramification numbers converge to `b` in `ℤ_p`.
 
 ## Main results
 
 * `LaurentSeries.isAdmissible_of_mapRingHom_eq_ofPowerSeries`: a Laurent series whose image
   under a coefficient map is a power series `f` with `f(0) = 0` and `f'(0)` a unit is admissible.
-* `FalseTateNonliftability.Truncation.derivativeLevel_lt_absoluteRamificationIdx`: `s(P) < e`.
-* `FalseTateNonliftability.Truncation.absoluteRamificationIdx_le_derivativeLevel`: `s(P) ≥ e`.
-* `FalseTateNonliftability.Truncation.false_of_commute`: there are no `P, G, D` as above when
-  `f` has ramification growth at `p`.
+* `FalseTateNonliftability.Truncation.derivativeLevel_lt_absoluteRamificationIdx`: `s(P) < e`
+  (Yuan, §6, case 1).
+* `FalseTateNonliftability.Truncation.absoluteRamificationIdx_le_derivativeLevel`: `s(P) ≥ e`
+  (Yuan, §6, case 2).
+* `FalseTateNonliftability.Truncation.false_of_commute`: there are no `P, G, D` as above if `f`
+  has ramification limit `b ∉ ℤ` (Yuan, Proposition 1.3, for an abstract discrete valuation ring
+  `O`).
+
+## Implementation notes
+
+The hypotheses on the ramification numbers are bundled in the structures `HasRamificationGrowth`
+and `HasRamificationLimit`, which the false Tate curve extension satisfies by Proposition 5.1.
 
 ## References
 
-* Yuan, Lemma 2.4, Theorem 3.1, Theorem 3.4, Lemma 4.1, Proposition 4.3, Proposition 5.1 and §6
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Lemma 2.4, Theorem 3.1, Theorem 3.4, Lemma 4.1, Proposition 4.3, Proposition 5.1 and §6
   (proof of Proposition 1.3).
+* J.-P. Serre, *Local Fields*, Chapter IV, §1 (the ramification numbers `i(σ)`).
 -/
 
 @[expose] public section
@@ -73,13 +83,13 @@ namespace PowerSeries
 
 variable {κ : Type*} [Field κ]
 
-/-- A power series `f` over a field `κ` has ramification growth at `p` if `f'(0) = 1`, the
-automorphism `a ↦ a ∘ f` of `κ((T))` has infinite order (so `f = T + O(T²)`), and the
-ramification numbers `d_k = v_T(f^{∘p^k} - T) - 1` satisfy `d_k ≡ -1 (mod p)` and
-`d_{k+1} ≥ (p + 1) d_k` for every `k ≥ 0` (for the Kummer generator of the false Tate curve
-extension: Yuan, Proposition 5.1). -/
+/-- A power series `f` over a field `κ` has ramification growth at `p` if `f ∈ T + T ^ 2 κ⟦T⟧`,
+the automorphism `a ↦ a ∘ f` of `κ((T))` has infinite order, and the ramification numbers
+`d_k = v_T(f^{∘p^k} - T) - 1` satisfy `d_k ≡ -1 (mod p)` and `d_{k + 1} ≥ (p + 1) d_k` for every
+`k ≥ 0`. The coordinate series of the Kummer generator of the false Tate curve extension has
+ramification growth at `p` (Yuan, Proposition 5.1). -/
 structure HasRamificationGrowth (p : ℕ) (f : κ⟦X⟧) : Prop where
-  /-- `f'(0) = 1`. -/
+  /-- The linear coefficient of `f` is `1`. -/
   coeff_one : f.coeff 1 = 1
   /-- `a ↦ a ∘ f` has infinite order. -/
   not_isOfFinOrder : ¬ IsOfFinOrder (LaurentSeries.substEquiv f)
@@ -97,8 +107,8 @@ namespace LaurentSeries
 variable {R S : Type*} [CommRing R] [IsLocalRing R] [IsArtinianRing R] [CommRing S]
   [IsLocalRing S]
 
-/-- A Laurent series `G` whose image under a coefficient map is a power series `f` with
-`f(0) = 0` and `f'(0)` a unit is admissible. -/
+/-- A Laurent series `G` whose image under a coefficient map `φ` to a local ring is a power series
+`f` with `f(0) = 0` and `f'(0)` a unit is admissible. -/
 theorem isAdmissible_of_mapRingHom_eq_ofPowerSeries (φ : R →+* S) {G : LaurentSeries R}
     {f : PowerSeries S} (hf : f.constantCoeff = 0) (hf' : IsUnit (f.coeff 1))
     (hG : mapRingHom φ G = HahnSeries.ofPowerSeries ℤ S f) : IsAdmissible G :=
@@ -134,7 +144,7 @@ open LaurentSeries
 variable {O : Type*} [CommRing O] [IsDomain O] [IsDiscreteValuationRing O]
   (p : ℕ) [Fact p.Prime] [Fact (Nat.card (ResidueField O) = p)] [NeZero (p : O)]
 
-/-- Yuan, §6, proof of Proposition 1.3, case 1: let `p ≠ 0` in `O`, let `κ = 𝔽_p` and `e = v(p)`.
+/-- Yuan, §6, proof of Proposition 1.3, case 1: let `p ≠ 0` in `O`, `κ = 𝔽_p` and `e = v_ϖ(p)`.
 Let `P, G ∈ (O ⧸ 𝔪 ^ (e + 1))((T))` with `G ∘ P = P ∘ G`, where `P` reduces to `T ^ p` and `G`
 reduces to a power series `f` with ramification growth at `p`. Then the derivative level of `P`
 satisfies `s(P) < e`. -/
@@ -191,8 +201,8 @@ variable {κ : Type*} [Field κ]
 
 /-- A power series `f` over a field `κ` has ramification limit `b ∈ ℤ_p` at `p` if it has
 ramification growth at `p` and its ramification numbers `d_k = v_T(f^{∘p^k} - T) - 1` converge
-to `b` in `ℤ_p` (for the Kummer generator of the false Tate curve extension,
-`b = (p - 1)/(p + 1)`: Yuan, Proposition 5.1). -/
+to `b` in `ℤ_p`. The coordinate series of the Kummer generator of the false Tate curve extension
+has ramification limit `(p - 1) / (p + 1)` (Yuan, Proposition 5.1). -/
 structure HasRamificationLimit (p : ℕ) [Fact p.Prime] (f : κ⟦X⟧) (b : ℤ_[p]) : Prop
     extends HasRamificationGrowth p f where
   /-- `d_k → b` in `ℤ_p`. -/
@@ -228,12 +238,12 @@ private theorem substEquiv_normalizedDerivative_of_commute {r : ℕ}
 
 variable [NeZero (p : O)]
 
-/-- Yuan, §6, proof of Proposition 1.3, case 2: let `p ≠ 0` in `O`, let `κ = 𝔽_p` and `e = v(p)`.
+/-- Yuan, §6, proof of Proposition 1.3, case 2: let `p ≠ 0` in `O`, `κ = 𝔽_p` and `e = v_ϖ(p)`.
 Let `P, G, D ∈ (O ⧸ 𝔪 ^ (e + 1))((T))` with `G ∘ P = P ∘ G` and `D ∘ P = P ∘ D`, where `P`
-reduces to `T ^ p`, `G` reduces to a power series `f` with `f'(0) = 1` such that `a ↦ a ∘ f` has
-infinite order and the ramification numbers `d_k = v_T(f^{∘p^k} - T) - 1` converge in `ℤ_p` to
-some `b ∉ ℤ`, and `D` reduces to a power series `g ∈ T κ⟦T⟧` whose linear coefficient has
-multiplicative order `p - 1`. Then the derivative level of `P` satisfies `s(P) ≥ e`. -/
+reduces to `T ^ p`, `G` reduces to `f ∈ T + T ^ 2 κ⟦T⟧` such that `a ↦ a ∘ f` has infinite order
+and the ramification numbers `d_k = v_T(f^{∘p^k} - T) - 1` converge in `ℤ_p` to some `b ∉ ℤ`, and
+`D` reduces to a power series `g ∈ T κ⟦T⟧` whose linear coefficient has multiplicative order
+`p - 1`. Then the derivative level of `P` satisfies `s(P) ≥ e`. -/
 theorem absoluteRamificationIdx_le_derivativeLevel
     {P G D : LaurentSeries (Truncation O (absoluteRamificationIdx p O))}
     {f g : PowerSeries (ResidueField O)} {b : ℤ_[p]}
@@ -264,9 +274,9 @@ theorem absoluteRamificationIdx_le_derivativeLevel
   rw [padic_ramification_limit_eq_of_invariant_exact_differential p hf1 hf hlimit ha ⟨B, hB⟩ hinv,
     Int.cast_neg]
 
-/-- Yuan, §6, proof of Proposition 1.3: let `p ≠ 0` in `O`, let `κ = 𝔽_p` and `e = v(p)`. Let
-`f ∈ κ⟦T⟧` have ramification limit `b ∉ ℤ` at `p`, and let `g ∈ T κ⟦T⟧` have linear
-coefficient of multiplicative order `p - 1`. Then there are no
+/-- Yuan, Proposition 1.3, over a discrete valuation ring: let `p ≠ 0` in `O`, `κ = 𝔽_p` and
+`e = v_ϖ(p)`. Let `f ∈ κ⟦T⟧` have ramification limit `b ∉ ℤ` at `p`, and let `g ∈ T κ⟦T⟧` have
+linear coefficient of multiplicative order `p - 1`. Then there are no
 `P, G, D ∈ (O ⧸ 𝔪 ^ (e + 1))((T))` reducing to `T ^ p`, `f` and `g` with `G ∘ P = P ∘ G` and
 `D ∘ P = P ∘ D`. -/
 theorem false_of_commute

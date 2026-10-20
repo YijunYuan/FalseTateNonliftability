@@ -11,12 +11,14 @@ public import Mathlib.SetTheory.Cardinal.Finite
 /-!
 # Rings with a prime number of elements
 
-A ring with `p` elements, `p` prime, has characteristic `p`. This is the `Nat.card` version of
-`charP_of_card_eq_prime`, which needs a `Fintype` instance.
+A ring `R` with `p` elements, where `p` is a prime number, has characteristic `p`.
+
+This file is a candidate for upstreaming to Mathlib, next to `charP_of_card_eq_prime` in
+`Mathlib.Algebra.CharP.CharAndCard`, which states the same result for `Fintype.card`.
 
 ## Main results
 
-* `charP_of_natCard_eq_prime`: if `Nat.card R = p` is prime, then `CharP R p`.
+* `charP_of_natCard_eq_prime`: if `Nat.card R = p` with `p` prime, then `R` has characteristic `p`.
 -/
 
 @[expose] public section

@@ -14,21 +14,23 @@ public import Mathlib.RingTheory.PowerSeries.Expand
 /-!
 # The derivative of Laurent series
 
-Let `R` be a commutative ring. The derivative `d / dT` of `R((T))` (`LaurentSeries.derivative`)
-sends `∑ f_j T ^ j` to `∑ (j + 1) f_{j + 1} T ^ j`. It satisfies the Leibniz rule and restricts to
-the derivative of power series.
+Let `R` be a commutative ring. The derivative `f ↦ f'` of `R((T))` (`LaurentSeries.derivative`)
+sends `∑ f_j T ^ j` to `∑ (j + 1) f_{j + 1} T ^ j`. It satisfies the Leibniz rule and the power
+rules, and it restricts to the derivative of `R⟦T⟧`.
 
 Let `κ` be a field of characteristic `p`. A Laurent series `h ∈ κ((T))` is a derivative if and
-only if its coefficients in all degrees `p * ℓ - 1`, `ℓ ∈ ℤ`, vanish. A Laurent series `U` satisfies
-`U' = 0` if and only if it is supported on exponents divisible by `p`; if `κ` is perfect, the kernel
-of `d / dT` is `κ((T)) ^ p`. Deleting from `U` the terms whose exponents are divisible by `p` gives
-the primitive `coefficientPrimitive U'` of `U'`; if `U' ≠ 0`, it has order `v_T(U') + 1`, which is
-not divisible by `p`.
+only if its coefficients in all degrees `p ℓ - 1`, `ℓ ∈ ℤ`, vanish. A Laurent series `U` satisfies
+`U' = 0` if and only if it is supported on exponents divisible by `p`; if `κ` is perfect, the
+kernel of the derivative is `κ((T)) ^ p`. Deleting from `U` the terms whose exponents are divisible
+by `p` gives the primitive `coefficientPrimitive U'` of `U'`; if `U' ≠ 0`, its order is
+`v_T(U') + 1`, which is not divisible by `p`.
+
+This file is a candidate for upstreaming to Mathlib (`Mathlib.RingTheory.LaurentSeries`).
 
 ## Main definitions
 
-* `LaurentSeries.coefficientPrimitive h`: the Laurent series `∑ⱼ (h_{j - 1} / j) T ^ j` over a
-  field, whose coefficient is zero in every degree `j` with `(j : κ) = 0`.
+* `LaurentSeries.coefficientPrimitive h`: over a field `κ`, the Laurent series
+  `∑ⱼ (h_{j - 1} / j) T ^ j`, whose coefficient is `0` in every degree `j` with `(j : κ) = 0`.
 
 ## Main results
 
@@ -45,10 +47,16 @@ not divisible by `p`.
   `LaurentSeries.not_dvd_order_coefficientPrimitive_derivative`: the primitive
   `coefficientPrimitive U'` of `U'`.
 
+## Implementation notes
+
+`coefficientPrimitive h` is defined for every `h`, with the convention `h_{j - 1} / 0 = 0` in
+degrees `j` with `(j : κ) = 0`; it is a primitive of `h` if and only if `h` is a derivative.
+
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  Lemma 2.4 (3), Lemma 4.2 and Proposition 4.3.
+  proof of Lemma 2.4 (3) (the Laurent series that are derivatives) and proof of Proposition 4.3
+  (the kernel of the derivative and primitives without terms in degrees divisible by `p`).
 -/
 
 @[expose] public section
@@ -64,11 +72,13 @@ theorem coeff_derivative (f : LaurentSeries R) (j : ℤ) :
     (derivative R f).coeff j = ((j + 1 : ℤ) : R) * f.coeff (j + 1) := by
   simp [derivative, hasseDeriv_coeff, zsmul_eq_mul]
 
+/-- `(b T ^ j)' = j b T ^ (j - 1)`. -/
 @[simp]
 theorem derivative_single (j : ℤ) (b : R) :
     derivative R (HahnSeries.single j b) = HahnSeries.single (j - 1) ((j : R) * b) := by
   simp [derivative, hasseDeriv_single, zsmul_eq_mul]
 
+/-- The derivative of a constant is `0`. -/
 @[simp]
 theorem derivative_C (b : R) : derivative R (HahnSeries.C b) = 0 := by
   rw [HahnSeries.C_apply, derivative_single]
@@ -94,7 +104,8 @@ theorem derivative_ofPowerSeries (H : PowerSeries R) :
       rw [PowerSeries.coeff_coe, PowerSeries.coeff_coe,
         ite_eq_left (by omega), ite_eq_left (by omega), mul_zero]
 
-/-- If `H'(0)` is a unit, then the derivative of the power series `H` is a unit. -/
+/-- If the linear coefficient `H'(0)` of a power series `H` is a unit, then `H'` is a unit of
+`R((T))`. -/
 theorem isUnit_derivative_ofPowerSeries (H : PowerSeries R) (hlinear : IsUnit (H.coeff 1)) :
     IsUnit (derivative R (HahnSeries.ofPowerSeries ℤ R H)) := by
   rw [derivative_ofPowerSeries]
@@ -135,6 +146,7 @@ theorem derivative_mul (f g : LaurentSeries R) :
     rw [HahnSeries.single_mul_single, neg_add_cancel, mul_one, HahnSeries.single_zero_one]
   rw [← one_mul (derivative R (f * g)), ← hT, mul_assoc, h, ← mul_assoc, hT, one_mul]
 
+/-- `1' = 0`. -/
 @[simp]
 theorem derivative_one : derivative R (1 : LaurentSeries R) = 0 := by
   simpa only [HahnSeries.C_one] using derivative_C (R := R) 1
@@ -204,8 +216,8 @@ noncomputable section
 
 variable {κ : Type*} [Field κ]
 
-/-- The Laurent series `∑ⱼ (h_{j - 1} / j) T ^ j`; its coefficient in every degree `j` with
-`(j : κ) = 0` is zero. -/
+/-- The Laurent series `∑ⱼ (h_{j - 1} / j) T ^ j` over a field `κ`; its coefficient in every
+degree `j` with `(j : κ) = 0` is `0`. If `h` is a derivative, it is a primitive of `h`. -/
 def coefficientPrimitive (h : LaurentSeries κ) : LaurentSeries κ :=
   HahnSeries.ofSuppBddBelow (fun j : ℤ ↦ h.coeff (j - 1) / (j : κ)) <| by
     refine ⟨h.order + 1, fun j hj ↦ ?_⟩
@@ -213,6 +225,7 @@ def coefficientPrimitive (h : LaurentSeries κ) : LaurentSeries κ :=
     rw [Function.notMem_support,
       HahnSeries.coeff_eq_zero_of_lt_order (by omega : j - 1 < h.order), zero_div]
 
+/-- The coefficient of `T ^ j` in `coefficientPrimitive h` is `h_{j - 1} / j`. -/
 @[simp]
 theorem coefficientPrimitive_coeff (h : LaurentSeries κ) (j : ℤ) :
     (coefficientPrimitive h).coeff j = h.coeff (j - 1) / (j : κ) := rfl

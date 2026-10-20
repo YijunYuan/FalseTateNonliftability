@@ -13,8 +13,13 @@ public import FalseTateNonliftability.LaurentSeries.Taylor
 /-!
 # Laurent series
 
-Substitution in Laurent series over local Artinian rings with principal maximal ideal (Yuan,
-Lemma 2.1), the Taylor expansion of substitutions close to the identity (Yuan, Lemma 3.2 and the
-proof of Theorem 3.1), and ramification numbers and normal forms (Yuan, §3.2: Lemma 3.3 and
-Theorem 3.4).
+Substitution `f ↦ f(G)` in Laurent series over local Artinian rings with principal maximal ideal
+(Yuan, Lemma 2.1), the Taylor expansion of substitutions close to the identity (Yuan, Lemma 3.2
+and the proofs of Theorem 3.1 and Lemma 4.2), and ramification numbers, their growth under
+`p`-th powers, and normal forms (Yuan, §3.2: Lemma 3.3 and Theorem 3.4).
+
+## References
+
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  §2.1 and §3.
 -/

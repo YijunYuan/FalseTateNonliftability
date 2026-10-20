@@ -16,21 +16,23 @@ public import Mathlib.RingTheory.PowerSeries.Expand
 
 Let `κ` be a perfect field of characteristic `p`, let `f ∈ T + T ^ 2 κ⟦T⟧` be such that the
 automorphism `σ : x ↦ x(f)` of `κ((T))` has infinite order, and let `U ∈ κ⟦T⟧ˣ`. If `m ∈ ℤ_p`
-satisfies `(f / T) ^ m (U ∘ f) = U`, then `(f^{∘n} / T) ^ m (U ∘ f^{∘n}) = U` for every `n`,
-and `m = 0`. Here `f / T` is `PowerSeries.divXPowOrder f`, and the power `z ^ m` of the principal
-unit `z = f / T` is `PowerSeries.principalUnitPow z m`.
+satisfies `(f / T) ^ m (U ∘ f) = U`, then `(f^{∘n} / T) ^ m (U ∘ f^{∘n}) = U` for every `n`, and
+`m = 0`. Here `f / T ∈ 1 + T κ⟦T⟧` is the principal unit `PowerSeries.divXPowOrder f`, and its
+`p`-adic power `(f / T) ^ m` is `PowerSeries.principalUnitPow (f / T) m`. This is the last step
+of the proof of Yuan, Lemma 4.2: the limiting functional equation (4.4) forces `m = 0`.
 
 ## Main results
 
-* `PowerSeries.principalUnitPow_mul_subst_iterate_eq`: `(f^{∘n} / T) ^ m (U ∘ f^{∘n}) = U`.
+* `PowerSeries.principalUnitPow_mul_subst_iterate_eq`: `(f^{∘n} / T) ^ m (U ∘ f^{∘n}) = U` (Yuan,
+  proof of Lemma 4.2, (4.5)).
 * `PowerSeries.exists_pow_eq_of_derivative_eq_zero`: over a perfect field of characteristic `p`,
   a power series with zero derivative is a `p`-th power.
 * `PowerSeries.eq_zero_of_principalUnitPow_mul_subst_eq`: `(f / T) ^ m (U ∘ f) = U` implies
-  `m = 0`.
+  `m = 0` (Yuan, proof of Lemma 4.2).
 
 ## References
 
-* Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
   proof of Lemma 4.2, equations (4.4) and (4.5).
 -/
 

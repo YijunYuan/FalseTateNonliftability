@@ -14,34 +14,38 @@ public import FalseTateExtension.Padic.Basic
 /-!
 # `F`-liftability of the action on the field of norms
 
-Let `K` be a finite extension of `ℚ_p`, let `L/K` be an infinite totally ramified APF extension
-inside an algebraic closure `K^alg`, and let `F ⊆ K^alg` be a finite extension of `ℚ_p` with the
-same residue field as `K`. Let `κ_F` be the residue field of the ring of integers `𝒪_F` of `F` and
-let `A_K` be the `𝔪_F`-adic completion of `𝒪_F((T))`. As `L/K` is totally ramified, the residue
-field `κ_L` of the field of norms `X_K(L)` is the residue field of `K`, hence isomorphic to `κ_F`.
-For a uniformizer `u` of `X_K(L)`, the coordinate series `f_{g,u}` of the elements
-`g ∈ Aut(L/K)` (`ev_u(f_{g,u}) = g(u)`, Yuan, §1.4) thus form a coordinate family over `κ_F`. The
-action of `Aut(L/K)` on `X_K(L)` is `F`-liftable if this family has a lift to `A_K` (Berger 2014;
-Yuan, Definition 1.1): there exist `P` and `(F_g)_{g ∈ Aut(L/K)}` in `A_K` with `P̄ = T^q`,
-`ev_u(F̄_g) = g(u)`, `F_g ∘ P = P ∘ F_g` and `F_h ∘ F_g = F_{gh}`.
+Let `p` be a prime, `K` a finite extension of `ℚ_p` with algebraic closure `K^alg`, and `L ⊆ K^alg`
+an infinite totally ramified APF extension of `K` with field of norms `X_K(L)`. Let `F ⊆ K^alg` be
+a finite extension of `ℚ_p` with the same residue field as `K`, with ring of integers `𝒪_F`,
+maximal ideal `𝔪_F` and residue field `κ_F` with `q` elements, and let `A_K` be the `𝔪_F`-adic
+completion of `𝒪_F((T))`. As `L/K` is totally ramified, the residue field `κ_L` of `X_K(L)` is the
+residue field of `K`, hence isomorphic to `κ_F`. For a uniformizer `u` of `X_K(L)`, the coordinate
+series `f_{g,u}` of the elements `g ∈ Aut(L/K)` (`ev_u(f_{g,u}) = g(u)`, Yuan, §1.4) thus form a
+coordinate family over `κ_F`. The action of `Aut(L/K)` on `X_K(L)` is `F`-liftable (Berger;
+Yuan, Definition 1.1) if this family has a lift to `A_K`: there exist `P` and
+`(F_g)_{g ∈ Aut(L/K)}` in `A_K` with `P̄ = T^q`, `ev_u(F̄_g) = g(u)`, `F_g ∘ P = P ∘ F_g` and
+`F_h ∘ F_g = F_{gh}` for all `g, h ∈ Aut(L/K)`.
 
 A change of uniformizer conjugates the coordinate family by a change of variable
 (Yuan, Lemma 2.2 (4)), so `F`-liftability does not depend on the uniformizer, and neither does the
 existence of finite lifts modulo `𝔪_F ^ (r + 1)` on a subset of `Aut(L/K)`
-(Yuan, Proposition 2.3).
+(Yuan, Proposition 2.3). The isomorphism `κ_L ≅ κ_F` preserves the ramification numbers
+`v_T(f_{g,u} - T) - 1`, the multiplicative orders of the linear coefficients `f_{g,u}'(0)` and the
+finiteness of the orders of the automorphisms `a ↦ a ∘ f_{g,u}` of `κ_L((T))`, which are the
+arithmetic inputs of Yuan, §5.
 
-For `K = ℚ_p` the condition on `F` is that `F/ℚ_p` is totally ramified; then `κ_F` has `p`
-elements.
+For `K = ℚ_p`, a finite totally ramified extension `F/ℚ_p` has the same residue field as `ℚ_p`,
+and `κ_F` has `p` elements.
 
 ## Main definitions
 
 * `FalseTateNonliftability.baseField p K`: the image of `K` in `K^alg`, an intermediate field of
-  `K^alg/ℚ_p`. "`F` has the same residue field as `K`" is `(baseField p K).HasSameResidueField F`.
+  `K^alg/ℚ_p`.
 * `FalseTateNonliftability.IsLiftable.residueFieldEquiv p K L F`: the isomorphism `κ_L ≅ κ_F`.
 * `FalseTateNonliftability.IsLiftable.coordinateFamily p K L F u hu`: the coordinate family
   `(f_{g,u})_{g ∈ Aut(L/K)}` over `κ_F`.
 * `FalseTateNonliftability.IsLiftable p K L F`: the action of `Aut(L/K)` on `X_K(L)` is
-  `F`-liftable.
+  `F`-liftable (Yuan, Definition 1.1).
 
 ## Main results
 
@@ -49,8 +53,10 @@ elements.
   `FalseTateNonliftability.isLiftable_iff_exists_uniformizer`,
   `FalseTateNonliftability.isLiftable_iff_forall_uniformizer`,
   `FalseTateNonliftability.IsLiftable.liftable_coordinateFamily_iff`,
-  `FalseTateNonliftability.IsLiftable.finiteLiftable_coordinateFamily_iff`: Yuan,
-  Proposition 2.3.
+  `FalseTateNonliftability.IsLiftable.finiteLiftable_coordinateFamily_iff`: `F`-liftability and
+  finite liftability do not depend on the uniformizer (Yuan, Proposition 2.3).
+* `FalseTateNonliftability.IsLiftable.finiteLiftable`: an `F`-liftable action has finite lifts
+  modulo every `𝔪_F ^ (r + 1)` on every subset of `Aut(L/K)`, in every uniformizer.
 * `FalseTateNonliftability.hasSameResidueField_baseField_padic`: a totally ramified extension of
   `ℚ_p` has the same residue field as `ℚ_p`.
 * `FalseTateNonliftability.fact_natCard_residueField_spectralIntegerRing`: the residue field of a
@@ -58,14 +64,29 @@ elements.
 * `FalseTateNonliftability.IsLiftable.ramificationNumber_coordinateFamily_series`,
   `FalseTateNonliftability.IsLiftable.orderOf_coeff_one_coordinateFamily_series`,
   `FalseTateNonliftability.IsLiftable.isOfFinOrder_substEquiv_coordinateFamily_series_iff`: the
-  isomorphism `κ_L ≅ κ_F` preserves the ramification numbers, the orders of the linear
-  coefficients and the orders of the automorphisms `a ↦ a ∘ f_{g,u}`.
+  isomorphism `κ_L ≅ κ_F` preserves ramification numbers, the orders of the linear coefficients
+  and the finiteness of the orders of the automorphisms `a ↦ a ∘ f_{g,u}`.
+
+## Implementation notes
+
+* `K` is a field with `[NormedAlgebra ℚ_[p] K]`, and `L` and `F` are intermediate fields of
+  `K^alg = AlgebraicClosure K` over `K` and over `ℚ_p`. As the norm of `K` extends the norm of
+  `ℚ_p`, `𝒪[K]` is the integral closure of `ℤ_p` in `K`, so the residue field of `K` is the
+  residue field of `baseField p K`. "`F` has the same residue field as `K`" is the
+  FontaineWintenberger class `(baseField p K).HasSameResidueField F`: the images of the residue
+  fields of `K` and `F` in the residue field of the integral closure of `ℤ_p` in `K^alg` coincide.
+  It provides the isomorphism `κ_L ≅ κ_F`.
+* Total ramification of `L/K` and the same residue field condition are Prop classes of
+  FontaineWintenberger and enter as instance arguments; the infiniteness of `L/K`, required by
+  the field of norms of FontaineWintenberger, is the instance `Fact (¬ Module.Finite K L)`.
+* `IsLiftable p K L F` uses the uniformizer `FieldOfNorms.uniformizer K L` of FontaineWintenberger;
+  `isLiftable_iff_uniformizer` replaces it by any other uniformizer.
 
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
   §1.4, Definition 1.1, Lemma 2.2 and Proposition 2.3.
-* Berger 2014, Definition 1.1 in Yuan.
+* L. Berger, *Lifting the field of norms*, J. Éc. polytech. Math. 1 (2014), 29–38.
 -/
 
 @[expose] public section
@@ -80,7 +101,8 @@ namespace PowerSeries
 
 variable {R S : Type*} [CommRing R] [CommRing S]
 
-/-- An injective coefficient map preserves ramification numbers. -/
+/-- For an injective ring homomorphism `φ`, the ramification number `v_T(φ(f) - T) - 1` of the
+image `φ(f)` of `f` is the ramification number of `f`. -/
 theorem ramificationNumber_map {φ : R →+* S} (hφ : Function.Injective φ) (f : R⟦X⟧) :
     (f.map φ).ramificationNumber = f.ramificationNumber := by
   have key (A : LaurentSeries R) : (LaurentSeries.mapRingHom φ A).order = A.order := by
@@ -145,7 +167,8 @@ theorem isOfFinOrder_substEquiv_series_iff (g : Γ) :
   rw [← substEquiv_eq_one_iff h0 h1, f.series_pow, substEquiv_iterate (f.constantCoeff_series g)
     (f.isUnit_coeff_one_series g)]
 
-/-- An injective coefficient map preserves the orders of the automorphisms `a ↦ a ∘ f_g`. -/
+/-- For an injective ring homomorphism `φ`, the automorphism `a ↦ a ∘ φ(f_g)` has finite order if
+and only if `a ↦ a ∘ f_g` has finite order. -/
 theorem isOfFinOrder_substEquiv_map_series_iff {φ : κ →+* κ'} (hφ : Function.Injective φ)
     (g : Γ) :
     IsOfFinOrder (substEquiv ((f.map φ).series g)) ↔ IsOfFinOrder (substEquiv (f.series g)) := by
@@ -204,7 +227,8 @@ variable {K₀ : Type*} [NontriviallyNormedField K₀] [IsCompleteDiscreteValued
   {E E' : Type*} [Field E] [Field E'] [Algebra K₀ E] [Algebra K₀ E']
   [Algebra.IsAlgebraic K₀ E] [Algebra.IsAlgebraic K₀ E']
 
-/-- The residue embedding induced by `e.symm` is inverse to the one induced by `e`. -/
+/-- For a `K₀`-isomorphism `e : E ≃ E'`, the map of residue fields induced by `e⁻¹` is a left
+inverse of the map induced by `e`. -/
 theorem integralClosureResidueInclusion_symm_apply (e : E ≃ₐ[K₀] E')
     (z : integralClosureResidueField K₀ E) :
     integralClosureResidueInclusion K₀ e.symm.toAlgHom
@@ -255,8 +279,9 @@ variable (p : ℕ) [Fact p.Prime]
   (K : Type*) [NontriviallyNormedField K] [IsPerfectResidueLocalField K] [NormedAlgebra ℚ_[p] K]
   [FiniteDimensional ℚ_[p] K]
 
-/-- The residue field of `K` is the residue field of its image in `K^alg`: the norm of `K` extends
-the norm of `ℚ_p`, so `𝒪[K]` is the integral closure of `ℤ_p` in `K`. -/
+/-- The isomorphism of the residue field of `K` with the residue field of the integral closure of
+`ℤ_p` in the image of `K` in `K^alg`. Here `𝒪[K]` is the integral closure of `ℤ_p` in `K`, as the
+norm of `K` extends the norm of `ℚ_p`. -/
 def residueFieldBaseFieldEquiv : 𝓀[K] ≃+* integralClosureResidueField ℚ_[p] (baseField p K) :=
   (IsLocalRing.ResidueField.mapEquiv
     (IsIntegralClosure.equiv 𝒪[ℚ_[p]] 𝒪[K] K (integralClosure 𝒪[ℚ_[p]] K)).toRingEquiv).trans
@@ -327,7 +352,8 @@ theorem orderOf_coeff_one_coordinateFamily_series (g : L ≃ₐ[K] L) :
   rw [coeff_coordinateFamily_series]
   exact (residueFieldEquiv p K L F).toMulEquiv.orderOf_eq _
 
-/-- `κ_L ≅ κ_F` preserves the order of the automorphism `a ↦ a ∘ f_{g,u}`. -/
+/-- The automorphism `a ↦ a ∘ f_{g,u}` of `κ_F((T))`, with coefficients mapped by `κ_L ≅ κ_F`, has
+finite order if and only if `a ↦ a ∘ f_{g,u}` of `κ_L((T))` has finite order. -/
 theorem isOfFinOrder_substEquiv_coordinateFamily_series_iff (g : L ≃ₐ[K] L) :
     IsOfFinOrder (LaurentSeries.substEquiv ((coordinateFamily p K L F u hu).series g)) ↔
       IsOfFinOrder (LaurentSeries.substEquiv (FieldOfNorms.coordinateSeries K L u hu g)) := by
@@ -340,11 +366,11 @@ end IsLiftable
 variable [FiniteDimensional ℚ_[p] F]
 
 /-- Yuan, Definition 1.1 (Berger 2014): the action of `Aut(L/K)` on the field of norms `X_K(L)` is
-`F`-liftable, that is, there exist `P` and `(F_g)_{g ∈ Aut(L/K)}` in `A_K` with `P̄ = T^q`,
-`ev_u(F̄_g) = g(u)`, `F_g ∘ P = P ∘ F_g` and `F_h ∘ F_g = F_{gh}` for all `g, h ∈ Aut(L/K)`. Here
-`q` is the cardinality of `κ_F`, `u` is the uniformizer `FieldOfNorms.uniformizer K L` of `X_K(L)`
-and `ev_u : κ_F((T)) ≅ X_K(L)` sends `T` to `u`, through `κ_F ≅ κ_L`. This does not depend on `u`
-(Yuan, Proposition 2.3; `isLiftable_iff_uniformizer`). -/
+`F`-liftable, that is, there exist `P` and `(F_g)_{g ∈ Aut(L/K)}` in the `𝔪_F`-adic completion
+`A_K` of `𝒪_F((T))` with `P̄ = T^q`, `ev_u(F̄_g) = g(u)`, `F_g ∘ P = P ∘ F_g` and
+`F_h ∘ F_g = F_{gh}` for all `g, h ∈ Aut(L/K)`. Here `q` is the cardinality of the residue field
+`κ_F` of `F`, `u` is a fixed uniformizer of `X_K(L)` and `ev_u : κ_F((T)) ≅ X_K(L)` sends `T` to
+`u`, through `κ_F ≅ κ_L`. This does not depend on `u` (Yuan, Proposition 2.3). -/
 def IsLiftable : Prop :=
   (IsLiftable.coordinateFamily p K L F (FieldOfNorms.uniformizer K L)
     (FieldOfNorms.valuation_uniformizer K L)).Liftable

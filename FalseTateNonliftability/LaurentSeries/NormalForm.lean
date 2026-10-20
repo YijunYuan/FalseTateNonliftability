@@ -20,10 +20,10 @@ number.
 
 Let `k` have characteristic `p`. If `σ T = T + α T ^ (d + 1) + β T ^ ℓ + O(T ^ (ℓ + 1))` with
 `α, β ≠ 0`, `d + 2 ≤ ℓ ≤ 2 d` and `d ≡ ℓ ≡ -1 (mod p)`, then `i(σ ^ p) = ℓ + (p - 1) d - 1`,
-which is smaller than `(p + 1) d`. Consequently, if `d = i(σ) ≡ -1 (mod p)` and
+which is smaller than `(p + 1) d` (Yuan, Lemma 3.3). Consequently, if `d = i(σ) ≡ -1 (mod p)` and
 `i(σ ^ p) ≥ (p + 1) d`, the coefficients of `σ T` in degrees `d + 2, …, 2 d` can be removed one
 by one by the coordinate changes `T' = T + t T ^ q`, and in a suitable uniformizer
-`σ T = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ≠ 0`.
+`σ T = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ≠ 0` (Yuan, Theorem 3.4).
 
 For every `f = T + O(T ^ 2)` in characteristic `p`, `i(σ ^ p) ≥ p i(σ)`. If `σ` has infinite
 order, then `σ ^ n ≠ 1` for every `n > 0`, so the ramification numbers `d_n = i(σ ^ (p ^ n))` are
@@ -31,7 +31,7 @@ positive integers; they satisfy `d_(n+1) ≥ p d_n`, hence strictly increase and
 
 ## Main definitions
 
-* `PowerSeries.ramificationNumber f`: the integer `v_T(f - T) - 1`; it is `-1` for `f = X`.
+* `PowerSeries.ramificationNumber f`: the integer `v_T(f - T) - 1`.
 * `LaurentSeries.substSubOne g`: the `R`-linear operator `x ↦ x(g) - x` on `R((T))`.
 
 ## Main results
@@ -39,8 +39,11 @@ positive integers; they satisfy `d_(n+1) ≥ p d_n`, hence strictly increase and
 * `LaurentSeries.substEquiv_conj`: `x ↦ x(w ∘ f ∘ w^{∘-1})` is the conjugate of `x ↦ x(f)` by
   `x ↦ x(w)`.
 * `LaurentSeries.substEquiv_iterate`: `x ↦ x(f^{∘n})` is the `n`-th power of `x ↦ x(f)`.
+* `LaurentSeries.substSubOne_pow_mem`: if `g = T + O(T ^ (d + 1))`, then `x ↦ x(g) - x` applied
+  `n` times raises `O(T ^ m)` to `O(T ^ (m + n d))` (Yuan, Lemma 3.2).
+* `LaurentSeries.substSubOne_pow_char_apply`: in characteristic `p`, `(σ - 1) ^ p = σ ^ p - 1`.
 * `PowerSeries.ramificationNumber_conj`: the ramification number does not depend on the
-  uniformizer.
+  uniformizer (Yuan, §3.2).
 * `PowerSeries.ramificationNumber_iterate_eq_of_resonant`: a nonzero resonant coefficient
   determines `i(σ ^ p)` (Yuan, Lemma 3.3).
 * `PowerSeries.exists_normalForm`: the normal form `T + α T ^ (d + 1) + O(T ^ (2 d + 1))`
@@ -52,9 +55,17 @@ positive integers; they satisfy `d_(n+1) ≥ p d_n`, hence strictly increase and
   increasing.
 * `PowerSeries.tendsto_ramificationNumber_iterate_pow_atTop`: `i(σ ^ (p ^ n)) → ∞`.
 
+## Implementation notes
+
+`PowerSeries.ramificationNumber f` is the integer `v_T(f - T) - 1`, where `v_T` is
+`HahnSeries.order`, so that `v_T(0) = 0`. For `f = X`, where the paper has `i(σ) = +∞`, it is
+`-1`.
+
 ## References
 
-* Yuan, §3.2: the ramification number, Lemma 3.3 and Theorem 3.4; proof of Lemma 4.2.
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  §3.2 (the ramification number), Lemma 3.3, Theorem 3.4 and the proof of Lemma 4.2 (the growth
+  of `d_j`).
 -/
 
 @[expose] public section
@@ -100,10 +111,12 @@ for `f = X`, where `i(σ) = ∞`. -/
 def ramificationNumber (f : R⟦X⟧) : ℤ :=
   (HahnSeries.ofPowerSeries ℤ R f - HahnSeries.single (1 : ℤ) 1).order - 1
 
+/-- The ramification number of `X` is `-1`. -/
 @[simp]
 theorem ramificationNumber_X : (X : R⟦X⟧).ramificationNumber = -1 := by
   simp [ramificationNumber, HahnSeries.ofPowerSeries_X]
 
+/-- The ramification number of a power series is at least `-1`. -/
 theorem neg_one_le_ramificationNumber (f : R⟦X⟧) : -1 ≤ f.ramificationNumber := by
   rw [ramificationNumber, ← HahnSeries.ofPowerSeries_X, ← map_sub]
   by_cases h : HahnSeries.ofPowerSeries ℤ R (f - X) = 0
@@ -225,7 +238,8 @@ theorem ofPowerSeries_iterate {f : PowerSeries R} (hf : f.constantCoeff = 0)
     (PowerSeries.constantCoeff_iterate hf n)
     (by rw [PowerSeries.coeff_one_iterate hf]; exact hf'.pow n)]
 
-/-- The `R`-linear operator `x ↦ x(g) - x` on `R((T))`. -/
+/-- The `R`-linear operator `x ↦ x(g) - x` on `R((T))`. For `g = f_σ` it is the operator
+`σ - 1` of the proof of Yuan, Lemma 3.3. -/
 def substSubOne (g : LaurentSeries R) : Module.End R (LaurentSeries R) where
   toFun x := subst g x - x
   map_add' x y := by
@@ -235,6 +249,7 @@ def substSubOne (g : LaurentSeries R) : Module.End R (LaurentSeries R) where
     simp only [← HahnSeries.C_mul_eq_smul, RingHom.id_apply, map_mul, subst_C]
     ring
 
+/-- `substSubOne g x = x(g) - x`. -/
 @[simp]
 theorem substSubOne_apply (g x : LaurentSeries R) : substSubOne g x = subst g x - x := rfl
 
@@ -495,7 +510,7 @@ private theorem exists_conj_sub_mem (p : ℕ) [Fact p.Prime] [CharP k p] {g : k�
   have hfirst : HahnSeries.ofPowerSeries ℤ k g - HahnSeries.single (1 : ℤ) 1 -
       HahnSeries.single (d + 1) α ∈ orderAddSubgroup (d + 2) :=
     orderAddSubgroup_antitone (by omega) (mem_orderAddSubgroup_of_sub_single_mem hg)
-  -- `g(T + t T ^ q) - (T + t T ^ q) = α T ^ (d + 1) + O(T ^ (d + q + 1))`
+  -- `w(g) - w = α T ^ (d + 1) + O(T ^ (d + q + 1))` for `w = T + t T ^ q`
   have hA : LaurentSeries.subst (HahnSeries.ofPowerSeries ℤ k g)
       (HahnSeries.ofPowerSeries ℤ k w) - HahnSeries.ofPowerSeries ℤ k w -
         HahnSeries.single (d + 1) α ∈ orderAddSubgroup (d + q + 1) := by
@@ -508,7 +523,7 @@ private theorem exists_conj_sub_mem (p : ℕ) [Fact p.Prime] [CharP k p] {g : k�
       show ((q : ℤ) : k) * α * t = -β by rw [Int.cast_natCast]; linear_combination ht,
       HahnSeries.single_neg]
     abel
-  -- `(T ^ (d + 1))(T + t T ^ q) = T ^ (d + 1) + O(T ^ (d + q + 1))`
+  -- `(T ^ (d + 1))(w) = T ^ (d + 1) + O(T ^ (d + q + 1))`, as `p ∣ d + 1`
   have hEa : substEquiv w (HahnSeries.single (d + 1) α) - HahnSeries.single (d + 1) α ∈
       orderAddSubgroup (d + q + 1) := by
     have hwexp : HahnSeries.ofPowerSeries ℤ k w - HahnSeries.single (1 : ℤ) 1 -
@@ -658,7 +673,7 @@ theorem iterate_ne_X_of_not_isOfFinOrder {f : R⟦X⟧} (hf : ¬ IsOfFinOrder (s
   refine hf (isOfFinOrder_iff_pow_eq_one.mpr ⟨n, hn, ?_⟩)
   rw [← substEquiv_iterate hf0 hf', h, ← iterate_zero f, substEquiv_iterate hf0 hf', pow_zero]
 
-/-- If `f = T + O(T ^ 2)` and `x ↦ x(f)` has infinite order, then `f^{∘n}` has positive
+/-- If `f = T + O(T ^ 2)` and `σ : x ↦ x(f)` has infinite order, then `f^{∘n}` has positive
 ramification number for every `n > 0`. -/
 theorem one_le_ramificationNumber_iterate {f : R⟦X⟧} (hf1 : f.coeff 1 = 1)
     (hf : ¬ IsOfFinOrder (substEquiv f)) {n : ℕ} (hn : 0 < n) :
@@ -691,7 +706,7 @@ theorem mul_ramificationNumber_le_ramificationNumber_iterate {f : k⟦X⟧}
     (p : ℤ) * f.ramificationNumber ≤ (iterate f p).ramificationNumber :=
   (le_ramificationNumber_iff hfp).mpr (ofPowerSeries_iterate_sub_X_mem p hf)
 
-/-- If `f = T + O(T ^ 2)` and `x ↦ x(f)` has infinite order, then
+/-- If `f = T + O(T ^ 2)` and `σ : x ↦ x(f)` has infinite order, then
 `i(σ ^ (p ^ (n + 1))) ≥ p i(σ ^ (p ^ n))`. -/
 theorem mul_ramificationNumber_iterate_pow_le {f : k⟦X⟧} (hf1 : f.coeff 1 = 1)
     (hf : ¬ IsOfFinOrder (substEquiv f)) (n : ℕ) :
@@ -704,8 +719,8 @@ theorem mul_ramificationNumber_iterate_pow_le {f : k⟦X⟧} (hf1 : f.coeff 1 = 
   exact mul_ramificationNumber_le_ramificationNumber_iterate p
     (one_le_ramificationNumber_iterate hf1 hf (pow_pos hp n)) hne
 
-/-- If `f = T + O(T ^ 2)` and `x ↦ x(f)` has infinite order, then the ramification numbers
-`i(σ ^ (p ^ n))` strictly increase. -/
+/-- If `f = T + O(T ^ 2)` and `σ : x ↦ x(f)` has infinite order, then the ramification numbers
+`i(σ ^ (p ^ n))` strictly increase (Yuan, proof of Lemma 4.2). -/
 theorem strictMono_ramificationNumber_iterate_pow {f : k⟦X⟧} (hf1 : f.coeff 1 = 1)
     (hf : ¬ IsOfFinOrder (substEquiv f)) :
     StrictMono fun n : ℕ ↦ (iterate f (p ^ n)).ramificationNumber := by
@@ -713,10 +728,11 @@ theorem strictMono_ramificationNumber_iterate_pow {f : k⟦X⟧} (hf1 : f.coeff 
   have h := mul_ramificationNumber_iterate_pow_le p hf1 hf n
   have h1 := one_le_ramificationNumber_iterate hf1 hf (pow_pos (Fact.out : p.Prime).pos n)
   have hp : (2 : ℤ) ≤ p := by exact_mod_cast (Fact.out : p.Prime).two_le
-  nlinarith
+  have h0 : (0 : ℤ) ≤ (iterate f (p ^ n)).ramificationNumber := by omega
+  linarith [mul_le_mul_of_nonneg_right hp h0]
 
-/-- If `f = T + O(T ^ 2)` and `x ↦ x(f)` has infinite order, then the ramification numbers
-`i(σ ^ (p ^ n))` tend to infinity. -/
+/-- If `f = T + O(T ^ 2)` and `σ : x ↦ x(f)` has infinite order, then the ramification numbers
+`i(σ ^ (p ^ n))` tend to infinity (Yuan, proof of Lemma 4.2). -/
 theorem tendsto_ramificationNumber_iterate_pow_atTop {f : k⟦X⟧} (hf1 : f.coeff 1 = 1)
     (hf : ¬ IsOfFinOrder (substEquiv f)) :
     Tendsto (fun n : ℕ ↦ (iterate f (p ^ n)).ramificationNumber) atTop atTop := by

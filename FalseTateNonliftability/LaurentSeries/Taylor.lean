@@ -14,29 +14,38 @@ public import Mathlib.RingTheory.PowerSeries.Derivative
 
 Let `R` be a local Artinian ring with principal maximal ideal, and let `g ∈ R((T))` satisfy
 `g = T + O(T ^ (d + 1))` with `d ≥ 1`. For every integer `m` and every `f = O(T ^ m)`, the
-substitution `f ↦ f(g)` satisfies
-`f(g) - f = O(T ^ (m + d))` and `f(g) = f + (g - T) f' + O(T ^ (m + 2 d))`.
-If `g = T + α T ^ (d + 1) + O(T ^ (d + 2))` and `x = b T ^ m + O(T ^ (m + 1))`, then
-`x(g) - x = m α b T ^ (m + d) + O(T ^ (m + d + 1))`. For a power series `U` the bounds improve to
-`U(g) - U = O(T ^ (d + 1))` and `U(g) - U - (g - T) U' = O(T ^ (2 d + 2))`; over a field the
-latter remainder is `(g - T) ^ 2` times a power series, so `v(U(g) - U) = v(g - T) + v(U')`
-whenever `v(U') < v(g - T)`.
+substitution `f ↦ f(g)` satisfies `f(g) - f = O(T ^ (m + d))` and
+`f(g) = f + (g - T) f' + O(T ^ (m + 2 d))`. If `g = T + α T ^ (d + 1) + O(T ^ (d + 2))` and
+`x = b T ^ m + O(T ^ (m + 1))`, then `x(g) - x = m α b T ^ (m + d) + O(T ^ (m + d + 1))`. For a
+power series `U` the bounds improve to `U(g) - U = O(T ^ (d + 1))` and
+`U(g) - U - (g - T) U' = O(T ^ (2 d + 2))`. Over a field the latter remainder is `(g - T) ^ 2`
+times a power series, so `v_T(U(g) - U) = v_T(g - T) + v_T(U')` whenever `U' ≠ 0` and
+`v_T(U') < v_T(g - T)`.
+
+If `σ` is an automorphism of a field of norms with residue field `𝔽_q` and `g = f_σ` is its series
+in a uniformizer `T`, then `x(g) = σ x` (Yuan, Lemma 2.2 (2)), and `g = T + O(T ^ (d + 1))` means
+that `σ` has ramification number at least `d`. In this setting the results above are Yuan,
+Lemma 3.2, and the expansions in the proofs of Yuan, Theorem 3.1 and Lemma 4.2.
 
 ## Main results
 
-* `LaurentSeries.subst_sub_mem_orderAddSubgroup`: `f(g) - f = O(T ^ (m + d))` (Lemma 3.2).
+* `LaurentSeries.subst_sub_mem_orderAddSubgroup`: `f(g) - f = O(T ^ (m + d))` (Yuan, Lemma 3.2).
 * `LaurentSeries.subst_sub_leadingTerm_mem`: `x(g) - x = m α b T ^ (m + d) + O(T ^ (m + d + 1))`
-  (Lemma 3.2).
+  (Yuan, Lemma 3.2).
 * `LaurentSeries.subst_taylor_mem_orderAddSubgroup`: `f(g) - f - (g - T) f' = O(T ^ (m + 2 d))`,
-  the expansion in the proof of Theorem 3.1.
+  the expansion in the proof of Yuan, Theorem 3.1.
+* `LaurentSeries.subst_ofPowerSeries_sub_mem`, `LaurentSeries.subst_ofPowerSeries_taylor_mem`:
+  `U(g) - U = O(T ^ (d + 1))` and `U(g) - U - (g - T) U' = O(T ^ (2 d + 2))` for a power series
+  `U` (Yuan, proof of Lemma 4.2, (4.2)).
 * `LaurentSeries.exists_powerSeries_taylor_remainder`: over a field,
   `U(g) - U - (g - T) U' ∈ (g - T) ^ 2 k⟦T⟧`.
-* `LaurentSeries.order_subst_ofPowerSeries_sub_eq`: `v(U(g) - U) = v(g - T) + v(U')` when
-  `v(U') < v(g - T)`.
+* `LaurentSeries.order_subst_ofPowerSeries_sub_eq`: `v_T(U(g) - U) = v_T(g - T) + v_T(U')` when
+  `v_T(U') < v_T(g - T)`.
 
 ## References
 
-* Yuan, Lemma 3.2 and the proof of Theorem 3.1.
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Lemma 3.2, proof of Theorem 3.1 and proof of Lemma 4.2.
 -/
 
 @[expose] public section
@@ -59,8 +68,7 @@ private theorem sub_one_sq_dvd_zpow_sub_one_sub_mul (u : Rˣ) (j : ℤ) :
   | succ n _ =>
     have hpos : ((u : R) - 1) ^ 2 ∣
         (u : R) ^ (n + 1) - 1 - ((n + 1 : ℕ) : R) * ((u : R) - 1) := by
-      convert sq_dvd_add_pow_sub_sub ((u : R) - 1) 1 (n + 1) using 1
-      ring
+      exact (sq_dvd_add_pow_sub_sub ((u : R) - 1) 1 (n + 1)).trans (dvd_of_eq (by ring))
     change ((u : R) - 1) ^ 2 ∣
       ((u ^ ((n + 1 : ℕ) : ℤ) : Rˣ) : R) - 1 - (((n + 1 : ℕ) : ℤ) : R) * ((u : R) - 1)
     simpa only [zpow_natCast, Units.val_pow_eq_pow_val, Int.cast_natCast] using hpos
@@ -301,12 +309,17 @@ theorem subst_sub_leadingTerm_mem {g : LaurentSeries R} {d : ℤ} (hd : 1 ≤ d)
     rw [derivative_single, HahnSeries.single_mul_single, show d + 1 + (m - 1) = m + d by omega]
     congr 1
     ring
-  convert add_mem hTaylor (add_mem hfirst hsecond) using 1
-  rw [← hlead]
-  ring
+  have heq : subst g x - x - HahnSeries.single (m + d) ((m : R) * α * b) =
+      (subst g x - x - δ * derivative R x) +
+        (δ * (derivative R x - derivative R (HahnSeries.single m b)) +
+          (δ - HahnSeries.single (d + 1) α) * derivative R (HahnSeries.single m b)) := by
+    rw [← hlead]
+    ring
+  rw [heq]
+  exact add_mem hTaylor (add_mem hfirst hsecond)
 
 /-- For `g = T + O(T ^ (d + 1))` with `d ≥ 1` and a power series `U`,
-`U(g) - U = O(T ^ (d + 1))`. -/
+`U(g) - U = O(T ^ (d + 1))` (Yuan, proof of Lemma 4.2, (4.2)). -/
 theorem subst_ofPowerSeries_sub_mem {g : LaurentSeries R} {d : ℤ} (hd : 1 ≤ d)
     (hg : g - HahnSeries.single (1 : ℤ) 1 ∈ orderAddSubgroup (d + 1)) (U : PowerSeries R) :
     subst g (HahnSeries.ofPowerSeries ℤ R U) - HahnSeries.ofPowerSeries ℤ R U ∈

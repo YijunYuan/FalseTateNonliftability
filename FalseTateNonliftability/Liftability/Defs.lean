@@ -11,15 +11,16 @@ public import FalseTateNonliftability.Liftability.CoordinateFamily
 /-!
 # Lifts of coordinate families
 
-Let `O` be a discrete valuation ring with maximal ideal `𝔪` and finite residue field `κ` with `q`
-elements, for instance the ring of integers of a finite extension `F` of `ℚ_p`, and let `A` be the
-`𝔪`-adic completion of `O((T))` (`FalseTateNonliftability.CoefficientRing O`), whose reduction
-modulo `𝔪` is `κ((T))`. Write `Q ∘ G` for the substitution of `G` for the variable in `Q`. A lift
-of a coordinate family `f = (f_g)_{g ∈ Γ}` over `κ` to `A` consists of elements `P` and `F_g`,
-`g ∈ Γ`, of `A` with reductions `P̄ = T^q` and `F̄_g = f_g` such that `F_g ∘ P = P ∘ F_g` and
-`F_h ∘ F_g = F_{gh}` for all `g, h ∈ Γ`. When `f` is the coordinate family of the action of
-`Gal(L/K)` on the field of norms `X_K(L)` in a uniformizer, the existence of a lift is Berger's
-`F`-liftability (Yuan, Definition 1.1).
+Let `O` be a local principal ideal ring with maximal ideal `𝔪` and residue field `κ` with `q`
+elements; in Yuan, `O` is the ring of integers `𝒪_F` of a finite extension `F` of `ℚ_p`. Let `A`
+be the `𝔪`-adic completion of `O((T))` (for `O = 𝒪_F` and a uniformizer `ϖ_F`, the
+`ϖ_F`-adic completion of `𝒪_F⟦T⟧[1/T]`), whose reduction modulo `𝔪` is `κ((T))`, and write
+`Q ∘ G` for the substitution of `G` for the variable in `Q`. A lift of a coordinate family
+`f = (f_g)_{g ∈ Γ}` over `κ` to `A` consists of elements `P` and `F_g`, `g ∈ Γ`, of `A` with
+reductions `P̄ = T^q` and `F̄_g = f_g` such that `F_g ∘ P = P ∘ F_g` and `F_h ∘ F_g = F_{gh}` for
+all `g, h ∈ Γ`. When `f` is the coordinate family of the action of `Gal(L/K)` on the field of
+norms `X_K(L)` in a uniformizer, the existence of a lift is Berger's `F`-liftability
+(Yuan, Definition 1.1).
 
 A finite lift of `f` modulo `𝔪 ^ (r + 1)` on a subset `S ⊆ Γ` consists of elements `P` and `F_g`,
 `g ∈ S`, of `(O ⧸ 𝔪 ^ (r + 1))((T)) = A ⧸ 𝔪 ^ (r + 1) A` with the same reductions such that
@@ -41,10 +42,20 @@ modulo `𝔪 ^ (r + 1)` is a finite lift on every subset.
 * `FalseTateNonliftability.CoordinateFamily.Liftable.finiteLiftable`: a coordinate family with a
   lift to `A` has finite lifts modulo every `𝔪 ^ (r + 1)` on every subset.
 
+## Implementation notes
+
+* Truncations are indexed by `r + 1`: `FiniteLift f S r` lives over `O ⧸ 𝔪 ^ (r + 1)`, which has
+  residue field `κ` for every `r : ℕ`. The ring `A ⧸ ϖ_F ^ (e + 1) A` of Yuan, §1.4 is `r = e`.
+* `Q ∘ G` is `CoefficientRing.subst G Q` in `A` and `LaurentSeries.subst G Q` in
+  `(O ⧸ 𝔪 ^ (r + 1))((T))`. Both are defined for every `G` and are substitution when `G` is
+  admissible, that is, when the reduction of `G` modulo `𝔪` has finite positive `T`-adic
+  valuation. The `F_g` and, for finite `κ`, `P` are admissible.
+
 ## References
 
-* Yuan, Definition 1.1 and Proposition 1.3.
-* Berger 2014, Definition 1.1 in Yuan.
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Definition 1.1 and Proposition 1.3.
+* L. Berger, *Lifting the field of norms*, J. Éc. polytech. Math. 1 (2014), 29–38.
 -/
 
 @[expose] public section
@@ -60,9 +71,9 @@ variable {O : Type*} [CommRing O] [IsLocalRing O] [IsPrincipalIdealRing O]
   {Γ : Type*} [Monoid Γ]
 
 /-- A lift of a coordinate family `f = (f_g)_{g ∈ Γ}` over the residue field `κ` of `O` to the
-coefficient ring `A` (Yuan, Definition 1.1): elements `P` and `F_g`, `g ∈ Γ`, of `A` whose images
-in `κ((T))` are `T^q`, where `q` is the cardinality of `κ`, and `f_g`, such that
-`F_g ∘ P = P ∘ F_g` and `F_h ∘ F_g = F_{gh}`. Here `Q ∘ G` is `CoefficientRing.subst G Q`. -/
+`𝔪`-adic completion `A` of `O((T))` (Yuan, Definition 1.1): elements `P` and `F_g`, `g ∈ Γ`, of `A`
+whose reductions in `κ((T))` are `P̄ = T^q`, where `q` is the cardinality of `κ`, and `F̄_g = f_g`,
+such that `F_g ∘ P = P ∘ F_g` and `F_h ∘ F_g = F_{gh}` for all `g, h ∈ Γ`. -/
 structure Lift (f : CoordinateFamily (ResidueField O) Γ) where
   /-- The lift `P` of the Frobenius `T^q`. -/
   frobenius : CoefficientRing O
@@ -80,16 +91,17 @@ structure Lift (f : CoordinateFamily (ResidueField O) Γ) where
   /-- `F_h ∘ F_g = F_{gh}`. -/
   lift_mul (g h : Γ) : CoefficientRing.subst (lift g) (lift h) = lift (g * h)
 
-/-- The coordinate family `f` has a lift to `A`. For the coordinate family of the action of
-`Gal(L/K)` on the field of norms `X_K(L)` in a uniformizer, this is `F`-liftability
-(Yuan, Definition 1.1). -/
+/-- The coordinate family `f` has a lift to the `𝔪`-adic completion `A` of `O((T))`. For the
+coordinate family of the action of `Gal(L/K)` on the field of norms `X_K(L)` in a uniformizer, this
+is `F`-liftability (Yuan, Definition 1.1). -/
 def Liftable (f : CoordinateFamily (ResidueField O) Γ) : Prop :=
   Nonempty f.Lift
 
 /-- A finite lift of a coordinate family `f = (f_g)_{g ∈ Γ}` over the residue field `κ` of `O`
 modulo `𝔪 ^ (r + 1)` on a subset `S ⊆ Γ`: elements `P` and `F_g`, `g ∈ S`, of
-`(O ⧸ 𝔪 ^ (r + 1))((T))` whose images in `κ((T))` are `T^q`, where `q` is the cardinality of `κ`,
-and `f_g`, such that `F_g ∘ P = P ∘ F_g` (the data of Yuan, Proposition 1.3). -/
+`(O ⧸ 𝔪 ^ (r + 1))((T))` whose reductions in `κ((T))` are `P̄ = T^q`, where `q` is the cardinality
+of `κ`, and `F̄_g = f_g`, such that `F_g ∘ P = P ∘ F_g` for `g ∈ S` (the data of Yuan,
+Proposition 1.3). -/
 structure FiniteLift (f : CoordinateFamily (ResidueField O) Γ) (S : Set Γ) (r : ℕ) where
   /-- The lift `P` of the Frobenius `T^q`. -/
   frobenius : LaurentSeries (Truncation O r)
@@ -114,12 +126,13 @@ namespace Lift
 
 variable (L : f.Lift)
 
-/-- The lifts `F_g` are admissible. -/
+/-- Each `F_g` is admissible: its reduction `f_g` has `T`-adic valuation `1`. -/
 theorem isAdmissible_lift (g : Γ) : CoefficientRing.IsAdmissible (L.lift g) := by
   rw [CoefficientRing.isAdmissible_iff_isAdmissible_residue, L.residue_lift]
   exact isAdmissible_ofPowerSeries (f.constantCoeff_series g) (f.isUnit_coeff_one_series g)
 
-/-- The Frobenius lift `P` is admissible. -/
+/-- For finite `κ`, the Frobenius lift `P` is admissible: its reduction `T^q` has `T`-adic
+valuation `q > 0`. -/
 theorem isAdmissible_frobenius [Finite (ResidueField O)] :
     CoefficientRing.IsAdmissible L.frobenius := by
   rw [CoefficientRing.isAdmissible_iff_isAdmissible_residue, L.residue_frobenius]
@@ -131,12 +144,13 @@ namespace FiniteLift
 
 variable {S : Set Γ} {r : ℕ} (L : f.FiniteLift S r)
 
-/-- The lifts `F_g`, `g ∈ S`, are admissible. -/
+/-- Each `F_g`, `g ∈ S`, is admissible: its reduction `f_g` has `T`-adic valuation `1`. -/
 theorem isAdmissible_lift (g : S) : IsAdmissible (L.lift g) := by
   rw [← isAdmissible_mapRingHom_iff (Truncation.residue O r), L.residue_lift]
   exact isAdmissible_ofPowerSeries (f.constantCoeff_series g) (f.isUnit_coeff_one_series g)
 
-/-- The Frobenius lift `P` is admissible. -/
+/-- For finite `κ`, the Frobenius lift `P` is admissible: its reduction `T^q` has `T`-adic
+valuation `q > 0`. -/
 theorem isAdmissible_frobenius [Finite (ResidueField O)] : IsAdmissible L.frobenius := by
   rw [← isAdmissible_mapRingHom_iff (Truncation.residue O r), L.residue_frobenius]
   exact isAdmissible_single (Nat.cast_pos.mpr Nat.card_pos) isUnit_one
@@ -144,7 +158,7 @@ theorem isAdmissible_frobenius [Finite (ResidueField O)] : IsAdmissible L.froben
 end FiniteLift
 
 /-- A coordinate family with a lift to `A` has a finite lift modulo every `𝔪 ^ (r + 1)` on every
-subset of `Γ`: the reduction of the lift. -/
+subset of `Γ`, namely the reduction of the lift modulo `𝔪 ^ (r + 1)`. -/
 theorem Liftable.finiteLiftable (hf : f.Liftable) (S : Set Γ) (r : ℕ) : f.FiniteLiftable S r := by
   obtain ⟨L⟩ := hf
   exact ⟨{

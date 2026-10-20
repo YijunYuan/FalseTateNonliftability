@@ -18,26 +18,27 @@ public import FalseTateExtension.Layers.Galois
 Let `p` be an odd prime, `π` a uniformizer of `ℚ_p`, `K_FT = ℚ_p(π^{1/p^∞}, ζ_{p^∞})` the false
 Tate curve extension, `τ` the generator of `Gal(K_FT/ℚ_p(ζ_{p^∞}))` with Kummer exponent `1`, and
 `X = X_{ℚ_p}(K_FT)` the field of norms. For an automorphism `g` of a totally ramified infinite APF
-extension `L/K` and a uniformizer `u` of `X_K(L)`, the ramification number of `g` on `X_K(L)` is
-`i(g) = v(g(u) - u) - 1 = v_T(f_{g,u} - T) - 1`, where `f_{g,u}` is the coordinate series of `g`
-(Yuan, Lemma 2.2 and §3.2).
+extension `L/K` and a uniformizer `u` of `X_K(L)` with valuation `v`, the ramification number of
+`g` on `X_K(L)` is `i(g) = v(g(u) - u) - 1 = v_T(f_{g,u} - T) - 1`, where `f_{g,u}` is the
+coordinate series of `g` (Yuan, Lemma 2.2 and §3.2); it is `∞` if `g` acts trivially.
 
-Proposition 5.1 of Yuan: for every `k ≥ 0` the ramification number of `τ^{p^k}` on `X` is
+Yuan, Proposition 5.1: for every `k ≥ 0` the ramification number of `τ^{p^k}` on `X` is
 `d_k = (2 p^{2k+2} + p - 1)/(p + 1)`. It is the ramification number of the restriction of
 `τ^{p^k}` to the diagonal layers `L_N = ℚ_p(π^{1/p^N}, ζ_{p^N})` for large `N` (Wintenberger,
 Proposition 3.3.2), which is `d_k` for `N ≥ k + 2` (Viviani, Corollary 6.10). Consequently, for
 every uniformizer `u` of `X`, `v_T(f_{τ^{p^k},u} - T) = d_k + 1`, `f_{τ,u} = T + O(T²)`, and `τ`
 acts on `X` with infinite order. Moreover `d_k → ∞`, and `d_k → (p - 1)/(p + 1)` in `ℤ_p`, a limit
-which is not an integer. The identities `d_0 = 2p - 1`, `p ∣ d_k + 1` and `(p + 1) d_k ≤ d_{k+1}`
-are `FalseTateExtension.kummerRamificationBreak_zero`,
+which is not an integer. The integers `d_k` are `FalseTateExtension.kummerRamificationBreak p k`;
+the identities `d_0 = 2p - 1`, `p ∣ d_k + 1` and `(p + 1) d_k ≤ d_{k+1}` are
+`FalseTateExtension.kummerRamificationBreak_zero`,
 `FalseTateExtension.kummerRamificationBreak_succ_dvd` and
 `FalseTateExtension.kummerRamificationBreak_growth`.
 
 ## Main definitions
 
 * `FalseTateNonliftability.kummerRamificationLimit p`: the `p`-adic integer `(p - 1)/(p + 1)`.
-* `FalseTateNonliftability.fact_not_finite_falseTateExtension`: `K_FT/ℚ_p` is infinite, as an
-  instance.
+* `FalseTateNonliftability.fact_not_finite_falseTateExtension`: the instance stating that
+  `K_FT/ℚ_p` is infinite.
 
 ## Main results
 
@@ -46,16 +47,17 @@ are `FalseTateExtension.kummerRamificationBreak_zero`,
 * `FalseTateNonliftability.FieldOfNorms.valuation_aut_sub_eq_iff`:
   `v(g(u) - u) = v_T(f_{g,u} - T)`.
 * `FalseTateNonliftability.ramificationNumber_kummerGenerator_pow`: `i(τ^{p^k}) = d_k`
-  (Yuan, Proposition 5.1 (5.1)).
+  (Yuan, Proposition 5.1, (5.1)).
 * `FalseTateNonliftability.order_coordinateSeries_kummerGenerator_pow_sub_X`,
   `FalseTateNonliftability.valuation_aut_kummerGenerator_pow_sub`:
   `v_T(f_{τ^{p^k},u} - T) = v(τ^{p^k}(u) - u) = d_k + 1` for every uniformizer `u`.
 * `FalseTateNonliftability.coeff_one_coordinateSeries_kummerGenerator`: `f_{τ,u}'(0) = 1`.
 * `FalseTateNonliftability.coordinateSeries_kummerGenerator_pow_ne_X`: `f_{τ^n,u} ≠ T` for
   `n > 0`.
-* `FalseTateNonliftability.kummerRamificationBreak_tendsto_atTop`: `d_k → ∞`.
+* `FalseTateNonliftability.kummerRamificationBreak_tendsto_atTop`: `d_k → ∞`
+  (Yuan, Proposition 5.1 (2)).
 * `FalseTateNonliftability.kummerRamificationBreak_tendsto_padic`: `d_k → (p - 1)/(p + 1)` in
-  `ℤ_p` (Yuan, Proposition 5.1 (5.2)).
+  `ℤ_p` (Yuan, Proposition 5.1, (5.2)).
 * `FalseTateNonliftability.kummerRamificationLimit_notMem_range_intCast`: `(p - 1)/(p + 1)` is
   not an integer.
 
@@ -64,9 +66,10 @@ are `FalseTateExtension.kummerRamificationBreak_zero`,
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
   Lemma 2.2, §3.2 and Proposition 5.1.
 * J.-P. Wintenberger, *Le corps des normes de certaines extensions infinies de corps locaux;
-  applications*, Proposition 3.3.2.
-* M. Viviani, *Ramification groups and Artin conductors of radical extensions of ℚ*,
-  Corollary 6.10.
+  applications*, Ann. Sci. École Norm. Sup. (4) 16 (1983), 59–89, Proposition 3.3.2.
+* F. Viviani, *Ramification groups and Artin conductors of radical extensions of ℚ*, J. Théor.
+  Nombres Bordeaux 16 (2004), 779–816, Corollary 6.10.
+* J.-P. Serre, *Local Fields*, Graduate Texts in Mathematics 67, Springer, 1979, Chapter IV.
 -/
 
 @[expose] public section
@@ -224,7 +227,7 @@ private theorem ramificationNumber_falseTateDiagonalSubfield (k N : ℕ) (hN : k
   exact coe_sub_one_eq_natCast_iff.mpr rfl
 
 /-- The ramification number of `τ^{p^k}` on the field of norms `X_{ℚ_p}(K_FT)` is
-`d_k = (2 p^{2k+2} + p - 1)/(p + 1)` (Yuan, Proposition 5.1 (5.1)). -/
+`d_k = (2 p^{2k+2} + p - 1)/(p + 1)` (Yuan, Proposition 5.1, (5.1)). -/
 theorem ramificationNumber_kummerGenerator_pow (k : ℕ) :
     FieldOfNorms.ramificationNumber ℚ_[p] (falseTateExtension p (π : ℚ_[p]))
       ((τ p π).val ^ p ^ k) = kummerRamificationBreak p k := by
@@ -264,12 +267,10 @@ theorem coeff_one_coordinateSeries_kummerGenerator :
       (τ p π).val).coeff 1 = 1 := by
   have h := order_coordinateSeries_kummerGenerator_pow_sub_X u hu 0
   rw [pow_zero, pow_one, kummerRamificationBreak_zero p (Fact.out : p.Prime).one_le] at h
-  have hlt : ((1 : ℕ) : ℕ∞) < (FieldOfNorms.coordinateSeries ℚ_[p]
-      (falseTateExtension p (π : ℚ_[p])) u hu (τ p π).val - X).order := by
-    have hp := (Fact.out : p.Prime).two_le
-    rw [h]
-    exact_mod_cast (by omega : 1 < 2 * p - 1 + 1)
-  simpa [sub_eq_zero] using PowerSeries.coeff_of_lt_order 1 hlt
+  have hp := (Fact.out : p.Prime).two_le
+  have h1 : ((1 : ℕ) : ℕ∞) < ((2 * p - 1 + 1 : ℕ) : ℕ∞) := by exact_mod_cast (by omega)
+  have h0 := PowerSeries.coeff_of_lt_order 1 (h1.trans_eq h.symm)
+  rwa [map_sub, coeff_one_X, sub_eq_zero] at h0
 
 /-- `τ` acts on `X_{ℚ_p}(K_FT)` with infinite order: `f_{τ^n,u} ≠ T` for `n > 0`
 (Yuan, Proposition 5.1). -/
@@ -332,7 +333,7 @@ private theorem kummerRamificationBreak_sub_kummerRamificationLimit (k : ℕ) :
   linear_combination h * Ring.inverse ((p : ℤ_[p]) + 1) -
     (kummerRamificationBreak p k : ℤ_[p]) * hu
 
-/-- `d_k → (p - 1)/(p + 1)` in `ℤ_p` (Yuan, Proposition 5.1 (5.2)). -/
+/-- `d_k → (p - 1)/(p + 1)` in `ℤ_p` (Yuan, Proposition 5.1, (5.2)). -/
 theorem kummerRamificationBreak_tendsto_padic :
     Tendsto (fun k ↦ (kummerRamificationBreak p k : ℤ_[p])) atTop
       (𝓝 (kummerRamificationLimit p)) := by
@@ -344,7 +345,7 @@ theorem kummerRamificationBreak_tendsto_padic :
   refine tendsto_sub_nhds_zero_iff.mp (hz.congr fun k ↦ ?_)
   rw [kummerRamificationBreak_sub_kummerRamificationLimit, Function.comp_apply]
 
-/-- `(p - 1)/(p + 1) ∈ ℤ_p` is not an integer (Yuan, Proposition 5.1 (5.2)). -/
+/-- `(p - 1)/(p + 1) ∈ ℤ_p` is not an integer (Yuan, Proposition 5.1, (5.2)). -/
 theorem kummerRamificationLimit_notMem_range_intCast :
     kummerRamificationLimit p ∉ Set.range ((↑) : ℤ → ℤ_[p]) := by
   rintro ⟨z, hz⟩
@@ -352,8 +353,9 @@ theorem kummerRamificationLimit_notMem_range_intCast :
   rw [← hz] at h
   have hz' : z * ((p : ℤ) + 1) = (p : ℤ) - 1 := by exact_mod_cast h
   have hp : (2 : ℤ) ≤ p := by exact_mod_cast (Fact.out : p.Prime).two_le
-  have hz₀ : 0 < z := by nlinarith
-  nlinarith
+  -- `p + 1 ∣ p - 1` with `0 < p - 1 < p + 1`
+  have hle := Int.le_of_dvd (by omega) (Dvd.intro_left z hz')
+  omega
 
 end PadicLimit
 

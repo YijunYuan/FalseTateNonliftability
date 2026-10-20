@@ -12,14 +12,16 @@ public import Mathlib.FieldTheory.Finite.Basic
 /-!
 # Independence of the uniformizer
 
-Let `O` be a discrete valuation ring with maximal ideal `𝔪` and finite residue field `κ` with `q`
-elements, let `f = (f_g)_{g ∈ Γ}` be a coordinate family over `κ`, and let `w` be a power series
-over `κ` with `w(0) = 0` and `w'(0) ≠ 0`. Then the coordinate family `(w ∘ f_g ∘ w^{∘-1})_{g ∈ Γ}`
-has a lift to the coefficient ring `A` if and only if `f` has one, and the same holds for finite
-lifts modulo every `𝔪 ^ (r + 1)` on every subset of `Γ`. If `H` is a power series over `O` (or
-over `O ⧸ 𝔪 ^ (r + 1)`) reducing to `w`, conjugation by `H` maps lifts of `f` to lifts of
-`w ∘ f ∘ w^{∘-1}`; it fixes the Frobenius `T^q` modulo `𝔪` since `T^q ∘ w = w^q = w ∘ T^q` over
-the field with `q` elements.
+Let `O` be a local principal ideal ring with maximal ideal `𝔪` and finite residue field `κ` with
+`q` elements, let `A` be the `𝔪`-adic completion of `O((T))`, let `f = (f_g)_{g ∈ Γ}` be a
+coordinate family over `κ`, and let `w ∈ κ⟦T⟧` with `w(0) = 0` and `w'(0) ≠ 0`. Then the
+coordinate family `(w ∘ f_g ∘ w^{∘-1})_{g ∈ Γ}` has a lift to `A` if and only if `f` has one, and
+the same holds for finite lifts modulo every `𝔪 ^ (r + 1)` on every subset of `Γ`. Indeed, let
+`H` be a power series over `O` (or over `O ⧸ 𝔪 ^ (r + 1)`) with `H(0) = 0` reducing to `w`; its
+compositional inverse reduces to `w^{∘-1}` (Yuan, Lemma 2.1 (3)). Conjugation `Q ↦ H ∘ Q ∘ H^{∘-1}`
+preserves the relations `F_g ∘ P = P ∘ F_g` and `F_h ∘ F_g = F_{gh}`, maps `F_g` to a lift of
+`w ∘ f_g ∘ w^{∘-1}`, and maps `P` to a lift of `T^q`, since `T^q ∘ w = w^q = w ∘ T^q` over the
+field with `q` elements.
 
 By Yuan, Lemma 2.2 (4), replacing the uniformizer `u` of the field of norms by `ev_u(w)` replaces
 its coordinate family `f` by `w ∘ f ∘ w^{∘-1}`, so `F`-liftability does not depend on the
@@ -30,13 +32,19 @@ uniformizer (Yuan, Proposition 2.3).
 * `LaurentSeries.conj_single_natCard`: over a field with `q` elements, conjugation by a power
   series fixes `T^q`.
 * `FalseTateNonliftability.CoordinateFamily.liftable_conj_iff`: `w ∘ f ∘ w^{∘-1}` has a lift to
-  `A` if and only if `f` has one.
+  `A` if and only if `f` has one (Yuan, Proposition 2.3).
 * `FalseTateNonliftability.CoordinateFamily.finiteLiftable_conj_iff`: `w ∘ f ∘ w^{∘-1}` has a
-  finite lift modulo `𝔪 ^ (r + 1)` on `S` if and only if `f` has one.
+  finite lift modulo `𝔪 ^ (r + 1)` on `S` if and only if `f` has one (Yuan, Proposition 2.3).
+
+## Implementation notes
+
+The two equivalences are stated for every power series `w`: `f.conj w = f` unless `w(0) = 0` and
+`w'(0)` is a unit.
 
 ## References
 
-* Yuan, Proposition 2.3.
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Lemma 2.1, Lemma 2.2 and Proposition 2.3.
 -/
 
 public section

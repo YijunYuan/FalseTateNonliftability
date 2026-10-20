@@ -10,16 +10,19 @@ public import FalseTateNonliftability.Mathlib.RingTheory.PowerSeries.Composition
 /-!
 # Coordinate families
 
-Let a group `Γ` act on `κ((T))`, for a field `κ`, by continuous automorphisms over `κ` that
-preserve the `T`-adic valuation. The image of the variable under `g ∈ Γ` is a power series
-`f_g ∈ T κ⟦T⟧` with nonzero linear coefficient, the action on all of `κ((T))` is `a ↦ a ∘ f_g`,
-and `f_{gh} = f_h ∘ f_g` (Yuan, Lemma 2.2). A coordinate family over a commutative ring `κ`,
-indexed by a monoid `Γ`, is a family `(f_g)_{g ∈ Γ}` of power series with `f_g(0) = 0`, `f_g'(0)`
-a unit and `f_{gh} = f_h ∘ f_g`. Then `f_1 = T` and `f_{g ^ n} = f_g^{∘n}`.
+Let `κ` be a field and let a group `Γ` act on the field `κ((T))` of Laurent series by continuous
+automorphisms over `κ` that preserve the `T`-adic valuation `v_T`; for instance `Γ = Gal(L/K)`
+acting on the field of norms `X_K(L)`, identified with `κ((T))` by a uniformizer. Write `a ∘ f`
+for the substitution of `f` for the variable of `a`. The image of the variable under `g ∈ Γ` is a
+power series `f_g ∈ T κ⟦T⟧` with nonzero linear coefficient, `g` acts on `κ((T))` by
+`a ↦ a ∘ f_g`, and `f_{gh} = f_h ∘ f_g` (Yuan, Lemma 2.2).
 
-A ring homomorphism `φ : κ → κ'` applied to the coefficients gives a coordinate family over `κ'`.
-A change of variable `T' = w(T)`, with `w(0) = 0` and `w'(0)` a unit, replaces `f_g` by
-`w ∘ f_g ∘ w^{∘-1}` (Yuan, Lemma 2.2 (4)).
+A coordinate family over a commutative ring `κ`, indexed by a monoid `Γ`, is a family
+`(f_g)_{g ∈ Γ}` of power series over `κ` with `f_g(0) = 0`, `f_g'(0)` a unit and
+`f_{gh} = f_h ∘ f_g`. Then `f_1 = T` and `f_{g ^ n} = f_g^{∘n}`. A ring homomorphism `φ : κ → κ'`
+applied to the coefficients gives a coordinate family `φ(f)` over `κ'`. A change of variable
+`T' = w(T)`, with `w(0) = 0` and `w'(0)` a unit, replaces `f_g` by `w ∘ f_g ∘ w^{∘-1}`, where
+`w^{∘-1}` is the compositional inverse of `w` (Yuan, Lemma 2.2 (4)).
 
 ## Main definitions
 
@@ -33,9 +36,15 @@ A change of variable `T' = w(T)`, with `w(0) = 0` and `w'(0)` a unit, replaces `
 * `FalseTateNonliftability.CoordinateFamily.series_one`: `f_1 = T`.
 * `FalseTateNonliftability.CoordinateFamily.series_pow`: `f_{g ^ n} = f_g^{∘n}`.
 * `FalseTateNonliftability.CoordinateFamily.conj_compInv_conj`: the change of variable by
-  `w^{∘-1}` undoes the change by `w`.
-* `FalseTateNonliftability.CoordinateFamily.map_conj`: changes of coefficients and changes of
-  variable commute.
+  `w^{∘-1}` undoes the change of variable by `w`.
+* `FalseTateNonliftability.CoordinateFamily.map_conj`: changes of coefficients commute with
+  changes of variable.
+
+## Implementation notes
+
+`conj w f` is defined for every power series `w`: it is `f` unless `w(0) = 0` and `w'(0)` is a
+unit. Statements about lifts of `conj w f` (`Liftability/CoordinateChange`) therefore hold for
+every `w`.
 
 ## References
 
@@ -69,6 +78,7 @@ namespace CoordinateFamily
 
 variable {κ κ' κ'' : Type*} [CommRing κ] [CommRing κ'] [CommRing κ''] {Γ : Type*} [Monoid Γ]
 
+/-- Two coordinate families with the same series are equal. -/
 @[ext]
 theorem ext {f₁ f₂ : CoordinateFamily κ Γ} (h : ∀ g, f₁.series g = f₂.series g) : f₁ = f₂ := by
   obtain ⟨s₁, _, _, _⟩ := f₁
@@ -78,6 +88,8 @@ theorem ext {f₁ f₂ : CoordinateFamily κ Γ} (h : ∀ g, f₁.series g = f�
 
 variable (f : CoordinateFamily κ Γ)
 
+/-- `f_g` has zero constant coefficient, so it can be substituted for the variable of a power
+series. -/
 theorem hasSubst_series (g : Γ) : HasSubst (f.series g) :=
   .of_constantCoeff_zero' (f.constantCoeff_series g)
 
@@ -114,6 +126,7 @@ def map (φ : κ →+* κ') (f : CoordinateFamily κ Γ) : CoordinateFamily κ' 
     rw [f.series_mul]
     exact map_subst (f.hasSubst_series g) _
 
+/-- The series of `φ(f)` are the series `φ(f_g)`. -/
 @[simp]
 theorem map_series (φ : κ →+* κ') (g : Γ) : (f.map φ).series g = (f.series g).map φ :=
   rfl
@@ -124,7 +137,7 @@ section Conj
 
 open scoped Classical in
 /-- The coordinate family `(w ∘ f_g ∘ w^{∘-1})_{g ∈ Γ}` in the variable `T' = w(T)`, for `w` with
-`w(0) = 0` and `w'(0)` a unit (Yuan, Lemma 2.2 (4)); it is `f` for every other `w`. -/
+`w(0) = 0` and `w'(0)` a unit (Yuan, Lemma 2.2 (4)); `conj w f = f` for every other `w`. -/
 def conj (w : κ⟦X⟧) (f : CoordinateFamily κ Γ) : CoordinateFamily κ Γ :=
   if hw : w.constantCoeff = 0 ∧ IsUnit (w.coeff 1) then
     { series g := PowerSeries.conj w (f.series g)
@@ -137,10 +150,12 @@ def conj (w : κ⟦X⟧) (f : CoordinateFamily κ Γ) : CoordinateFamily κ Γ :
 
 variable {w : κ⟦X⟧}
 
+/-- For `w(0) = 0` and `w'(0)` a unit, the series of `conj w f` are `w ∘ f_g ∘ w^{∘-1}`. -/
 theorem conj_series (hw : w.constantCoeff = 0) (hw' : IsUnit (w.coeff 1)) (g : Γ) :
     (f.conj w).series g = PowerSeries.conj w (f.series g) := by
   simp only [conj, hw, hw', and_self, dite_true]
 
+/-- If `w(0) ≠ 0` or `w'(0)` is not a unit, then `conj w f = f`. -/
 theorem conj_of_not (hw : ¬(w.constantCoeff = 0 ∧ IsUnit (w.coeff 1))) : f.conj w = f := by
   simp only [conj, hw, dite_false]
 

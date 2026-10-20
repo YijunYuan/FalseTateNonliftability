@@ -10,27 +10,33 @@ public import FalseTateNonliftability.Mathlib.RingTheory.PowerSeries.Composition
 public import FalseTateNonliftability.PowerSeries.PrincipalUnits
 
 /-!
-# Invariant exact differentials from two weighted identities
+# Construction of an invariant exact differential
 
-Let `κ` be a field of characteristic `p`. A power series `f ∈ T κ⟦T⟧` with invertible linear
-coefficient defines the automorphism `σ_f : x ↦ x(f)` of `κ((T))`, which acts on differentials by
-`σ_f(a dT) = a(f) f' dT`. Let `f ∈ T + T ^ 2 κ⟦T⟧`, let `g ∈ T κ⟦T⟧` have linear coefficient
-`λ` of multiplicative order `p - 1`, and let `h = A' ≠ 0` satisfy the weighted identities
-`h(f) = (f') ^ (p - 1) h` and `h(g) = (g') ^ (p - 1) h`. The leading coefficients of the second
-identity give `λ ^ v_T(h) = 1`, hence `p - 1 ∣ v_T(h)`, and `a ^ (p - 1) h = b` for some
-`a ∈ κ((T))ˣ`, where `b` is the leading coefficient of `h`. The differential `ω = a dT` is fixed by
-`σ_f`, and it is exact: `ω = d(b⁻¹ a ^ p A)`.
+Let `κ` be a field of characteristic `p` and let `v_T` be the `T`-adic valuation of `κ((T))`. A
+power series `f ∈ T κ⟦T⟧` with invertible linear coefficient defines the continuous automorphism
+`σ_f : x ↦ x(f)` of `κ((T))`, which acts on differentials by `σ_f(a dT) = a(f) f' dT`. A
+differential `a dT` is exact if `a = B'` for some `B ∈ κ((T))`.
+
+Yuan, Lemma 4.1: let `f ∈ T + T ^ 2 κ⟦T⟧`, let `g ∈ T κ⟦T⟧` have linear coefficient `λ` of
+multiplicative order `p - 1`, and let `h = A' ≠ 0` satisfy `h(f) = (f') ^ (p - 1) h` and
+`h(g) = (g') ^ (p - 1) h`. In Yuan, `f` and `g` are the coordinate series of `τ` and `δ`, and `h` is
+the normalized derivative of a lift of Frobenius of derivative level `s < e` (Lemma 2.4). Then
+`σ_f` fixes a nonzero exact differential. Comparing leading coefficients in the second identity
+gives `λ ^ v_T(h) = 1`, hence `p - 1 ∣ v_T(h)`, so that `a ^ (p - 1) h = b` for some
+`a ∈ κ((T))ˣ`, where `b` is the leading coefficient of `h`. The differential `ω = a dT` is fixed
+by `σ_f`, and `ω = d(b⁻¹ a ^ p A)`.
 
 ## Main results
 
-* `LaurentSeries.leadingCoeff_substEquiv`: the leading coefficient of `x(g)` is `λ ^ v_T(x)`
-  times that of `x`.
-* `LaurentSeries.exists_exact_invariant_of_weighted_identities`: the nonzero exact differential
-  fixed by `σ_f` (Yuan, Lemma 4.1).
+* `LaurentSeries.leadingCoeff_substEquiv`: the leading coefficient of `x(g)` is `λ ^ v_T(x)` times
+  the leading coefficient of `x`.
+* `LaurentSeries.leadingCoeff_derivative_ofPowerSeries`: the leading coefficient of `g'` is `λ`.
+* `LaurentSeries.exists_exact_invariant_of_weighted_identities`: `σ_f` fixes a nonzero exact
+  differential (Yuan, Lemma 4.1).
 
 ## References
 
-* Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
   Lemma 4.1.
 -/
 
@@ -49,18 +55,23 @@ private def leadingCoeffHom : LaurentSeries κ →*₀ κ where
   map_one' := HahnSeries.leadingCoeff_one
   map_mul' x y := HahnSeries.leadingCoeff_mul x y
 
+/-- `leadingCoeffHom x` is the leading coefficient of `x`. -/
 private theorem leadingCoeffHom_apply (x : LaurentSeries κ) :
     leadingCoeffHom x = x.leadingCoeff :=
   rfl
 
+/-- The leading coefficient of `x ^ n` is the `n`-th power of that of `x`. -/
 private theorem leadingCoeff_pow (x : LaurentSeries κ) (n : ℕ) :
     (x ^ n).leadingCoeff = x.leadingCoeff ^ n := by
   rw [← leadingCoeffHom_apply, map_pow, leadingCoeffHom_apply]
 
+/-- The leading coefficient of `x ^ m`, `m ∈ ℤ`, is the `m`-th power of that of `x`. -/
 private theorem leadingCoeff_zpow (x : LaurentSeries κ) (m : ℤ) :
     (x ^ m).leadingCoeff = x.leadingCoeff ^ m := by
   rw [← leadingCoeffHom_apply, map_zpow₀, leadingCoeffHom_apply]
 
+/-- The leading coefficient of a power series with nonzero constant coefficient is its constant
+coefficient. -/
 private theorem leadingCoeff_ofPowerSeries {P : PowerSeries κ} (hP : P.constantCoeff ≠ 0) :
     (HahnSeries.ofPowerSeries ℤ κ P).leadingCoeff = P.constantCoeff := by
   have hunit : IsUnit P := PowerSeries.isUnit_iff_constantCoeff.mpr (isUnit_iff_ne_zero.mpr hP)
@@ -74,12 +85,13 @@ private theorem leadingCoeff_ofPowerSeries {P : PowerSeries κ} (hP : P.constant
   rw [HahnSeries.leadingCoeff_eq, ho]
   simpa using HahnSeries.ofPowerSeries_apply_coeff (Γ := ℤ) P 0
 
+/-- The constant coefficient of `T ^ (-v_T(x)) x` is the leading coefficient of `x`. -/
 private theorem constantCoeff_powerSeriesPart (x : LaurentSeries κ) :
     x.powerSeriesPart.constantCoeff = x.leadingCoeff := by
   rw [← PowerSeries.coeff_zero_eq_constantCoeff_apply, powerSeriesPart_coeff, Nat.cast_zero,
     add_zero, HahnSeries.leadingCoeff_eq]
 
-/-- Let `g ∈ T κ⟦T⟧` have invertible linear coefficient `λ`. The leading coefficient of `x(g)` is
+/-- Let `g ∈ T κ⟦T⟧` have linear coefficient `λ ≠ 0`. The leading coefficient of `x(g)` is
 `λ ^ v_T(x)` times the leading coefficient of `x`. -/
 theorem leadingCoeff_substEquiv {g : PowerSeries κ} (hg : g.constantCoeff = 0)
     (hlinear : IsUnit (g.coeff 1)) (x : LaurentSeries κ) :
@@ -103,8 +115,8 @@ theorem leadingCoeff_substEquiv {g : PowerSeries κ} (hg : g.constantCoeff = 0)
     HahnSeries.leadingCoeff_mul, leadingCoeff_zpow, hX, hw,
     leadingCoeff_ofPowerSeries (hP ▸ HahnSeries.leadingCoeff_ne_zero.mpr hx), hP]
 
-/-- If the linear coefficient `λ` of `g ∈ κ⟦T⟧` is invertible, then the leading coefficient of
-`g'` is `λ`. -/
+/-- If the linear coefficient `λ` of `g ∈ κ⟦T⟧` is nonzero, then the leading coefficient of `g'`
+is `λ`. -/
 theorem leadingCoeff_derivative_ofPowerSeries {g : PowerSeries κ}
     (hlinear : IsUnit (g.coeff 1)) :
     (derivative κ (HahnSeries.ofPowerSeries ℤ κ g)).leadingCoeff = g.coeff 1 := by
@@ -238,9 +250,9 @@ private theorem substEquiv_mul_derivative_eq {f : PowerSeries κ} (hf : f.consta
 
 /-- **Construction of an invariant exact differential** (Yuan, Lemma 4.1). Let `κ` be a field of
 characteristic `p`, let `f ∈ T + T ^ 2 κ⟦T⟧`, and let `g ∈ T κ⟦T⟧` have linear coefficient of
-multiplicative order `p - 1`. If a nonzero exact Laurent series `h = A'` satisfies
-`h(f) = (f') ^ (p - 1) h` and `h(g) = (g') ^ (p - 1) h`, then there is a nonzero exact
-differential `ω = a dT = dB` fixed by `σ_f`, that is, `a(f) f' = a`. -/
+multiplicative order `p - 1`. If `h = A' ≠ 0` satisfies `h(f) = (f') ^ (p - 1) h` and
+`h(g) = (g') ^ (p - 1) h`, then `σ_f` fixes a nonzero exact differential `ω = a dT = dB`, that
+is, `a ≠ 0`, `a = B'` and `a(f) f' = a`. -/
 theorem exists_exact_invariant_of_weighted_identities {f g : PowerSeries κ}
     (hf : f.constantCoeff = 0) (hf1 : f.coeff 1 = 1) (hg : g.constantCoeff = 0)
     (hg1 : orderOf (g.coeff 1) = p - 1) {h A : LaurentSeries κ} (hne : h ≠ 0)

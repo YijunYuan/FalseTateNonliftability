@@ -14,43 +14,40 @@ public import Mathlib.RingTheory.DiscreteValuationRing.Basic
 /-!
 # The coefficient ring `A`, its truncations and their layers
 
-Let `O` be a local ring with maximal ideal `𝔪` and residue field `κ`, for instance the ring of
-integers of a finite extension `F` of `ℚ_p`. The coefficient ring `A` of Yuan, Definition 1.1, is
-the `𝔪`-adic completion of `O((T))`; for a uniformizer `ϖ` of `O` it is the `ϖ`-adic completion of
-`O⟦T⟧[1/T]`. For every `r` the ring `A ⧸ 𝔪 ^ (r + 1) A` is the ring of Laurent series over the
-truncation `O ⧸ 𝔪 ^ (r + 1)`, which is a local Artinian principal ideal ring when `O` is a
-discrete valuation ring, so that Laurent series over it admit substitution
-(`LaurentSeries.subst`). The ring `A` is the inverse limit of these Laurent series rings.
-
-If `𝔪` is principal, `A` is a local ring with maximal ideal `𝔪 A`, it is complete for its maximal
-ideal, and the reduction `A → κ((T))` identifies its residue field with `κ((T))`. If `O` is a
-discrete valuation ring, then so is `A`, and every uniformizer `ϖ` of `O` is a uniformizer of `A`.
-This is the statement of Yuan, Definition 1.1, that `A` is a complete discrete valuation ring with
-uniformizer `ϖ` and residue field `κ((T))`; the proofs of the main results do not use it.
+Let `O` be a local ring with maximal ideal `𝔪` and residue field `κ`; in Yuan, `O = O_F` is the
+ring of integers of a finite extension `F` of `ℚ_p`, a discrete valuation ring with uniformizer
+`ϖ`. The coefficient ring `A` of Yuan, Definition 1.1, is the `ϖ`-adic completion of `O⟦T⟧[1/T]`,
+that is, the `𝔪`-adic completion of the ring `O((T))` of Laurent series. If `𝔪` is principal,
+then for every `r ≥ 0` the quotient `A ⧸ 𝔪 ^ (r + 1) A` is the ring `(O ⧸ 𝔪 ^ (r + 1))((T))` of
+Laurent series over the truncation `O ⧸ 𝔪 ^ (r + 1)`, and `A` is the inverse limit of these rings;
+for `r = e = v_ϖ(p)` this is the ring `R = A ⧸ ϖ ^ (e + 1) A` of Yuan, §1.4. In this case `A` is
+a local ring, complete for its maximal ideal `𝔪 A`, with residue field `κ((T))`, and if `O` is a
+discrete valuation ring then so is `A`, with uniformizer `ϖ`. These facts are the description of
+`A` in Definition 1.1; the proofs of Proposition 1.3 and Theorem A do not use them.
 
 Let `O` be a discrete valuation ring and `R_r = (O ⧸ 𝔪 ^ (r + 1))((T))`. The ideals
-`Λ_j = 𝔪 ^ j R_r` of Laurent series with coefficients in `𝔪 ^ j` form a decreasing filtration with
-`Λ_0 = R_r` and `Λ_{r + 1} = 0`. For `j ≤ r` and a uniformizer `ϖ` of `O`, multiplication by
-`ϖ ^ j` induces an isomorphism of `O`-modules `κ((T)) ≃ Λ_j ⧸ Λ_{j + 1}` (Yuan, §2.2). We fix a
-uniformizer of `O` and write `layer j X ∈ κ((T))` for the preimage of `X mod Λ_{j + 1}` under this
-isomorphism, the series `ϖ⁻ʲ X` of the paper. It satisfies `layer j (X Z) = layer j X · Z̄`,
-where `Z̄` is the residue of `Z`, it is computed coefficientwise, and it commutes with every
-algebra endomorphism of `R_r` that reduces to an endomorphism of `κ((T))`.
+`𝔪 ^ j R_r = ϖ ^ j R_r` of Laurent series with coefficients in `𝔪 ^ j` decrease from `R_r` for
+`j = 0` to `0` for `j = r + 1`. For `j ≤ r`, multiplication by `ϖ ^ j` induces an isomorphism of
+`O`-modules `Λ_j : κ((T)) ≃ ϖ ^ j R_r ⧸ ϖ ^ (j + 1) R_r` (Yuan, §2.2). For `X ∈ ϖ ^ j R_r`, the
+series `ϖ⁻ʲ X ∈ κ((T))` is the preimage of `X mod ϖ ^ (j + 1) R_r` under `Λ_j`. It is computed
+coefficientwise, it satisfies `ϖ⁻ʲ (X Z) = ϖ⁻ʲ X · Z̄`, where `Z̄` is the reduction of `Z` to
+`κ((T))`, and it commutes with every algebra endomorphism of `R_r` that reduces to an
+endomorphism of `κ((T))`.
 
 ## Main definitions
 
 * `Truncation O r`: the truncation `O ⧸ 𝔪 ^ (r + 1)`.
 * `Truncation.factor O hsr`, `Truncation.residue O r`: the reductions
-  `O ⧸ 𝔪 ^ (r + 1) → O ⧸ 𝔪 ^ (s + 1)` for `s ≤ r` and `O ⧸ 𝔪 ^ (r + 1) → O ⧸ 𝔪`.
-* `CoefficientRing O`: the `𝔪`-adic completion `A` of `O((T))`.
+  `O ⧸ 𝔪 ^ (r + 1) → O ⧸ 𝔪 ^ (s + 1)` for `s ≤ r` and `O ⧸ 𝔪 ^ (r + 1) → κ`.
+* `CoefficientRing O`: the `𝔪`-adic completion `A` of `O((T))` (Yuan, Definition 1.1).
 * `CoefficientRing.reduction O r`: the reduction `A → (O ⧸ 𝔪 ^ (r + 1))((T))`.
 * `CoefficientRing.residue O`: the reduction `A → κ((T))`.
-* `CoefficientRing.lift O f hf`: the map into `A` induced by a compatible family of maps into
-  the rings `(O ⧸ 𝔪 ^ (r + 1))((T))`.
-* `Truncation.layerIdeal O r j`: the ideal `Λ_j = 𝔪 ^ j R_r`.
-* `Truncation.GradedLayer O r j`: the `O`-module `Λ_j ⧸ Λ_{j + 1}`.
-* `Truncation.gradedLayerEquiv O r j hj`: the isomorphism `κ((T)) ≃ₗ[O] Λ_j ⧸ Λ_{j + 1}`.
-* `Truncation.layer j X`: the series `ϖ⁻ʲ X ∈ κ((T))` for `X ∈ Λ_j`, and `0` for `X ∉ Λ_j`.
+* `CoefficientRing.lift f hf`: the map into `A` induced by a compatible family of maps into the
+  rings `(O ⧸ 𝔪 ^ (r + 1))((T))`.
+* `Truncation.layerIdeal O r j`: the ideal `𝔪 ^ j R_r`.
+* `Truncation.GradedLayer O r j`: the `O`-module `ϖ ^ j R_r ⧸ ϖ ^ (j + 1) R_r`.
+* `Truncation.gradedLayerEquiv O r j hj`: the isomorphism `Λ_j` (Yuan, §2.2).
+* `Truncation.layer j X`: the series `ϖ⁻ʲ X ∈ κ((T))` (Yuan, §2.2).
 
 ## Main results
 
@@ -60,29 +57,40 @@ algebra endomorphism of `R_r` that reduces to an endomorphism of `κ((T))`.
   `𝔪 ^ (r + 1) A`.
 * `CoefficientRing.ext_reduction`: an element of `A` is determined by its reductions.
 * `CoefficientRing.isLocalRing`, `CoefficientRing.maximalIdeal_eq_map`: `A` is a local ring with
-  maximal ideal `𝔪 A`.
-* `CoefficientRing.ker_reduction_eq_maximalIdeal_pow`: the kernel of
-  `A → (O ⧸ 𝔪 ^ (r + 1))((T))` is the `(r + 1)`-st power of the maximal ideal of `A`.
-* `CoefficientRing.isAdicComplete`: `A` is complete for its maximal ideal.
-* `CoefficientRing.residueFieldEquiv`: the residue field of `A` is `κ((T))`.
-* `CoefficientRing.isDomain`, `CoefficientRing.isDiscreteValuationRing`: `A` is a discrete
-  valuation ring.
-* `CoefficientRing.irreducible_algebraMap`: a uniformizer of `O` is a uniformizer of `A`.
-* `Truncation.layer_eq_zero_iff`: for `X ∈ Λ_j`, `layer j X = 0` if and only if `X ∈ Λ_{j + 1}`.
-* `Truncation.layer_mul`: `layer j (X Z) = layer j X · Z̄`.
+  maximal ideal `𝔪 A` (Yuan, Definition 1.1).
+* `CoefficientRing.isAdicComplete`: `A` is complete for its maximal ideal (Yuan,
+  Definition 1.1).
+* `CoefficientRing.residueFieldEquiv`: the residue field of `A` is `κ((T))` (Yuan,
+  Definition 1.1).
+* `CoefficientRing.isDiscreteValuationRing`, `CoefficientRing.irreducible_algebraMap`: if `O` is
+  a discrete valuation ring, so is `A`, and a uniformizer of `O` is a uniformizer of `A` (Yuan,
+  Definition 1.1).
+* `Truncation.layer_eq_zero_iff`: for `X ∈ ϖ ^ j R_r`, `ϖ⁻ʲ X = 0` if and only if
+  `X ∈ ϖ ^ (j + 1) R_r`.
+* `Truncation.layer_mul`: `ϖ⁻ʲ (X Z) = ϖ⁻ʲ X · Z̄`.
 * `Truncation.coeff_layer_eq_zero_iff`, `Truncation.coeff_layer_eq_of_coeff_eq_mul`: the
-  coefficients of `layer j X`.
-* `Truncation.layer_algHom`: `layer j (E X) = E' (layer j X)` if `E` reduces to `E'`.
+  coefficients of `ϖ⁻ʲ X`.
+* `Truncation.layer_algHom`: `ϖ⁻ʲ (E X) = E' (ϖ⁻ʲ X)` if `E` reduces to `E'`.
 
-## Implementation details
+## Implementation notes
 
-The isomorphism `κ((T)) ≃ Λ_j ⧸ Λ_{j + 1}` depends on the uniformizer: replacing `ϖ` by `u ϖ`
-multiplies `layer j` by the residue of `u⁻ʲ`. The uniformizer is fixed once by
-`IsDiscreteValuationRing.exists_irreducible` and does not appear in any statement of this file.
+* The truncation is indexed so that `Truncation O r = O ⧸ 𝔪 ^ (r + 1)` is a nonzero ring for every
+  `r : ℕ`; the ring `R` of Yuan, §1.4, is `LaurentSeries (Truncation O e)`, and its layers
+  `ϖ ^ j R` are `layerIdeal O e j` with `0 ≤ j ≤ e + 1`.
+* The instances `Truncation.isLocalRing`, `Truncation.isArtinianRing` and
+  `Truncation.isPrincipalIdealRing` place the truncations in the class of coefficient rings of
+  `LaurentSeries.subst` (local Artinian principal ideal rings).
+* `Λ_j` depends on the uniformizer: replacing `ϖ` by `u ϖ` multiplies `ϖ⁻ʲ X` by the residue of
+  `u⁻ʲ`. A uniformizer of `O` is chosen once by `IsDiscreteValuationRing.exists_irreducible`, so
+  it does not appear in the statements.
+* `layer j X` is defined for all `j` and `X`, with value `0` if `X ∉ ϖ ^ j R_r` or `r < j`; its
+  lemmas assume `X ∈ ϖ ^ j R_r`.
 
 ## References
 
-* Yuan, Definition 1.1 and §2.2.
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+  Definition 1.1, §1.4 and §2.2.
+* L. Berger, *Lifting the field of norms*, J. Éc. polytech. Math. 1 (2014), 29–38.
 -/
 
 @[expose] public section
@@ -112,15 +120,19 @@ namespace Truncation
 /-- The reduction `O → O ⧸ 𝔪 ^ (r + 1)`. -/
 abbrev mk (r : ℕ) : O →+* Truncation O r := Ideal.Quotient.mk _
 
+/-- The reduction `O → O ⧸ 𝔪 ^ (r + 1)` is surjective. -/
 theorem mk_surjective (r : ℕ) : Function.Surjective (mk O r) := Ideal.Quotient.mk_surjective
 
+/-- `𝔪 ^ (r + 1) ⊆ 𝔪`. -/
 theorem maximalIdeal_pow_le (r : ℕ) : maximalIdeal O ^ (r + 1) ≤ maximalIdeal O :=
   Ideal.pow_le_self r.succ_ne_zero
 
+/-- `O ⧸ 𝔪 ^ (r + 1)` is a nonzero ring. -/
 instance nontrivial (r : ℕ) : Nontrivial (Truncation O r) :=
   Ideal.Quotient.nontrivial_iff.mpr
     (ne_top_of_le_ne_top (IsLocalRing.maximalIdeal.isMaximal O).ne_top (maximalIdeal_pow_le O r))
 
+/-- `O ⧸ 𝔪 ^ (r + 1)` is a local ring. -/
 instance isLocalRing (r : ℕ) : IsLocalRing (Truncation O r) :=
   .of_surjective' (mk O r) (mk_surjective O r)
 
@@ -130,6 +142,7 @@ theorem maximalIdeal_eq_map (r : ℕ) :
   (IsLocalRing.eq_maximalIdeal (Ideal.IsMaximal.map_of_surjective_of_ker_le (mk_surjective O r)
     (by rw [Ideal.mk_ker]; exact maximalIdeal_pow_le O r))).symm
 
+/-- The `(r + 1)`-st power of the maximal ideal of `O ⧸ 𝔪 ^ (r + 1)` is zero. -/
 theorem maximalIdeal_pow_eq_bot (r : ℕ) : maximalIdeal (Truncation O r) ^ (r + 1) = ⊥ := by
   rw [maximalIdeal_eq_map, ← Ideal.map_pow, Ideal.map_quotient_self]
 
@@ -140,9 +153,11 @@ theorem mk_mem_maximalIdeal_pow_iff {k r : ℕ} (hk : k ≤ r + 1) (x : O) :
   rw [maximalIdeal_eq_map, ← Ideal.map_pow]
   exact Ideal.mem_quotient_iff_mem (Ideal.pow_le_pow_right hk)
 
+/-- If `O` is Noetherian, then `O ⧸ 𝔪 ^ (r + 1)` is Artinian. -/
 instance isArtinianRing [IsNoetherianRing O] (r : ℕ) : IsArtinianRing (Truncation O r) :=
   (isArtinianRing_iff_isNilpotent_maximalIdeal _).mpr ⟨r + 1, maximalIdeal_pow_eq_bot O r⟩
 
+/-- If `O` is a principal ideal ring, so is `O ⧸ 𝔪 ^ (r + 1)`. -/
 instance isPrincipalIdealRing [IsPrincipalIdealRing O] (r : ℕ) :
     IsPrincipalIdealRing (Truncation O r) :=
   .of_surjective (mk O r) (mk_surjective O r)
@@ -151,20 +166,24 @@ instance isPrincipalIdealRing [IsPrincipalIdealRing O] (r : ℕ) :
 def factor {s r : ℕ} (hsr : s ≤ r) : Truncation O r →+* Truncation O s :=
   Ideal.Quotient.factor (Ideal.pow_le_pow_right (Nat.succ_le_succ hsr))
 
-/-- The residue map `O ⧸ 𝔪 ^ (r + 1) → O ⧸ 𝔪`. -/
+/-- The residue map `O ⧸ 𝔪 ^ (r + 1) → κ = O ⧸ 𝔪`. -/
 def residue (r : ℕ) : Truncation O r →+* ResidueField O :=
   Ideal.Quotient.factor (maximalIdeal_pow_le O r)
 
+/-- The residue of the image of `x ∈ O` in `O ⧸ 𝔪 ^ (r + 1)` is the residue of `x`. -/
 @[simp]
 theorem residue_mk (r : ℕ) (x : O) : residue O r (mk O r x) = IsLocalRing.residue O x := rfl
 
+/-- The composite `O → O ⧸ 𝔪 ^ (r + 1) → κ` is the residue map of `O`. -/
 @[simp]
 theorem residue_comp_mk (r : ℕ) : (residue O r).comp (mk O r) = IsLocalRing.residue O :=
   RingHom.ext fun _ ↦ rfl
 
+/-- The residue map `O ⧸ 𝔪 ^ (r + 1) → κ` is surjective. -/
 theorem residue_surjective (r : ℕ) : Function.Surjective (residue O r) :=
   Ideal.Quotient.factor_surjective _
 
+/-- The kernel of the residue map `O ⧸ 𝔪 ^ (r + 1) → κ` is the maximal ideal. -/
 theorem ker_residue (r : ℕ) : RingHom.ker (residue O r) = maximalIdeal (Truncation O r) :=
   (Ideal.Quotient.factor_ker _).trans (maximalIdeal_eq_map O r).symm
 
@@ -174,22 +193,28 @@ theorem isUnit_iff_residue_ne_zero (r : ℕ) (x : Truncation O r) :
   rw [ne_eq, ← RingHom.mem_ker, ker_residue, IsLocalRing.mem_maximalIdeal, mem_nonunits_iff,
     not_not]
 
+/-- The residue maps commute with the reductions `O ⧸ 𝔪 ^ (r + 1) → O ⧸ 𝔪 ^ (s + 1)`. -/
 @[simp]
 theorem residue_factor {s r : ℕ} (hsr : s ≤ r) (x : Truncation O r) :
     residue O s (factor O hsr x) = residue O r x := by
   obtain ⟨y, rfl⟩ := mk_surjective O r x
   rfl
 
+/-- The composite `O ⧸ 𝔪 ^ (r + 1) → O ⧸ 𝔪 ^ (s + 1) → κ` is the residue map. -/
 @[simp]
 theorem residue_comp_factor {s r : ℕ} (hsr : s ≤ r) :
     (residue O s).comp (factor O hsr) = residue O r :=
   RingHom.ext (residue_factor O hsr)
 
+/-- Reducing the coefficients of `f ∈ O((T))` modulo `𝔪 ^ (r + 1)` and then to `κ` is reducing
+them to `κ`. -/
 @[simp]
 theorem mapRingHom_residue_mapRingHom_mk (r : ℕ) (f : LaurentSeries O) :
     mapRingHom (residue O r) (mapRingHom (mk O r) f) = mapRingHom (IsLocalRing.residue O) f :=
   rfl
 
+/-- Reducing the coefficients of `G ∈ (O ⧸ 𝔪 ^ (r + 1))((T))` modulo `𝔪 ^ (s + 1)` and then to
+`κ` is reducing them to `κ`. -/
 @[simp]
 theorem mapRingHom_residue_mapRingHom_factor {s r : ℕ} (hsr : s ≤ r)
     (G : LaurentSeries (Truncation O r)) :
@@ -210,6 +235,7 @@ def laurentSeriesQuotientMap (r : ℕ) :
     LaurentSeries O ⧸ CoefficientRing.adicIdeal O ^ (r + 1) →+* LaurentSeries (Truncation O r) :=
   Ideal.Quotient.lift _ (mapRingHom (mk O r)) fun _ h ↦ adicIdeal_pow_le_ker O r h
 
+/-- The map `O((T)) ⧸ 𝔪 ^ (r + 1) O((T)) → (O ⧸ 𝔪 ^ (r + 1))((T))` is surjective. -/
 theorem laurentSeriesQuotientMap_surjective (r : ℕ) :
     Function.Surjective (laurentSeriesQuotientMap O r) :=
   Ideal.Quotient.lift_surjective_of_surjective _ _ (mapRingHom_surjective _ (mk_surjective O r))
@@ -232,6 +258,8 @@ theorem ker_mapRingHom_mk (r : ℕ) :
     RingHom.ker (mapRingHom (mk O r)) = CoefficientRing.adicIdeal O ^ (r + 1) := by
   rw [LaurentSeries.ker_mapRingHom_mk, Ideal.map_pow]
 
+/-- If `𝔪` is principal, the map `O((T)) ⧸ 𝔪 ^ (r + 1) O((T)) → (O ⧸ 𝔪 ^ (r + 1))((T))` is
+injective. -/
 theorem laurentSeriesQuotientMap_injective (r : ℕ) :
     Function.Injective (laurentSeriesQuotientMap O r) := by
   intro x y h
@@ -248,6 +276,8 @@ def laurentSeriesQuotientEquiv (r : ℕ) :
   .ofBijective (laurentSeriesQuotientMap O r)
     ⟨laurentSeriesQuotientMap_injective O r, laurentSeriesQuotientMap_surjective O r⟩
 
+/-- The isomorphism `O((T)) ⧸ 𝔪 ^ (r + 1) O((T)) ≃ (O ⧸ 𝔪 ^ (r + 1))((T))` is coefficientwise
+reduction. -/
 @[simp]
 theorem laurentSeriesQuotientEquiv_apply (r : ℕ)
     (x : LaurentSeries O ⧸ CoefficientRing.adicIdeal O ^ (r + 1)) :
@@ -255,25 +285,31 @@ theorem laurentSeriesQuotientEquiv_apply (r : ℕ)
 
 end Truncation
 
-/-- Yuan, Definition 1.1: the coefficient ring `A`, the `𝔪`-adic completion of `O((T))`. For a
-uniformizer `ϖ` of `O` it is the `ϖ`-adic completion of `O⟦T⟧[1/T]`. -/
+/-- The coefficient ring `A` of Yuan, Definition 1.1 (Berger 2014): the `𝔪`-adic completion of
+`O((T))`. For a uniformizer `ϖ` of a discrete valuation ring `O` it is the `ϖ`-adic completion
+of `O⟦T⟧[1/T]`. -/
 def CoefficientRing : Type _ :=
   AdicCompletion (CoefficientRing.adicIdeal O) (LaurentSeries O)
 
 namespace CoefficientRing
 
+/-- `A` is a commutative ring. -/
 instance : CommRing (CoefficientRing O) :=
   inferInstanceAs (CommRing (AdicCompletion (adicIdeal O) (LaurentSeries O)))
 
+/-- `A` is an `O((T))`-algebra. -/
 instance : Algebra (LaurentSeries O) (CoefficientRing O) :=
   inferInstanceAs (Algebra (LaurentSeries O) (AdicCompletion (adicIdeal O) (LaurentSeries O)))
 
+/-- `A` is an `O⟦T⟧`-algebra. -/
 instance : Algebra (PowerSeries O) (CoefficientRing O) :=
   inferInstanceAs (Algebra (PowerSeries O) (AdicCompletion (adicIdeal O) (LaurentSeries O)))
 
+/-- `A` is an `O`-algebra. -/
 instance : Algebra O (CoefficientRing O) :=
   inferInstanceAs (Algebra O (AdicCompletion (adicIdeal O) (LaurentSeries O)))
 
+/-- The map `O⟦T⟧ → A` is `O⟦T⟧ → O((T)) → A`. -/
 instance : IsScalarTower (PowerSeries O) (LaurentSeries O) (CoefficientRing O) :=
   inferInstanceAs (IsScalarTower (PowerSeries O) (LaurentSeries O)
     (AdicCompletion (adicIdeal O) (LaurentSeries O)))
@@ -297,6 +333,7 @@ private theorem reduction_apply (r : ℕ) (x : CoefficientRing O) :
       Truncation.laurentSeriesQuotientMap O r (AdicCompletion.evalₐ (adicIdeal O) (r + 1) x) :=
   rfl
 
+/-- The reduction of `f ∈ O((T))` modulo `𝔪 ^ (r + 1)` is the coefficientwise reduction of `f`. -/
 @[simp]
 theorem reduction_algebraMap_laurentSeries (r : ℕ) (f : LaurentSeries O) :
     reduction O r (algebraMap (LaurentSeries O) (CoefficientRing O) f) =
@@ -305,11 +342,13 @@ theorem reduction_algebraMap_laurentSeries (r : ℕ) (f : LaurentSeries O) :
   exact congrArg (Truncation.laurentSeriesQuotientMap O r)
     (AdicCompletion.evalₐ_of (adicIdeal O) (r + 1) f)
 
+/-- The reduction of `b ∈ O` modulo `𝔪 ^ (r + 1)` is the constant series `b mod 𝔪 ^ (r + 1)`. -/
 @[simp]
 theorem reduction_algebraMap (r : ℕ) (b : O) :
     reduction O r (algebraMap O (CoefficientRing O) b) = HahnSeries.C (Truncation.mk O r b) := by
   rw [algebraMap_eq, RingHom.comp_apply, reduction_algebraMap_laurentSeries, mapRingHom_C]
 
+/-- The reduction of `P ∈ O⟦T⟧` modulo `𝔪 ^ (r + 1)` is the coefficientwise reduction of `P`. -/
 @[simp]
 theorem reduction_algebraMap_powerSeries (r : ℕ) (P : PowerSeries O) :
     reduction O r (algebraMap (PowerSeries O) (CoefficientRing O) P) =
@@ -317,6 +356,7 @@ theorem reduction_algebraMap_powerSeries (r : ℕ) (P : PowerSeries O) :
   rw [IsScalarTower.algebraMap_apply (PowerSeries O) (LaurentSeries O),
     reduction_algebraMap_laurentSeries, LaurentSeries.coe_algebraMap, mapRingHom_ofPowerSeries]
 
+/-- The reduction `A → (O ⧸ 𝔪 ^ (r + 1))((T))` is surjective. -/
 theorem reduction_surjective (r : ℕ) : Function.Surjective (reduction O r) :=
   (Truncation.laurentSeriesQuotientMap_surjective O r).comp
     (AdicCompletion.surjective_evalₐ _ _)
@@ -333,13 +373,14 @@ theorem mapRingHom_factor_reduction {s r : ℕ} (hsr : s ≤ r) (x : Coefficient
 def residue : CoefficientRing O →+* LaurentSeries (ResidueField O) :=
   (mapRingHom (Truncation.residue O 0)).comp (reduction O 0)
 
-/-- The residue map factors through every reduction. -/
+/-- The reduction `A → κ((T))` factors through every reduction `A → (O ⧸ 𝔪 ^ (r + 1))((T))`. -/
 @[simp]
 theorem mapRingHom_residue_reduction (r : ℕ) (x : CoefficientRing O) :
     mapRingHom (Truncation.residue O r) (reduction O r x) = residue O x := by
   rw [residue, RingHom.comp_apply, ← mapRingHom_factor_reduction O (Nat.zero_le r),
     Truncation.mapRingHom_residue_mapRingHom_factor]
 
+/-- The image of `f ∈ O((T))` in `κ((T))` is the coefficientwise reduction of `f`. -/
 @[simp]
 theorem residue_algebraMap_laurentSeries (f : LaurentSeries O) :
     residue O (algebraMap (LaurentSeries O) (CoefficientRing O) f) =
@@ -347,12 +388,13 @@ theorem residue_algebraMap_laurentSeries (f : LaurentSeries O) :
   rw [residue, RingHom.comp_apply, reduction_algebraMap_laurentSeries,
     Truncation.mapRingHom_residue_mapRingHom_mk]
 
+/-- The reduction `A → κ((T))` is surjective. -/
 theorem residue_surjective : Function.Surjective (residue O) :=
   (mapRingHom_surjective _ (Truncation.residue_surjective O 0)).comp (reduction_surjective O 0)
 
 variable [IsPrincipalIdealRing O]
 
-/-- The ideal `𝔪 O((T))` is finitely generated. -/
+/-- If `𝔪` is principal, the ideal `𝔪 O((T))` is finitely generated. -/
 theorem adicIdeal_fg : (adicIdeal O).FG :=
   Ideal.FG.map (IsNoetherian.noetherian _) _
 
@@ -407,13 +449,15 @@ private theorem lift_compatible {m n : ℕ} (hmn : m ≤ n) :
   simp only [RingHom.comp_apply, RingEquiv.toRingHom_eq_coe, RingHom.coe_coe,
     ← factor_symm f hf hmn x, Ideal.Quotient.factorPow, Ideal.Quotient.factor_comp_apply]
 
-/-- The map `B → A` induced by a compatible family of maps `B → (O ⧸ 𝔪 ^ (r + 1))((T))`. -/
+/-- The ring homomorphism `B → A` induced by a family of ring homomorphisms
+`f r : B → (O ⧸ 𝔪 ^ (r + 1))((T))` compatible with the reductions. -/
 def lift : B →+* CoefficientRing O :=
   AdicCompletion.liftRingHom (adicIdeal O)
     (fun n ↦ (Ideal.Quotient.factor (Ideal.pow_le_pow_right n.le_succ)).comp
       ((Truncation.laurentSeriesQuotientEquiv O n).symm.toRingHom.comp (f n)))
     (by exact lift_compatible f hf)
 
+/-- The reduction of `lift f hf x` modulo `𝔪 ^ (r + 1)` is `f r x`. -/
 @[simp]
 theorem reduction_lift (r : ℕ) (x : B) : reduction O r (lift f hf x) = f r x := by
   have h : AdicCompletion.evalₐ (adicIdeal O) (r + 1) (lift f hf x) =
@@ -463,6 +507,7 @@ private theorem isAdicComplete_map_adicIdeal :
       (CoefficientRing O) :=
   AdicCompletion.isAdicComplete_self (adicIdeal O) (adicIdeal_fg O)
 
+/-- `A` is a local ring (Yuan, Definition 1.1). -/
 instance isLocalRing : IsLocalRing (CoefficientRing O) :=
   have := isMaximal_map_adicIdeal O
   have := isAdicComplete_map_adicIdeal O
@@ -502,6 +547,7 @@ theorem ker_residue : RingHom.ker (residue O) = maximalIdeal (CoefficientRing O)
     map_eq_zero_iff _ (mapRingHom_residue_zero_injective O), ← RingHom.mem_ker,
     ker_reduction_eq_maximalIdeal_pow, zero_add, pow_one]
 
+/-- `A` is complete and separated for its maximal ideal (Yuan, Definition 1.1). -/
 instance isAdicComplete : IsAdicComplete (maximalIdeal (CoefficientRing O)) (CoefficientRing O) :=
   maximalIdeal_eq_map_adicIdeal O ▸ isAdicComplete_map_adicIdeal O
 
@@ -567,6 +613,7 @@ private theorem exists_eq_pow_mul_unit {ϖ : O} (hϖ : Irreducible ϖ) {x : Coef
     exact hn1 (Ideal.mem_span_singleton.mpr ⟨z, by ring⟩)
   exact ⟨n, hy.unit, rfl⟩
 
+/-- If `O` is a discrete valuation ring, then `A` is an integral domain. -/
 instance isDomain : IsDomain (CoefficientRing O) := by
   obtain ⟨ϖ, hϖ⟩ := IsDiscreteValuationRing.exists_irreducible O
   have : NoZeroDivisors (CoefficientRing O) := ⟨fun {a b} hab ↦ by
@@ -579,12 +626,13 @@ instance isDomain : IsDomain (CoefficientRing O) := by
     exact algebraMap_pow_ne_zero hϖ (n + m) ((u * v).isUnit.mul_left_eq_zero.mp h')⟩
   exact NoZeroDivisors.to_isDomain _
 
-/-- A uniformizer of `O` is a uniformizer of `A`. -/
+/-- A uniformizer of `O` is a uniformizer of `A` (Yuan, Definition 1.1). -/
 theorem irreducible_algebraMap {ϖ : O} (hϖ : Irreducible ϖ) :
     Irreducible (algebraMap O (CoefficientRing O) ϖ) :=
   IsDiscreteValuationRing.irreducible_of_span_eq_maximalIdeal _
     (by simpa using algebraMap_pow_ne_zero hϖ 1) (maximalIdeal_eq_span hϖ)
 
+/-- If `O` is a discrete valuation ring, so is `A` (Yuan, Definition 1.1). -/
 instance isDiscreteValuationRing : IsDiscreteValuationRing (CoefficientRing O) := by
   obtain ⟨ϖ, hϖ⟩ := IsDiscreteValuationRing.exists_irreducible O
   refine .ofHasUnitMulPowIrreducibleFactorization
@@ -615,25 +663,28 @@ open IsLocalRing (maximalIdeal ResidueField)
 
 variable (O : Type*) [CommRing O] [IsLocalRing O]
 
-/-- The ideal `Λ_j = 𝔪 ^ j R_r` of `R_r = (O ⧸ 𝔪 ^ (r + 1))((T))`. -/
+/-- The ideal `𝔪 ^ j R_r` of `R_r = (O ⧸ 𝔪 ^ (r + 1))((T))` generated by `𝔪 ^ j`; for a
+uniformizer `ϖ` of a discrete valuation ring `O` it is `ϖ ^ j R_r`. -/
 def layerIdeal (r j : ℕ) : Ideal (LaurentSeries (Truncation O r)) :=
   (maximalIdeal (Truncation O r) ^ j).map
     (HahnSeries.C : Truncation O r →+* LaurentSeries (Truncation O r))
 
-/-- A constant with coefficient in `𝔪 ^ j` lies in `Λ_j`. -/
+/-- A constant in `𝔪 ^ j` lies in `𝔪 ^ j R_r`. -/
 theorem C_mem_layerIdeal {r j : ℕ} {x : Truncation O r}
     (hx : x ∈ maximalIdeal (Truncation O r) ^ j) : HahnSeries.C x ∈ layerIdeal O r j :=
   Ideal.mem_map_of_mem _ hx
 
+/-- The ideals `𝔪 ^ j R_r` decrease with `j`. -/
 theorem layerIdeal_antitone (r : ℕ) {i j : ℕ} (hij : i ≤ j) :
     layerIdeal O r j ≤ layerIdeal O r i :=
   Ideal.map_mono (Ideal.pow_le_pow_right hij)
 
+/-- `𝔪 ^ 0 R_r = R_r`. -/
 @[simp]
 theorem layerIdeal_zero (r : ℕ) : layerIdeal O r 0 = ⊤ := by
   rw [layerIdeal, pow_zero, Ideal.one_eq_top, Ideal.map_top]
 
-/-- `Λ_j = 0` for `j > r`, since `𝔪 ^ (r + 1) = 0` in `O ⧸ 𝔪 ^ (r + 1)`. -/
+/-- `𝔪 ^ j R_r = 0` for `j > r`. -/
 theorem layerIdeal_eq_bot {r j : ℕ} (hj : r < j) : layerIdeal O r j = ⊥ := by
   rw [layerIdeal, le_bot_iff.mp ((Ideal.pow_le_pow_right hj).trans
     (maximalIdeal_pow_eq_bot O r).le), Ideal.map_bot]
@@ -649,7 +700,7 @@ private theorem algHom_C {r : ℕ}
   simpa only [HahnSeries.algebraMap_apply', PowerSeries.algebraMap_eq,
     HahnSeries.ofPowerSeries_C] using E.commutes a
 
-/-- Every `O ⧸ 𝔪 ^ (r + 1)`-algebra endomorphism of `R_r` preserves `Λ_j`. -/
+/-- Every `O ⧸ 𝔪 ^ (r + 1)`-algebra endomorphism of `R_r` preserves `𝔪 ^ j R_r`. -/
 theorem algHom_mem_layerIdeal {r j : ℕ}
     (E : LaurentSeries (Truncation O r) →ₐ[Truncation O r] LaurentSeries (Truncation O r))
     {X : LaurentSeries (Truncation O r)} (hX : X ∈ layerIdeal O r j) :
@@ -660,7 +711,8 @@ theorem algHom_mem_layerIdeal {r j : ℕ}
     (E : LaurentSeries (Truncation O r) →+* LaurentSeries (Truncation O r)) hX
   rwa [layerIdeal, Ideal.map_map, hE] at h
 
-/-- Every `O ⧸ 𝔪 ^ (r + 1)`-algebra automorphism of `R_r` preserves `Λ_j` in both directions. -/
+/-- An `O ⧸ 𝔪 ^ (r + 1)`-algebra automorphism `E` of `R_r` satisfies `E X ∈ 𝔪 ^ j R_r` if and
+only if `X ∈ 𝔪 ^ j R_r`. -/
 theorem algEquiv_mem_layerIdeal_iff {r j : ℕ}
     (E : LaurentSeries (Truncation O r) ≃ₐ[Truncation O r] LaurentSeries (Truncation O r))
     (X : LaurentSeries (Truncation O r)) :
@@ -668,7 +720,7 @@ theorem algEquiv_mem_layerIdeal_iff {r j : ℕ}
   ⟨fun h ↦ by simpa using algHom_mem_layerIdeal O E.symm.toAlgHom h,
     fun h ↦ algHom_mem_layerIdeal O E.toAlgHom h⟩
 
-/-- `Λ_j` as an `O`-submodule of `R_r`. -/
+/-- The ideal `𝔪 ^ j R_r` as an `O`-submodule of `R_r`. -/
 def layerSubmodule (r j : ℕ) : Submodule O (LaurentSeries (Truncation O r)) where
   carrier := layerIdeal O r j
   add_mem' := Ideal.add_mem _
@@ -677,28 +729,28 @@ def layerSubmodule (r j : ℕ) : Submodule O (LaurentSeries (Truncation O r)) wh
     rw [smul_eq_C_mul]
     exact Ideal.mul_mem_left _ _ hX
 
-/-- `Λ_{j + 1}` as an `O`-submodule of `Λ_j`. -/
+/-- `𝔪 ^ (j + 1) R_r` as an `O`-submodule of `𝔪 ^ j R_r`. -/
 def nextLayerSubmodule (r j : ℕ) : Submodule O (layerSubmodule O r j) :=
   (layerSubmodule O r (j + 1)).comap (layerSubmodule O r j).subtype
 
-/-- The graded piece `Λ_j ⧸ Λ_{j + 1}`. -/
+/-- The graded piece `𝔪 ^ j R_r ⧸ 𝔪 ^ (j + 1) R_r`, an `O`-module. -/
 abbrev GradedLayer (r j : ℕ) : Type _ := layerSubmodule O r j ⧸ nextLayerSubmodule O r j
 
 variable [IsPrincipalIdealRing O]
 
-/-- `Λ_j` consists of the Laurent series with coefficients in `𝔪 ^ j`. -/
+/-- If `𝔪` is principal, `𝔪 ^ j R_r` consists of the Laurent series with coefficients in
+`𝔪 ^ j`. -/
 theorem mem_layerIdeal_iff {r j : ℕ} (X : LaurentSeries (Truncation O r)) :
     X ∈ layerIdeal O r j ↔ ∀ n, X.coeff n ∈ maximalIdeal (Truncation O r) ^ j :=
   mem_map_C_iff _ X
 
-/-- `Λ_1` is the kernel of the reduction `R_r → κ((T))`. -/
+/-- `𝔪 R_r` is the kernel of the reduction `R_r → κ((T))`. -/
 theorem mem_layerIdeal_one_iff {r : ℕ} (X : LaurentSeries (Truncation O r)) :
     X ∈ layerIdeal O r 1 ↔ mapRingHom (residue O r) X = 0 := by
   rw [mem_layerIdeal_iff, pow_one, HahnSeries.ext_iff, funext_iff]
   simp only [mapRingHom_coeff, HahnSeries.coeff_zero, ← RingHom.mem_ker, ker_residue]
 
-/-- If `P ∈ R_r` reduces to `T ^ p` over a residue field of characteristic `p`, then
-`P' ∈ Λ_1`. -/
+/-- If `κ` has characteristic `p` and `P ∈ R_r` reduces to `T ^ p`, then `P' ∈ 𝔪 R_r`. -/
 theorem derivative_mem_layerIdeal_one (p : ℕ) [CharP (ResidueField O) p] {r : ℕ}
     {P : LaurentSeries (Truncation O r)}
     (hP : mapRingHom (residue O r) P = HahnSeries.single (p : ℤ) 1) :
@@ -712,6 +764,7 @@ section Uniformizer
 
 variable (O : Type*) [CommRing O] [IsDomain O] [IsDiscreteValuationRing O]
 
+/-- The uniformizer `ϖ` of `O` used to define `Λ_j`. -/
 private def uniformizer : O := Classical.choose (IsDiscreteValuationRing.exists_irreducible O)
 
 private theorem irreducible_uniformizer : Irreducible (uniformizer O) :=
@@ -755,6 +808,7 @@ private theorem eq_zero_of_lt {r j : ℕ} (hj : r < j) {X : LaurentSeries (Trunc
     (hX : X ∈ layerIdeal O r j) : X = 0 := by
   rwa [layerIdeal_eq_bot O hj, Ideal.mem_bot] at hX
 
+/-- Coefficientwise reduction `O((T)) → κ((T))`, as a map of `O`-modules. -/
 private def residueLinear : LaurentSeries O →ₗ[O] LaurentSeries (ResidueField O) where
   __ := (mapRingHom (IsLocalRing.residue O)).toAddMonoidHom
   map_smul' b f := by
@@ -773,6 +827,8 @@ private theorem mem_ker_residueLinear (f : LaurentSeries O) :
   rw [LinearMap.mem_ker, residueLinear_apply, HahnSeries.ext_iff, funext_iff]
   simp only [mapRingHom_coeff, HahnSeries.coeff_zero]
 
+/-- The map `O((T)) → ϖ ^ j R_r ⧸ ϖ ^ (j + 1) R_r`, `f ↦ ϖ ^ j f mod ϖ ^ (j + 1) R_r`. Its kernel is
+the kernel of `O((T)) → κ((T))` for `j ≤ r`, so it induces `Λ_j`. -/
 private def gradedLift (r j : ℕ) : LaurentSeries O →ₗ[O] GradedLayer O r j where
   toFun f := Submodule.Quotient.mk
     ⟨HahnSeries.C (mk O r (uniformizer O) ^ j) * mapRingHom (mk O r) f,
@@ -820,8 +876,9 @@ public section
 
 variable (O : Type*) [CommRing O] [IsDomain O] [IsDiscreteValuationRing O]
 
-/-- For `j ≤ r`, the isomorphism `κ((T)) ≃ Λ_j ⧸ Λ_{j + 1}` induced by multiplication by `ϖ ^ j`,
-for a uniformizer `ϖ` of `O` fixed once and for all (Yuan, §2.2). -/
+/-- Yuan, §2.2: for `j ≤ r`, the isomorphism of `O`-modules
+`Λ_j : κ((T)) ≃ ϖ ^ j R_r ⧸ ϖ ^ (j + 1) R_r` induced by multiplication by `ϖ ^ j`, for a
+uniformizer `ϖ` of `O` chosen once for all `r` and `j`. -/
 def gradedLayerEquiv (r j : ℕ) (hj : j ≤ r) :
     LaurentSeries (ResidueField O) ≃ₗ[O] GradedLayer O r j :=
   ((residueLinear O).quotKerEquivOfSurjective (residueLinear_surjective O)).symm.trans
@@ -842,24 +899,25 @@ private theorem gradedLayerEquiv_residueLinear (O : Type*) [CommRing O] [IsDomai
 variable {O : Type*} [CommRing O] [IsDomain O] [IsDiscreteValuationRing O]
 
 open Classical in
-/-- The layer `ϖ⁻ʲ X ∈ κ((T))` of `X ∈ Λ_j`: the preimage of `X mod Λ_{j + 1}` under
-`gradedLayerEquiv`, for `j ≤ r`. It is `0` if `X ∉ Λ_j` or `r < j`. -/
+/-- Yuan, §2.2: for `j ≤ r` and `X ∈ ϖ ^ j R_r`, the series `ϖ⁻ʲ X ∈ κ((T))`, the preimage of
+`X mod ϖ ^ (j + 1) R_r` under `Λ_j`. It is `0` if `X ∉ ϖ ^ j R_r` or `r < j`. -/
 def layer {r : ℕ} (j : ℕ) (X : LaurentSeries (Truncation O r)) : LaurentSeries (ResidueField O) :=
   if h : j ≤ r ∧ X ∈ layerIdeal O r j then
     (gradedLayerEquiv O r j h.1).symm (Submodule.Quotient.mk ⟨X, h.2⟩)
   else 0
 
-/-- On `Λ_j` with `j ≤ r`, `layer j` is the inverse of `gradedLayerEquiv`. -/
+/-- For `j ≤ r` and `X ∈ ϖ ^ j R_r`, `Λ_j⁻¹ (X mod ϖ ^ (j + 1) R_r) = ϖ⁻ʲ X`. -/
 theorem gradedLayerEquiv_symm_mk {r j : ℕ} (hj : j ≤ r) {X : LaurentSeries (Truncation O r)}
     (hX : X ∈ layerIdeal O r j) :
     (gradedLayerEquiv O r j hj).symm (Submodule.Quotient.mk ⟨X, hX⟩) = layer j X := by
   rw [layer, dite_eq_left ⟨hj, hX⟩]
 
-/-- `layer j = 0` for `j > r`. -/
+/-- `ϖ⁻ʲ X = 0` for `j > r`. -/
 theorem layer_of_lt {r j : ℕ} (hj : r < j) (X : LaurentSeries (Truncation O r)) :
     layer j X = 0 := by
   rw [layer, dite_eq_right fun h ↦ by omega]
 
+/-- `ϖ⁻ʲ 0 = 0`. -/
 @[simp]
 theorem layer_zero {r : ℕ} (j : ℕ) : layer j (0 : LaurentSeries (Truncation O r)) = 0 := by
   rcases le_or_gt j r with hj | hj
@@ -883,7 +941,7 @@ private theorem layer_C_mul {O : Type*} [CommRing O] [IsDomain O] [IsDiscreteVal
 
 variable {O : Type*} [CommRing O] [IsDomain O] [IsDiscreteValuationRing O]
 
-/-- For `X ∈ Λ_j`, `layer j X = 0` if and only if `X ∈ Λ_{j + 1}`. -/
+/-- For `X ∈ ϖ ^ j R_r`, `ϖ⁻ʲ X = 0` if and only if `X ∈ ϖ ^ (j + 1) R_r`. -/
 theorem layer_eq_zero_iff {r j : ℕ} {X : LaurentSeries (Truncation O r)}
     (hX : X ∈ layerIdeal O r j) : layer j X = 0 ↔ X ∈ layerIdeal O r (j + 1) := by
   rcases le_or_gt j r with hj | hj
@@ -893,11 +951,12 @@ theorem layer_eq_zero_iff {r j : ℕ} {X : LaurentSeries (Truncation O r)}
   · obtain rfl := eq_zero_of_lt O hj hX
     simp only [layer_zero, Submodule.zero_mem]
 
+/-- For `X ∈ ϖ ^ j R_r`, `ϖ⁻ʲ X ≠ 0` if and only if `X ∉ ϖ ^ (j + 1) R_r`. -/
 theorem layer_ne_zero_iff {r j : ℕ} {X : LaurentSeries (Truncation O r)}
     (hX : X ∈ layerIdeal O r j) : layer j X ≠ 0 ↔ X ∉ layerIdeal O r (j + 1) :=
   (layer_eq_zero_iff hX).not
 
-/-- For `X ∈ Λ_j`, `layer j (X Z) = layer j X · Z̄`, where `Z̄` is the reduction of `Z` to
+/-- For `X ∈ ϖ ^ j R_r`, `ϖ⁻ʲ (X Z) = ϖ⁻ʲ X · Z̄`, where `Z̄` is the reduction of `Z` to
 `κ((T))`. -/
 theorem layer_mul {r j : ℕ} {X : LaurentSeries (Truncation O r)} (hX : X ∈ layerIdeal O r j)
     (Z : LaurentSeries (Truncation O r)) :
@@ -907,7 +966,7 @@ theorem layer_mul {r j : ℕ} {X : LaurentSeries (Truncation O r)} (hX : X ∈ l
     rw [mul_assoc, layer_C_mul hj, layer_C_mul hj, map_mul]
   · rw [layer_of_lt hj, layer_of_lt hj, zero_mul]
 
-/-- For `X ∈ Λ_j`, the `n`-th coefficient of `layer j X` vanishes if and only if the `n`-th
+/-- For `X ∈ ϖ ^ j R_r`, the `n`-th coefficient of `ϖ⁻ʲ X` vanishes if and only if the `n`-th
 coefficient of `X` lies in `𝔪 ^ (j + 1)`. -/
 theorem coeff_layer_eq_zero_iff {r j : ℕ} {X : LaurentSeries (Truncation O r)}
     (hX : X ∈ layerIdeal O r j) (n : ℤ) :
@@ -918,8 +977,8 @@ theorem coeff_layer_eq_zero_iff {r j : ℕ} {X : LaurentSeries (Truncation O r)}
   · obtain rfl := eq_zero_of_lt O hj hX
     simp only [layer_zero, HahnSeries.coeff_zero, Submodule.zero_mem]
 
-/-- If `X ∈ Λ_j` and the `n`-th coefficient of `X` is `a b` with `a ∈ 𝔪 ^ j`, then the `n`-th
-coefficient of `layer j X` is the constant term of `layer j a` times the residue of `b`. -/
+/-- If `X ∈ ϖ ^ j R_r` and the `n`-th coefficient of `X` is `a b` with `a ∈ 𝔪 ^ j`, then the
+`n`-th coefficient of `ϖ⁻ʲ X` is `ϖ⁻ʲ a · b̄`, where `b̄` is the residue of `b`. -/
 theorem coeff_layer_eq_of_coeff_eq_mul {r j : ℕ} {X : LaurentSeries (Truncation O r)}
     (hX : X ∈ layerIdeal O r j) {n : ℤ} {a b : Truncation O r}
     (ha : a ∈ maximalIdeal (Truncation O r) ^ j) (h : X.coeff n = a * b) :
@@ -937,7 +996,7 @@ theorem coeff_layer_eq_of_coeff_eq_mul {r j : ℕ} {X : LaurentSeries (Truncatio
   · rw [layer_of_lt hj, layer_of_lt hj, HahnSeries.coeff_zero, HahnSeries.coeff_zero, zero_mul]
 
 /-- If an algebra endomorphism `E` of `R_r` reduces to the endomorphism `E'` of `κ((T))`, then
-`layer j (E X) = E' (layer j X)` for `X ∈ Λ_j`. -/
+`ϖ⁻ʲ (E X) = E' (ϖ⁻ʲ X)` for `X ∈ ϖ ^ j R_r`. -/
 theorem layer_algHom {r j : ℕ}
     (E : LaurentSeries (Truncation O r) →ₐ[Truncation O r] LaurentSeries (Truncation O r))
     (E' : LaurentSeries (ResidueField O) →ₐ[ResidueField O] LaurentSeries (ResidueField O))

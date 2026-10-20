@@ -12,20 +12,26 @@ public import FalseTateNonliftability.PowerSeries.UnitRigidity
 /-!
 # Valuations of approximate invariants
 
-Let `κ` be a finite field of characteristic `p`, let `f ∈ T + T ^ 2 κ⟦T⟧` be such that the
-automorphism `σ : x ↦ x(f)` of `κ((T))` has infinite order, and let `x_n ∈ κ((T))ˣ` be
-approximate invariants of `σ`: `v_T(σ(x_n) - x_n) - v_T(x_n) → ∞`. If the integers `v_T(x_n)`
-converge in `ℤ_p` to `m`, then `m = 0`. Writing `x_n = T ^ (m_n) U_n` with `U_n ∈ κ⟦T⟧ˣ`, one has
-`σ(x_n) - x_n = T ^ (m_n) ((f / T) ^ (m_n) U_n(f) - U_n)`, and a limit point `U` of the `U_n`
-satisfies `(f / T) ^ m U(f) = U`.
+Let `κ` be a finite field of characteristic `p`, let `v_T` be the `T`-adic valuation of `κ((T))`
+and let `f ∈ T + T ^ 2 κ⟦T⟧`, so that `σ : x ↦ x(f)` is a continuous automorphism of `κ((T))`.
+Assume that `σ` has infinite order. A sequence of nonzero `x_n ∈ κ((T))` consists of approximate
+invariants of `σ` if `v_T(σ(x_n) - x_n) - v_T(x_n) → ∞`. Yuan, Lemma 4.2: if the integers
+`v_T(x_n)` of approximate invariants converge in `ℤ_p` to `m`, then `m = 0`.
+
+Write `x_n = T ^ (m_n) U_n` with `m_n = v_T(x_n)` and `U_n ∈ κ⟦T⟧ˣ`. Then
+`σ(x_n) - x_n = T ^ (m_n) ((f / T) ^ (m_n) U_n(f) - U_n)`, and a limit `U ∈ κ⟦T⟧ˣ` of a
+subsequence of the `U_n` satisfies `(f / T) ^ m U(f) = U`, where `(f / T) ^ m` is the `p`-adic
+power of the principal unit `f / T` (`PowerSeries.principalUnitPow`). This equation forces `m = 0`
+(`PowerSeries.eq_zero_of_principalUnitPow_mul_subst_eq`).
 
 ## Main results
 
-* `LaurentSeries.padic_limit_order_eq_zero_of_approximate_invariance`: Yuan, Lemma 4.2.
+* `LaurentSeries.padic_limit_order_eq_zero_of_approximate_invariance`: the `p`-adic limit of the
+  valuations of approximate invariants of `σ` is `0` (Yuan, Lemma 4.2).
 
 ## References
 
-* Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
+* Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
   Lemma 4.2.
 -/
 
@@ -40,13 +46,15 @@ namespace LaurentSeries
 
 variable {κ : Type*} [Field κ]
 
+/-- If `v_T(T ^ m z) ≥ m + d`, then `v_T(z) ≥ d`. -/
 private theorem mem_orderAddSubgroup_of_single_mul_mem {m d : ℤ} {z : LaurentSeries κ}
     (h : HahnSeries.single m 1 * z ∈ orderAddSubgroup (m + d)) : z ∈ orderAddSubgroup d := by
   rw [mem_orderAddSubgroup_iff_coeff] at h ⊢
   intro j hj
   simpa only [HahnSeries.coeff_single_mul, one_mul, add_sub_cancel_left] using h (m + j) (by omega)
 
-/-- For `u ∈ κ⟦T⟧ˣ` and `x = T ^ m P` with `m = v_T(x)`, `x(T u) - x = T ^ m (u ^ m P(T u) - P)`. -/
+/-- For `u ∈ κ⟦T⟧ˣ` and `x = T ^ m P` with `m = v_T(x)` and `P ∈ κ⟦T⟧`,
+`x(T u) - x = T ^ m (u ^ m P(T u) - P)`. -/
 private theorem subst_X_mul_sub_eq (u : (PowerSeries κ)ˣ) (x : LaurentSeries κ) :
     subst (HahnSeries.single (1 : ℤ) 1 * HahnSeries.ofPowerSeries ℤ κ (u : PowerSeries κ)) x - x =
       HahnSeries.single x.order 1 * HahnSeries.ofPowerSeries ℤ κ
@@ -61,9 +69,9 @@ private theorem subst_X_mul_sub_eq (u : (PowerSeries κ)ˣ) (x : LaurentSeries �
   ring
 
 /-- **Valuations of approximate invariants** (Yuan, Lemma 4.2). Let `κ` be a finite field of
-characteristic `p` and `f = T + O(T ^ 2)` such that `σ : x ↦ x(f)` has infinite order. If
-`x_n ∈ κ((T))ˣ` satisfy `v_T(σ(x_n) - x_n) - v_T(x_n) → ∞` and the integers `v_T(x_n)` converge
-in `ℤ_p` to `c`, then `c = 0`. -/
+characteristic `p` and let `f ∈ T + T ^ 2 κ⟦T⟧` be such that `σ : x ↦ x(f)` has infinite order.
+If nonzero `x_n ∈ κ((T))` satisfy `v_T(σ(x_n) - x_n) - v_T(x_n) → ∞` and the integers `v_T(x_n)`
+converge in `ℤ_p` to `c`, then `c = 0`. -/
 theorem padic_limit_order_eq_zero_of_approximate_invariance [Finite κ] (p : ℕ) [Fact p.Prime]
     [CharP κ p] {f : PowerSeries κ} (hf1 : f.coeff 1 = 1) (hf : ¬ IsOfFinOrder (substEquiv f))
     {x : ℕ → LaurentSeries κ} (hx : ∀ n, x n ≠ 0) {c : ℤ_[p]}

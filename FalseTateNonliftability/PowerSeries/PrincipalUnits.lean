@@ -30,12 +30,15 @@ principal unit and `p ∤ a`, then `v_T(z ^ a - 1) = v_T(z - 1)`.
 For a principal unit `z ∈ 1 + T κ⟦T⟧` and `c ∈ ℤ_p`, the power
 `z ^ c := ∑ₙ (c choose n) (z - 1) ^ n` is obtained by substituting `z - 1` into the image in
 `κ⟦X⟧` of the binomial series `(1 + X) ^ c ∈ ℤ_p⟦X⟧`. It agrees with the power `z ^ n` for
-`n ∈ ℤ`, depends continuously on `c`, satisfies the exponent laws, commutes with substitution,
-and `v_T(z ^ c - 1) = v_T(z - 1)` for `c ∈ ℤ_pˣ`.
+`n ∈ ℤ`, depends continuously on `c`, satisfies the exponent laws and commutes with substitution,
+and `v_T(z ^ c - 1) = v_T(z - 1)` for `c ∈ ℤ_pˣ`. Together with the first paragraph this gives
+`v_T(z ^ c - 1) = p ^ (v_p(c)) v_T(z - 1)` for `c ≠ 0` (Yuan, proof of Lemma 4.2, (4.3)).
 
-Let `κ` carry the discrete topology. If `κ` is finite, then for nonzero `x n ∈ κ((T))` the units
-`T ^ (-v_T(x n)) x n` of `κ⟦T⟧` have a subsequence converging to a unit. The expressions
-`u ^ (a i) (U i ∘ f) - U i` converge to `u ^ c (V ∘ f) - V` when `a i → c` in `ℤ_p` and `U i → V`.
+Let `κ` carry the discrete topology and let `κ⟦T⟧` carry the topology of coefficientwise
+convergence. If `κ` is finite, then for nonzero `x_n ∈ κ((T))` the units `T ^ (-v_T(x_n)) x_n` of
+`κ⟦T⟧` have a subsequence converging to a unit. For a principal unit `u`, the series
+`u ^ (a_i) (U_i ∘ f) - U_i` converge to `u ^ c (V ∘ f) - V` when the integers `a_i` converge to `c`
+in `ℤ_p` and `U_i → V`.
 
 ## Main definitions
 
@@ -55,15 +58,21 @@ Let `κ` carry the discrete topology. If `κ` is finite, then for nonzero `x n �
 * `PowerSeries.order_principalUnitPow_sub_one_of_isUnit`: `v_T(z ^ c - 1) = v_T(z - 1)` for
   `c ∈ ℤ_pˣ`.
 * `PowerSeries.principalUnitPow_subst`: `z ^ c ∘ f = (z ∘ f) ^ c` for `f(0) = 0`.
-* `LaurentSeries.exists_subseq_powerSeriesPart_tendsto`: for nonzero `x n ∈ κ((T))`, the units
-  `T ^ (-v_T(x n)) x n` have a subsequence converging to a unit of `κ⟦T⟧`.
+* `LaurentSeries.exists_subseq_powerSeriesPart_tendsto`: for nonzero `x_n ∈ κ((T))`, the units
+  `T ^ (-v_T(x_n)) x_n` have a subsequence converging to a unit of `κ⟦T⟧`.
 * `PowerSeries.tendsto_principalUnitPow_mul_subst_sub_of_intCast_tendsto`: continuity of
   `(c, U) ↦ u ^ c (U ∘ f) - U` along integer approximations of `c`.
+
+## Implementation notes
+
+`PowerSeries.principalUnitPow z c` is defined for every `z ∈ κ⟦T⟧`; its properties assume that
+`z` is a principal unit, `z(0) = 1`.
 
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  Lemma 4.1 and Lemma 4.2, equation (4.3).
+  proof of Lemma 4.1 (`(p - 1)`-st roots of principal units) and proof of Lemma 4.2 ((4.3) and the
+  limit (4.4)).
 -/
 
 @[expose] public section
@@ -116,26 +125,30 @@ section BinomialSeries
 
 variable (κ) in
 /-- The image in `κ⟦X⟧` of the binomial series `(1 + X) ^ c = ∑ₙ (c choose n) X ^ n ∈ ℤ_p⟦X⟧`
-of `c ∈ ℤ_p`. -/
+of `c ∈ ℤ_p`, under the reduction `ℤ_p → 𝔽_p → κ` of the coefficients. -/
 def padicBinomialSeries (c : ℤ_[p]) : PowerSeries κ :=
   map ((ZMod.castHom dvd_rfl κ).comp PadicInt.toZMod) (binomialSeries ℤ_[p] c)
 
+/-- The coefficient of `X ^ n` in `(1 + X) ^ c` is the image of `c choose n` in `κ`. -/
 @[simp]
 theorem coeff_padicBinomialSeries (c : ℤ_[p]) (n : ℕ) :
     coeff n (padicBinomialSeries κ c) = ((PadicInt.toZMod (Ring.choose c n)).cast : κ) := by
   simp [padicBinomialSeries]
 
+/-- The constant coefficient of `(1 + X) ^ c` is `1`. -/
 @[simp]
 theorem constantCoeff_padicBinomialSeries (c : ℤ_[p]) :
     constantCoeff (padicBinomialSeries κ c) = 1 := by
   rw [← coeff_zero_eq_constantCoeff_apply, coeff_padicBinomialSeries]
   simp
 
+/-- For `n ∈ ℕ`, `(1 + X) ^ c` with `c = n` is the `n`-th power of `1 + X`. -/
 @[simp]
 theorem padicBinomialSeries_natCast (n : ℕ) :
     padicBinomialSeries κ (n : ℤ_[p]) = (1 + X) ^ n := by
   simp [padicBinomialSeries]
 
+/-- `(1 + X) ^ (c + d) = (1 + X) ^ c (1 + X) ^ d`. -/
 theorem padicBinomialSeries_add (c d : ℤ_[p]) :
     padicBinomialSeries κ (c + d) = padicBinomialSeries κ c * padicBinomialSeries κ d := by
   simp [padicBinomialSeries]
@@ -154,10 +167,11 @@ theorem continuous_padicBinomialSeries [TopologicalSpace κ] [DiscreteTopology �
 end BinomialSeries
 
 /-- The power `z ^ c = ∑ₙ (c choose n) (z - 1) ^ n` of a principal unit `z ∈ 1 + T κ⟦T⟧` by
-`c ∈ ℤ_p`, the substitution of `z - 1` into `padicBinomialSeries κ c`. -/
+`c ∈ ℤ_p`: the substitution of `z - 1` into the binomial series `(1 + X) ^ c`. -/
 def principalUnitPow (z : PowerSeries κ) (c : ℤ_[p]) : PowerSeries κ :=
   (padicBinomialSeries κ c).subst (z - 1)
 
+/-- `z ^ c` is the substitution of `z - 1` into `(1 + X) ^ c`. -/
 theorem principalUnitPow_eq_subst (z : PowerSeries κ) (c : ℤ_[p]) :
     principalUnitPow z c = (padicBinomialSeries κ c).subst (z - 1) :=
   rfl
@@ -173,6 +187,7 @@ private theorem principalUnitPow_eq_substAlgHom (hz : constantCoeff z = 1) (c : 
     principalUnitPow z c = substAlgHom (R := κ) (hasSubst_sub_one hz) (padicBinomialSeries κ c) :=
   (congrFun (coe_substAlgHom (R := κ) (hasSubst_sub_one hz)) (padicBinomialSeries κ c)).symm
 
+/-- For a principal unit `z` and `n ∈ ℕ`, `z ^ c` with `c = n` is the `n`-th power of `z`. -/
 @[simp]
 theorem principalUnitPow_natCast (hz : constantCoeff z = 1) (n : ℕ) :
     principalUnitPow z (n : ℤ_[p]) = z ^ n := by
@@ -181,23 +196,28 @@ theorem principalUnitPow_natCast (hz : constantCoeff z = 1) (n : ℕ) :
   congr 1
   ring
 
+/-- `z ^ 0 = 1` for a principal unit `z`. -/
 @[simp]
 theorem principalUnitPow_zero (hz : constantCoeff z = 1) :
     principalUnitPow z (0 : ℤ_[p]) = 1 := by
   simpa using principalUnitPow_natCast (p := p) hz 0
 
+/-- `z ^ 1 = z` for a principal unit `z`. -/
 @[simp]
 theorem principalUnitPow_one (hz : constantCoeff z = 1) : principalUnitPow z (1 : ℤ_[p]) = z := by
   simpa using principalUnitPow_natCast (p := p) hz 1
 
+/-- `z ^ (c + d) = z ^ c z ^ d` for a principal unit `z`. -/
 theorem principalUnitPow_add (hz : constantCoeff z = 1) (c d : ℤ_[p]) :
     principalUnitPow z (c + d) = principalUnitPow z c * principalUnitPow z d := by
   simp only [principalUnitPow_eq_substAlgHom hz, padicBinomialSeries_add, map_mul]
 
+/-- `z ^ (-c) z ^ c = 1` for a principal unit `z`. -/
 theorem principalUnitPow_neg_mul (hz : constantCoeff z = 1) (c : ℤ_[p]) :
     principalUnitPow z (-c) * principalUnitPow z c = 1 := by
   rw [← principalUnitPow_add hz, neg_add_cancel, principalUnitPow_zero hz]
 
+/-- `z ^ (c n) = (z ^ c) ^ n` for a principal unit `z` and `n ∈ ℕ`. -/
 theorem principalUnitPow_mul_natCast (hz : constantCoeff z = 1) (c : ℤ_[p]) (n : ℕ) :
     principalUnitPow z (c * (n : ℤ_[p])) = principalUnitPow z c ^ n := by
   induction n with
@@ -205,13 +225,14 @@ theorem principalUnitPow_mul_natCast (hz : constantCoeff z = 1) (c : ℤ_[p]) (n
   | succ n ih =>
       rw [Nat.cast_add, Nat.cast_one, mul_add, mul_one, principalUnitPow_add hz, ih, pow_succ]
 
+/-- `1 ^ c = 1`. -/
 @[simp]
 theorem principalUnitPow_one_base (c : ℤ_[p]) : principalUnitPow (1 : PowerSeries κ) c = 1 := by
   rw [principalUnitPow_eq_subst, sub_self, subst_zero_eq_C_constantCoeff,
     constantCoeff_padicBinomialSeries]
   simp
 
-/-- For a principal unit `u` of `κ⟦T⟧` and `n ∈ ℤ`, `principalUnitPow u n` is the power `u ^ n` in
+/-- For a principal unit `u` of `κ⟦T⟧` and `n ∈ ℤ`, `u ^ c` with `c = n` is the power `u ^ n` in
 the unit group. -/
 theorem principalUnitPow_intCast (u : (PowerSeries κ)ˣ)
     (hu : constantCoeff (u : PowerSeries κ) = 1) (n : ℤ) :
@@ -242,7 +263,7 @@ theorem principalUnitPow_intCast (u : (PowerSeries κ)ˣ)
         _ = _ := by
           rw [← mul_assoc, ← hpos, principalUnitPow_neg_mul hu, one_mul]
 
-/-- For `f(0) = 0`, `(z ^ c) ∘ f = (z ∘ f) ^ c`. -/
+/-- For a principal unit `z` and `f(0) = 0`, `(z ^ c) ∘ f = (z ∘ f) ^ c`. -/
 theorem principalUnitPow_subst {f : PowerSeries κ} (hz : constantCoeff z = 1)
     (hf : constantCoeff f = 0) (c : ℤ_[p]) :
     (principalUnitPow z c).subst f = principalUnitPow (z.subst f) c := by
@@ -253,7 +274,7 @@ theorem principalUnitPow_subst {f : PowerSeries κ} (hz : constantCoeff z = 1)
   exact (congrFun (coe_substAlgHom (R := κ) hfs) 1).symm.trans
     (map_one (substAlgHom (R := κ) hfs))
 
-/-- If `c ∈ ℤ_p` is a unit, then `v_T(z ^ c - 1) = v_T(z - 1)`. -/
+/-- For a principal unit `z` and a unit `c ∈ ℤ_pˣ`, `v_T(z ^ c - 1) = v_T(z - 1)`. -/
 theorem order_principalUnitPow_sub_one_of_isUnit (hz : constantCoeff z = 1) {c : ℤ_[p]}
     (hc : IsUnit c) : (principalUnitPow z c - 1).order = (z - 1).order := by
   let Q : PowerSeries κ := mk fun n ↦ coeff (n + 1) (padicBinomialSeries κ c)
@@ -281,7 +302,7 @@ theorem continuous_principalUnitPow (hz : constantCoeff z = 1) :
     Continuous (principalUnitPow z : ℤ_[p] → PowerSeries κ) :=
   (continuous_subst_of_constantCoeff_zero (by simp [hz])).comp continuous_padicBinomialSeries
 
-/-- If integers `a i` converge to `c` in `ℤ_p`, then `u ^ (a i)` converges to `u ^ c` in `κ⟦T⟧`. -/
+/-- If the integers `a_i` converge to `c` in `ℤ_p`, then `u ^ (a_i) → u ^ c` in `κ⟦T⟧`. -/
 theorem tendsto_principalUnitPow_of_intCast_tendsto {ι : Type*} {l : Filter ι}
     (u : (PowerSeries κ)ˣ) (hu : constantCoeff (u : PowerSeries κ) = 1) {a : ι → ℤ}
     {c : ℤ_[p]} (ha : Filter.Tendsto (fun i ↦ (a i : ℤ_[p])) l (𝓝 c)) :
@@ -327,7 +348,7 @@ theorem isUnit_powerSeriesPart {x : LaurentSeries κ} (hx : x ≠ 0) :
   simpa only [powerSeriesPart_coeff, Nat.cast_zero, add_zero] using
     HahnSeries.coeff_order_eq_zero.not.mpr hx
 
-/-- Over a finite discrete field, for nonzero `x n ∈ κ((T))` the units `T ^ (-v_T(x n)) x n` have
+/-- Over a finite discrete field, for nonzero `x_n ∈ κ((T))` the units `T ^ (-v_T(x_n)) x_n` have
 a subsequence converging to a unit of `κ⟦T⟧`, both in `κ⟦T⟧` and in `κ((T))`. -/
 theorem exists_subseq_powerSeriesPart_tendsto [TopologicalSpace κ] [DiscreteTopology κ]
     [Finite κ] (x : ℕ → LaurentSeries κ) (hx : ∀ n, x n ≠ 0) :
@@ -352,8 +373,8 @@ namespace PowerSeries
 variable {κ : Type*} [Field κ] [TopologicalSpace κ] [DiscreteTopology κ] {p : ℕ} [Fact p.Prime]
   [CharP κ p]
 
-/-- Let `u` be a principal unit of `κ⟦T⟧` and `f(0) = 0`. If integers `a i` converge to `c` in
-`ℤ_p` and `U i → V` in `κ⟦T⟧`, then `u ^ (a i) (U i ∘ f) - U i → u ^ c (V ∘ f) - V`. -/
+/-- Let `u` be a principal unit of `κ⟦T⟧` and `f(0) = 0`. If the integers `a_i` converge to `c` in
+`ℤ_p` and `U_i → V` in `κ⟦T⟧`, then `u ^ (a_i) (U_i ∘ f) - U_i → u ^ c (V ∘ f) - V`. -/
 theorem tendsto_principalUnitPow_mul_subst_sub_of_intCast_tendsto {ι : Type*} {l : Filter ι}
     (u : (PowerSeries κ)ˣ) (hu : constantCoeff (u : PowerSeries κ) = 1) {a : ι → ℤ} {c : ℤ_[p]}
     (ha : Filter.Tendsto (fun i ↦ (a i : ℤ_[p])) l (𝓝 c)) {U : ι → PowerSeries κ}
