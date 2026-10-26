@@ -3,7 +3,7 @@
 What the library takes from Mathlib, FontaineWintenberger and FalseTateExtension instead of
 proving it here, what it used to prove and now takes from them, and what it proves that Mathlib
 lacks (the `Mathlib/` directory, upstream candidates). Pinned versions: Mathlib `1e75e9d`,
-FontaineWintenberger `1f7caa5`, FalseTateExtension `01c06ba` (Lean `v4.35.0`). Keep this file
+FontaineWintenberger `7f43e30`, FalseTateExtension `2040c7e` (Lean `v4.35.0`). Keep this file
 current when a pin moves.
 
 ## Used from Mathlib
@@ -30,18 +30,28 @@ current when a pin moves.
 | `ev_u : κ_L((T)) ≅ X_K(L)` (Lemma 2.2) | `FieldOfNorms.laurentEquiv`, `laurentEquiv_C`, `laurentEquiv_X`, `continuous_laurentEquiv` |
 | The action of `Aut(L/K)` on `X_K(L)` | `FieldOfNorms.aut`, `aut_valuation`, `continuous_aut_apply`, `mapEquiv_residueConstants` (the action fixes the constants) |
 | Ramification numbers on `X_K(L)` and Wintenberger, Proposition 3.3.2 (Yuan (5.3)) | `FieldOfNorms.ramificationNumber`, `FieldOfNorms.ramificationNumber_eq_uniformizer`, `exists_finiteIntermediateField_ramificationNumber_eq` |
-| Hypotheses of Definition 1.1 | `IsAPF`, `IsTotallyRamified`, `IntermediateField.HasSameResidueField` and its `residueFieldEquiv` |
-| Rings of integers and residue fields | `𝒪[K]`, `𝓀[K]`, `spectralIntegerRing`, `integralClosureResidueField`, `integralClosureSpectralResidueEquiv`, `ramificationIdx_eq_addVal_uniformizer`, `irreducible_of_valuation_exp_neg_one` |
+| APF hypothesis of Definition 1.1 | `IsAPF` |
+| Rings of integers and residue fields | `𝒪[K]`, `𝓀[K]`, `spectralIntegerRing`, `integralClosureSpectralResidueEquiv`, `ramificationIdx_eq_addVal_uniformizer`, `irreducible_of_valuation_exp_neg_one` |
 | Teichmüller representatives (definition of `δ`) | `residueTeichmuller` |
 
 ## Used from FalseTateExtension
 
 | role | FalseTateExtension |
 |---|---|
-| `ℚ_p^FT = ℚ_p(π^{1/p^∞}, ζ_{p^∞})` | `falseTateExtension p π` and its instances `IsGalois`, `IsAPF`, `IsTotallyRamified ℚ_[p] (falseTateExtension p π)`; `not_finiteDimensional_falseTateExtension_padic`; `Fact (Irreducible (p : 𝒪[ℚ_[p]]))` |
+| `ℚ_p^FT = ℚ_p(π^{1/p^∞}, ζ_{p^∞})` | `falseTateExtension p π` and its instances `IsGalois`, `IsAPF`; `not_finiteDimensional_falseTateExtension_padic`; `falseTateExtension_residue_algebraMap_surjective` |
 | `τ` and Lemma 1.2 (2), (3) | `kummerGenerator` (notation `τ`), `kummerKernelEquivPadicInt` (`ker χ ≅ ℤ_p`, so `τ^a` for `a ∈ ℤ_p`), `padicKummerExponent`, `padicCyclotomicCharacter`, `falseTateKummerFixing`, `kummerFixingEquivCyclotomicImage`, `cyclotomicExtensionCharacter_surjective_padic` |
 | Proposition 5.1 on the finite layers (Viviani, Corollary 6.10, Remark 5.2) | `kummerRamificationBreak`, `kummerRamificationBreak_growth`, `kummerRamificationBreak_succ_dvd`, `ramificationOrder_tauPowRestrict` |
 | `ℚ_p` as a local field | `padicResidueFieldEquiv : 𝓀[ℚ_[p]] ≃+* ZMod p`, `padicValuationSubringEquiv : 𝒪[ℚ_[p]] ≃+* ℤ_[p]` |
+
+## Interfaces supplied by this library
+
+`Liftability/TotallyRamified` provides `FontaineWintenberger.integralClosureResidueField`,
+`FontaineWintenberger.IsTotallyRamified`, `IntermediateField.HasSameResidueField` and its
+`residueFieldEquiv`. Their proofs use the integral closure and spectral residue field maps from
+FontaineWintenberger's `APF/Tower/AlgebraicResidue`. These interfaces were removed upstream.
+The false Tate total ramification instance in `FalseTate/RamificationNumbers` follows from
+`falseTateExtension_residue_algebraMap_surjective`; the uniformizer instance
+`Fact (Irreducible (p : 𝒪[ℚ_[p]]))` in `FalseTate/Main` follows from `PadicInt.irreducible_p`.
 
 ## Formerly proved here, now taken from upstream
 

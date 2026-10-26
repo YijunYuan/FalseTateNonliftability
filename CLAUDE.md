@@ -29,10 +29,9 @@ module with `lake build <Module>` before checking its dependents.
 
 **Never run `lake update`** and never edit anything under `.lake/packages/mathlib` (it is a symlink
 shared with the local FontaineWintenberger checkout). `lake-manifest.json` is maintained by hand.
-The upstream packages `.lake/packages/FontaineWintenberger` and `.lake/packages/FalseTateExtension`
-are git clones on the branch `nonliftability-upstream` (commits `1f7caa5` and `01c06ba`); changes to
-them are made on that branch, and it must be pushed to GitHub before a fresh clone of this
-repository builds.
+The pinned upstream packages are FontaineWintenberger `7f43e30` and FalseTateExtension `2040c7e`.
+The total ramification and same residue field interfaces removed upstream live in this library's
+`Liftability/TotallyRamified`; use the existing upstream integral closure and residue field maps.
 
 **Performance red line: a single file must compile in under 30 s** (today the slowest takes 14 s;
 `docs/BUILD_TIMES.md`). Build only the touched module with `timeout 300 lake build <Module>`; a
@@ -69,7 +68,8 @@ FalseTateNonliftability/
                     Obstruction (§6, cases 1 and 2)
   Liftability/      CoordinateFamily, Defs (Lift, FiniteLift; Definition 1.1),
                     CoordinateChange (Proposition 2.3, abstract), FieldOfNorms (Lemma 2.2),
-                    IsLiftable (Definition 1.1 for X_K(L), Proposition 2.3)
+                    IsLiftable (Definition 1.1 for X_K(L), Proposition 2.3),
+                    TotallyRamified (total ramification and same residue field interfaces)
   FalseTate/        RamificationNumbers (Proposition 5.1), TameGenerator (δ, Lemma 5.3),
                     Main (Proposition 1.3, Theorem A)
   <Layer>.lean      one aggregate per layer, importing every file of the layer
@@ -167,11 +167,12 @@ variable (p : ℕ) [Fact p.Prime] [Fact (p ≠ 2)] (π : 𝒪[ℚ_[p]]) [Fact (I
   `LaurentSeries.orderTopology_eq_valued` where the two meet.
 - **Residue fields.** For an algebraic, possibly infinite, extension `L/K` given as an
   intermediate field (e.g. `L ⊆ K^alg`), write `integralClosureResidueField K L`
-  (FontaineWintenberger), never `ResidueField (integralClosure 𝒪[K] L)`: the structures Lean finds
+  (`FontaineWintenberger` namespace, defined in `Liftability/TotallyRamified`), never
+  `ResidueField (integralClosure 𝒪[K] L)`: the structures Lean finds
   on the latter differ from FontaineWintenberger's and unifying them is slow. The ring of integers
   of a finite extension `F/ℚ_p` given as an intermediate field is `spectralIntegerRing ℚ_[p] F`,
   with residue field `ResidueField (spectralIntegerRing ℚ_[p] F)`. "Same residue field" (Berger) is
-  FontaineWintenberger's class `IntermediateField.HasSameResidueField`.
+  the class `IntermediateField.HasSameResidueField` in `Liftability/TotallyRamified`.
 - **Galois groups** of infinite extensions are `L ≃ₐ[K] L`; `τ p π` and `δ p π` are elements of
   subgroups, used through `.val`. Each mention of `(τ p π).val` at type `L ≃ₐ[K] L` costs about
   0.3 s of unification: name it once in a proof instead of restating it.

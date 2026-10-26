@@ -7,10 +7,10 @@ module
 
 public import FalseTateNonliftability.LaurentSeries.Substitution
 public import FalseTateNonliftability.Liftability.CoordinateFamily
+public import FalseTateNonliftability.Liftability.TotallyRamified
 public import FontaineWintenberger.FieldOfNorms.Estimates.Transfer
 public import FontaineWintenberger.FieldOfNorms.Structure.Laurent
 public import FontaineWintenberger.Mathlib.Topology.LaurentSubstitution
-public import FontaineWintenberger.Ramification.Fields.TotallyRamified
 
 /-!
 # The coordinate family of the field of norms

@@ -575,3 +575,15 @@ U1 与 R1–R6 之间可以合并一次，确保 GitHub 上的本项目先有一
 - **CI**：去掉模板遗留的 `pages: write`、`id-token: write`（G-1 不部署 Pages），只保留 `contents: read`。
 - **文档**：`HasRamificationGrowth`、Lemma 4.2、Prop 4.3、`UnitRigidity`、§6 情形 2 所在模块的 Implementation notes 写明 `f(0) = 0` 由无限阶经 junk 值推出（偏差 4）；`ramificationNumber` 的 docstring 与 Implementation notes 写明 `-1` 也是 `f(0) ≠ 0` 的值、`0` 是 `f(0) = 0`、`f'(0) ≠ 1` 的值，以及 Theorem 3.4 在 `d = -1` 时平凡成立、其内容是论文的 `d ≥ 1`；Prop 2.3 的模 `ϖ_F` 幂部分的范围（偏差 13）；README 与根文件补 Lemma 2.4 的 `derivative_ne_zero`、`derivativeLevel_le`、`mapRingHom_residue_conj`、`derivative_normalizedDerivative_ne_zero`，根文件的命名空间例外补 `FalseTateExtension.`；三处 `O_F` 改 `𝒪_F`；`CLAUDE.md` 补 `O` 的 `[Fact (Nat.card …)] [NeZero (p : O)]` 与"定义不带证明参数"的例外（偏差 11、12）。
 - **未改**：FW/FTE 的 `nonliftability-upstream` 分支仍未推送 GitHub（全新克隆与 CI 无法取到依赖，见"遗留"）；两个 PDF 的跟踪状态留给作者决定（见"遗留"）。
+
+### 依赖升级后的构建修复（2026-10-26）
+
+- 保留当前依赖版本 FW `7f43e30`、FTE `2040c7e`，不回退到本地的
+  `nonliftability-upstream` 提交，也不修改依赖包。
+- 上游已删除 `Ramification/Fields/TotallyRamified`，并将整闭包的辅助定义合回
+  `APF/Tower/AlgebraicResidue`。本项目的 `Liftability/TotallyRamified` 接回
+  `integralClosureResidueField`、`IsTotallyRamified`、`IntermediateField.HasSameResidueField`
+  及原有接口；命名空间、数学定义和主定理陈述保持原样，整闭包与剩余域映射复用上游。
+- FTE 删除的完全分歧实例由 `falseTateExtension_residue_algebraMap_surjective` 在
+  `FalseTate/RamificationNumbers` 中恢复；`p` 为素元的实例由 `PadicInt.irreducible_p`
+  在 `FalseTate/Main` 中恢复。当前构建不再依赖旧分支上的这些补充。

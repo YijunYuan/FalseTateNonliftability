@@ -73,12 +73,13 @@ and `κ_F` has `p` elements.
   `K^alg = AlgebraicClosure K` over `K` and over `ℚ_p`. As the norm of `K` extends the norm of
   `ℚ_p`, `𝒪[K]` is the integral closure of `ℤ_p` in `K`, so the residue field of `K` is the
   residue field of `baseField p K`. "`F` has the same residue field as `K`" is the
-  FontaineWintenberger class `(baseField p K).HasSameResidueField F`: the images of the residue
-  fields of `K` and `F` in the residue field of the integral closure of `ℤ_p` in `K^alg` coincide.
+  class `(baseField p K).HasSameResidueField F` from `Liftability/TotallyRamified`: the residue
+  fields of `K` and `F` have the same image in the residue field of the integral closure of
+  `ℤ_p` in `K^alg`.
   It provides the isomorphism `κ_L ≅ κ_F`.
-* Total ramification of `L/K` and the same residue field condition are Prop classes of
-  FontaineWintenberger and enter as instance arguments; the infiniteness of `L/K`, required by
-  the field of norms of FontaineWintenberger, is the instance `Fact (¬ Module.Finite K L)`.
+* Total ramification of `L/K` and the same residue field condition are Prop classes defined in
+  `Liftability/TotallyRamified` and enter as instance arguments; the infiniteness of `L/K` is
+  the instance `Fact (¬ Module.Finite K L)`, as required by the field of norms construction.
 * `IsLiftable p K L F` uses the uniformizer `FieldOfNorms.uniformizer K L` of FontaineWintenberger;
   `isLiftable_iff_uniformizer` replaces it by any other uniformizer.
 * Proposition 2.3 also states that liftability modulo every power of `ϖ_F`, with the composition

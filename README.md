@@ -112,8 +112,9 @@ FalseTateNonliftability/
   Differential/     invariant exact differentials (Lemma 4.1, Lemma 4.2, Proposition 4.3)
   CoefficientRing/  the ring A_K, its truncations O ⧸ 𝔪^(r+1), substitution and conjugation,
                     the normalized derivative (Lemma 2.4, Theorem 3.1), the two cases of §6
-  Liftability/      coordinate families (Lemma 2.2), lifts (Definition 1.1), independence of the
-                    uniformizer (Proposition 2.3)
+  Liftability/      total ramification and residue field interfaces, coordinate families
+                    (Lemma 2.2), lifts (Definition 1.1), independence of the uniformizer
+                    (Proposition 2.3)
   FalseTate/        ℚ_p^FT: ramification numbers (Proposition 5.1), the tame generator
                     (Lemma 5.3), Proposition 1.3 and Theorem A
 FalseTateNonliftability.lean   imports one aggregate per layer
@@ -146,15 +147,15 @@ file takes more than 15 s (`docs/BUILD_TIMES.md`).
 |---|---|
 | Lean | `leanprover/lean4:v4.35.0` |
 | Mathlib | `1e75e9dd53d483fa01eff9ac7d4ea0472ce9d1fa` |
-| FontaineWintenberger | `1f7caa524b73528982740af18498d9f5cd7d1d0d` (branch `nonliftability-upstream`) |
-| FalseTateExtension | `01c06baf73c417f5aac6913689d7fcfb9a8f1def` (branch `nonliftability-upstream`) |
+| FontaineWintenberger | `7f43e30506d355ea81b0ea2bbb0b07680203ccec` |
+| FalseTateExtension | `2040c7ea259f8a10e326d55f5771959e0851328b` |
 
-The commits are pinned in `lakefile.toml` and `lake-manifest.json`. The FontaineWintenberger and
-FalseTateExtension commits add the classes `IsTotallyRamified` and
-`IntermediateField.HasSameResidueField` and the instance
-`IsTotallyRamified ℚ_[p] (falseTateExtension p π)`. **They exist so far only on the local branch
-`nonliftability-upstream` of these two repositories; they must be pushed to GitHub before a fresh
-clone of this repository builds.**
+The commits are pinned in `lakefile.toml` and `lake-manifest.json`. The classes
+`FontaineWintenberger.IsTotallyRamified` and `IntermediateField.HasSameResidueField`, together
+with the residue field abbreviation `FontaineWintenberger.integralClosureResidueField`, are
+provided by this library in `Liftability/TotallyRamified`. The instances for total ramification
+of the false Tate extension and for `p` being a uniformizer are in
+`FalseTate/RamificationNumbers` and `FalseTate/Main`, respectively.
 
 See `CLAUDE.md` for conventions and standing hypotheses, `docs/REFACTOR_PLAN.md` for the design
 and its execution log, `docs/MATHLIB_REUSE.md` for what is taken from Mathlib and the upstream

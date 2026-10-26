@@ -202,6 +202,12 @@ instance fact_not_finite_falseTateExtension (π : ℚ_[p]) :
 
 variable [Fact (p ≠ 2)] (π : 𝒪[ℚ_[p]]) [Fact (Irreducible π)]
 
+/-- The false Tate extension of `ℚ_p` is totally ramified at an odd prime. -/
+instance isTotallyRamified_falseTateExtension :
+    IsTotallyRamified ℚ_[p] (falseTateExtension p (π : ℚ_[p])) :=
+  (isTotallyRamified_iff_surjective_spectralIntegerRing ℚ_[p] _).mpr
+    (falseTateExtension_residue_algebraMap_surjective p π)
+
 /-- The ramification number of `τ^{p^k}` on the diagonal layer `L_N ⊆ K_FT` is `d_k` for
 `N ≥ k + 2`. -/
 private theorem ramificationNumber_falseTateDiagonalSubfield (k N : ℕ) (hN : k + 2 ≤ N) :

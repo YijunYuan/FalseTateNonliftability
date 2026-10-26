@@ -10,6 +10,7 @@ public import FalseTateNonliftability.Liftability.CoordinateFamily
 public import FalseTateNonliftability.Liftability.Defs
 public import FalseTateNonliftability.Liftability.FieldOfNorms
 public import FalseTateNonliftability.Liftability.IsLiftable
+public import FalseTateNonliftability.Liftability.TotallyRamified
 
 /-!
 # Liftability
@@ -26,6 +27,8 @@ change of uniformizer conjugates the coordinate family, which does not change li
 
 ## Main definitions
 
+* `FontaineWintenberger.IsTotallyRamified`, `IntermediateField.HasSameResidueField`
+  (`Liftability/TotallyRamified`): total ramification and equality of residue fields.
 * `FalseTateNonliftability.CoordinateFamily` (`Liftability/CoordinateFamily`).
 * `FalseTateNonliftability.CoordinateFamily.Lift`,
   `FalseTateNonliftability.CoordinateFamily.Liftable`,

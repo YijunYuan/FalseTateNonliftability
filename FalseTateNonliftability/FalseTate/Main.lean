@@ -75,6 +75,14 @@ open scoped FalseTateExtension
 
 namespace FalseTateNonliftability
 
+/-- `p` is a uniformizer of `ℚ_p`. -/
+instance padicValuationSubring_irreducible_p (p : ℕ) [Fact p.Prime] :
+    Fact (Irreducible (p : 𝒪[ℚ_[p]])) :=
+  ⟨by
+    have h := (MulEquiv.irreducible_iff (f := (padicValuationSubringEquiv p).symm)).mpr
+      PadicInt.irreducible_p
+    rwa [map_natCast] at h⟩
+
 /-- The absolute ramification index `e = v_F(p)` of a finite totally ramified extension `F/ℚ_p` is
 `[F : ℚ_p]`. -/
 theorem absoluteRamificationIdx_spectralIntegerRing (p : ℕ) [Fact p.Prime] (F : Type*) [Field F]
