@@ -97,9 +97,6 @@ All names are in the namespace `FalseTateNonliftability` unless they start with 
 | §6, case 2 (`s(P) < e`) | `Truncation.absoluteRamificationIdx_le_derivativeLevel` (`CoefficientRing/Obstruction`) |
 | **Theorem A** | `not_isLiftable_falseTate`, `not_isLiftable_falseTateExtension` (`FalseTate/Main`) |
 
-Remark 5.2 (the corrected lower index in Viviani's Corollary 6.10) is target 6 of
-FalseTateExtension. Remarks 2.6 and 6.1 are not formalized.
-
 ## Layout
 
 ```
@@ -134,32 +131,7 @@ Install [elan](https://github.com/leanprover/elan), then run from this directory
 ```sh
 lake exe cache get
 lake build
-python3 scripts/check_layers.py
 ```
-
-The library contains no `sorry` and no `set_option`, and builds without warnings under Mathlib's
-standard linter set. A clean build of the library takes 3 min wall-clock time on 20 cores, and no
-file takes more than 15 s (`docs/BUILD_TIMES.md`).
-
-## Dependencies
-
-| package | version |
-|---|---|
-| Lean | `leanprover/lean4:v4.35.0` |
-| Mathlib | `1e75e9dd53d483fa01eff9ac7d4ea0472ce9d1fa` |
-| FontaineWintenberger | `7f43e30506d355ea81b0ea2bbb0b07680203ccec` |
-| FalseTateExtension | `2040c7ea259f8a10e326d55f5771959e0851328b` |
-
-The commits are pinned in `lakefile.toml` and `lake-manifest.json`. The classes
-`FontaineWintenberger.IsTotallyRamified` and `IntermediateField.HasSameResidueField`, together
-with the residue field abbreviation `FontaineWintenberger.integralClosureResidueField`, are
-provided by this library in `Liftability/TotallyRamified`. The instances for total ramification
-of the false Tate extension and for `p` being a uniformizer are in
-`FalseTate/RamificationNumbers` and `FalseTate/Main`, respectively.
-
-See `CLAUDE.md` for conventions and standing hypotheses, `docs/REFACTOR_PLAN.md` for the design
-and its execution log, `docs/MATHLIB_REUSE.md` for what is taken from Mathlib and the upstream
-libraries, and `docs/BUILD_TIMES.md` for compile times.
 
 ## References
 
