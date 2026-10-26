@@ -17,12 +17,12 @@ rev = "1e75e9dd53d483fa01eff9ac7d4ea0472ce9d1fa"
 [[require]]
 name = "FontaineWintenberger"
 git = "https://github.com/YijunYuan/FontaineWintenberger"
-rev = "7f43e30506d355ea81b0ea2bbb0b07680203ccec"
+rev = "7b9f6b3459c69b3282cd09ced55d15d89344c58e"
 
 [[require]]
 name = "FalseTateExtension"
 git = "https://github.com/YijunYuan/FalseTateExtension"
-rev = "2040c7ea259f8a10e326d55f5771959e0851328b"
+rev = "ae06abba8ed93ec6f8cef4369fed870970faec0c"
 
 [[lean_lib]]
 name = "FalseTateNonliftability"
