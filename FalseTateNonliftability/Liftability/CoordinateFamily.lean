@@ -91,6 +91,8 @@ theorem ext {f₁ f₂ : CoordinateFamily κ Γ} (h : ∀ g, f₁.series g = f�
   obtain rfl : s₁ = s₂ := funext h
   rfl
 
+attribute [inherit_doc CoordinateFamily.ext] CoordinateFamily.ext_iff
+
 variable (f : CoordinateFamily κ Γ)
 
 /-- `f_g` has zero constant coefficient, so it can be substituted for the variable of a power

@@ -5,8 +5,8 @@ Authors: Yijun Yuan
 -/
 module
 
-public import FalseTateNonliftability.FalseTate.RamificationNumbers
 public import FalseTateExtension.FalseTate.TranslationKernel
+public import FalseTateNonliftability.FalseTate.RamificationNumbers
 public import FontaineWintenberger.FieldOfNorms.Galois.Action
 public import FontaineWintenberger.Ramification.Lower.Teichmuller
 
@@ -19,14 +19,15 @@ generator of `Gal(K_FT/ℚ_p(ζ_{p^∞})) ≅ ℤ_p` with Kummer exponent `1`. T
 to an isomorphism `Gal(K_FT/K_Kum) ≅ ℤ_pˣ ≅ μ_{p-1} × (1 + p ℤ_p)`. The tame generator `δ` is the
 element of `Gal(K_FT/K_Kum)` whose character `χ(δ) = ω(g)` is the Teichmüller representative of a
 fixed generator `g` of `𝔽_pˣ`; it generates the torsion subgroup of `Gal(K_FT/K_Kum)`, and
-`δ τ δ⁻¹ = τ^{χ(δ)}` (Yuan, Lemma 1.2 (3)).
+`δ τ δ⁻¹ = τ^{χ(δ)}` (Yuan, Lemma 1.3 (3)).
 
 Yuan, Lemma 5.3: for every uniformizer `u` of the field of norms `X_{ℚ_p}(K_FT)`, whose residue
 field `κ_L` is `𝔽_p` as `K_FT/ℚ_p` is totally ramified, the coordinate series of `δ` is
 `f_{δ,u} = χ(δ) T + O(T²)`. Hence its linear coefficient has multiplicative order `p - 1`. This
 follows from `f_{τ,u} = T + α T^{2p} + O(T^{2p+1})` with `α ≠ 0` (`d_0 = 2p - 1`, Yuan,
 Proposition 5.1) by comparing the coefficients of `T^{2p}` in
-`f_{τ,u} ∘ f_{δ,u} = f_{δ,u} ∘ f_{τ^{χ(δ)},u}`.
+`f_{τ,u} ∘ f_{δ,u} = f_{δ,u} ∘ f_{τ^{χ(δ)},u}`. This is equation (5.5) composed on the left
+with `f_{δ,u}`.
 
 ## Main definitions
 
@@ -38,11 +39,12 @@ Proposition 5.1) by comparing the coefficients of `T^{2p}` in
 ## Main results
 
 * `FalseTateNonliftability.padicCyclotomicCharacter_tameGenerator`: `χ(δ) = ω(g)`.
+* `FalseTateNonliftability.orderOf_tameGenerator`: `δ` has order `p - 1`.
 * `FalseTateNonliftability.orderOf_map_toZMod_padicCyclotomicCharacter_tameGenerator`:
   `χ(δ) mod p` has order `p - 1` in `𝔽_pˣ`.
 * `FalseTateNonliftability.falseTateKummerFixing_mul_kummerGenerator`,
   `FalseTateNonliftability.tameGenerator_mul_kummerGenerator`: `σ τ = τ^{χ(σ)} σ` for
-  `σ ∈ Gal(K_FT/K_Kum)`, in particular `δ τ = τ^{χ(δ)} δ` (Yuan, Lemma 1.2 (3)).
+  `σ ∈ Gal(K_FT/K_Kum)`, in particular `δ τ = τ^{χ(δ)} δ` (Yuan, Lemma 1.3 (3)).
 * `FalseTateNonliftability.coeff_one_coordinateSeries_falseTateKummerFixing`,
   `FalseTateNonliftability.coeff_one_coordinateSeries_tameGenerator`: `f_{σ,u}'(0)` is the image
   of `χ(σ) mod p` in `κ_L`, for `σ ∈ Gal(K_FT/K_Kum)` and for `σ = δ` (Yuan, Lemma 5.3).
@@ -51,9 +53,13 @@ Proposition 5.1) by comparing the coefficients of `T^{2p}` in
   multiplicative order `p - 1` if `χ(σ) mod p` has order `p - 1`, in particular for `σ = δ`
   (Yuan, Lemma 5.3).
 
+## Notation
+
+* `δ`: `FalseTateNonliftability.tameGenerator`, scoped to `FalseTateNonliftability`.
+
 ## Implementation notes
 
-Yuan, Lemma 1.2 (3) lets `δ` be any generator of the torsion subgroup of `Gal(K_FT/K_Kum)`. Here
+Yuan, Lemma 1.3 (3) lets `δ` be any generator of the torsion subgroup of `Gal(K_FT/K_Kum)`. Here
 `δ` is the element with `χ(δ) = ω(g)` for a generator `g` of `𝔽_pˣ` chosen once and for all. The
 proofs use only that `χ(δ) mod p` generates `𝔽_pˣ`, and Lemma 5.3 is also stated for every
 `σ ∈ Gal(K_FT/K_Kum)` with this property, which includes every generator of the torsion
@@ -62,7 +68,7 @@ subgroup.
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  Lemma 1.2, Proposition 5.1 and Lemma 5.3.
+  Lemma 1.3, Proposition 5.1 and Lemma 5.3.
 * T. Liu, *On lattices in semi-stable representations: a proof of a conjecture of Breuil*,
   Compos. Math. 144 (2008), 61–88, Lemma 5.1.2.
 * F. Viviani, *Ramification groups and Artin conductors of radical extensions of ℚ*, J. Théor.
@@ -129,6 +135,17 @@ theorem orderOf_map_toZMod_tameUnit :
   rw [h, (IsCyclic.exists_ofOrder_eq_natCard (α := (ZMod p)ˣ)).choose_spec,
     Nat.card_eq_fintype_card, ZMod.card_units]
 
+/-- The Teichmüller lift of a generator of `𝔽_pˣ` has order `p - 1`. -/
+theorem orderOf_tameUnit : orderOf (tameUnit p) = p - 1 := by
+  apply Nat.dvd_antisymm
+  · unfold tameUnit
+    convert orderOf_map_dvd _ _ using 1
+    rw [(IsCyclic.exists_ofOrder_eq_natCard (α := (ZMod p)ˣ)).choose_spec,
+      Nat.card_eq_fintype_card, ZMod.card_units]
+  · simpa only [orderOf_map_toZMod_tameUnit] using
+      orderOf_map_dvd (Units.map (PadicInt.toZMod : ℤ_[p] →+* ZMod p).toMonoidHom)
+        (tameUnit p)
+
 end Teichmuller
 
 section TameGenerator
@@ -138,7 +155,7 @@ variable (p : ℕ) [Fact p.Prime] [Fact (p ≠ 2)] (π : 𝒪[ℚ_[p]]) [Fact (I
 /-- The tame generator `δ ∈ Gal(K_FT/K_Kum)`: the automorphism whose cyclotomic character
 `χ(δ) = ω(g)` is the Teichmüller representative of a fixed generator `g` of `𝔽_pˣ`. As
 `χ : Gal(K_FT/K_Kum) ≅ ℤ_pˣ`, it generates the torsion subgroup of `Gal(K_FT/K_Kum)`
-(Yuan, Lemma 1.2 (3)). -/
+(Yuan, Lemma 1.3 (3)). -/
 def tameGenerator : falseTateKummerFixing p (π : ℚ_[p]) :=
   (kummerFixingEquivCyclotomicImage p π).symm
     ⟨tameUnit p, cyclotomicExtensionCharacter_surjective_padic p (tameUnit p)⟩
@@ -150,6 +167,11 @@ def tameGenerator : falseTateKummerFixing p (π : ℚ_[p]) :=
 theorem padicCyclotomicCharacter_tameGenerator :
     padicCyclotomicCharacter p (π : ℚ_[p]) (δ p π).val = tameUnit p :=
   congrArg Subtype.val ((kummerFixingEquivCyclotomicImage p π).apply_symm_apply _)
+
+/-- The tame generator `δ` has order `p - 1` (Yuan, Lemma 1.3 (3)). -/
+theorem orderOf_tameGenerator : orderOf (δ p π) = p - 1 :=
+  ((kummerFixingEquivCyclotomicImage p π).symm.toMulEquiv.orderOf_eq _).trans
+    ((Subgroup.orderOf_coe _).symm.trans (orderOf_tameUnit p))
 
 /-- `χ(δ) mod p` has order `p - 1` in `𝔽_pˣ`. -/
 theorem orderOf_map_toZMod_padicCyclotomicCharacter_tameGenerator :
@@ -164,7 +186,7 @@ private theorem kummerKernelEquivPadicInt_symm_natCast (N : ℕ) :
   rfl
 
 /-- `σ τ = τ^{χ(σ)} σ` for every `σ ∈ Gal(K_FT/K_Kum)`, where `τ^a` for `a ∈ ℤ_p` is the element
-of `Gal(K_FT/ℚ_p(ζ_{p^∞}))` with Kummer exponent `a` (Yuan, Lemma 1.2 (3)). -/
+of `Gal(K_FT/ℚ_p(ζ_{p^∞}))` with Kummer exponent `a` (Yuan, Lemma 1.3 (3)). -/
 theorem falseTateKummerFixing_mul_kummerGenerator (σ : falseTateKummerFixing p (π : ℚ_[p])) :
     σ.val * (τ p π).val = ((kummerKernelEquivPadicInt p π).symm
       (padicCyclotomicCharacter p (π : ℚ_[p]) σ.val : ℤ_[p])).toMul.val * σ.val := by
@@ -184,7 +206,7 @@ theorem falseTateKummerFixing_mul_kummerGenerator (σ : falseTateKummerFixing p 
     rw [map_mul, map_mul, (τ p π).property, t.property, mul_one, one_mul]
 
 /-- `δ τ = τ^{χ(δ)} δ`, where `τ^a` for `a ∈ ℤ_p` is the element of `Gal(K_FT/ℚ_p(ζ_{p^∞}))` with
-Kummer exponent `a` (Yuan, Lemma 1.2 (3)). -/
+Kummer exponent `a` (Yuan, Lemma 1.3 (3)). -/
 theorem tameGenerator_mul_kummerGenerator :
     (δ p π).val * (τ p π).val = ((kummerKernelEquivPadicInt p π).symm
       (padicCyclotomicCharacter p (π : ℚ_[p]) (δ p π).val : ℤ_[p])).toMul.val * (δ p π).val :=

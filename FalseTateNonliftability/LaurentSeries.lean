@@ -15,8 +15,8 @@ public import FalseTateNonliftability.LaurentSeries.Taylor
 
 Substitution `f ↦ f(G)` in Laurent series over local Artinian rings with principal maximal ideal
 (Yuan, Lemma 2.1), the Taylor expansion of substitutions close to the identity (Yuan, Lemma 3.2
-and the proofs of Theorem 3.1 and Lemma 4.2), and ramification numbers, their growth under
-`p`-th powers, and normal forms (Yuan, §3.2: Lemma 3.3 and Theorem 3.4).
+and the proofs of Proposition 3.1 and Lemma 4.2), and ramification numbers, their growth under
+`p`-th powers, and normal forms (Yuan, §3.2: Lemma 3.3 and Proposition 3.4).
 
 ## References
 

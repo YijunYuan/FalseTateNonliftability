@@ -20,19 +20,19 @@ ring of integers of a finite extension `F` of `ℚ_p`, a discrete valuation ring
 that is, the `𝔪`-adic completion of the ring `O((T))` of Laurent series. If `𝔪` is principal,
 then for every `r ≥ 0` the quotient `A ⧸ 𝔪 ^ (r + 1) A` is the ring `(O ⧸ 𝔪 ^ (r + 1))((T))` of
 Laurent series over the truncation `O ⧸ 𝔪 ^ (r + 1)`, and `A` is the inverse limit of these rings;
-for `r = e = v_ϖ(p)` this is the ring `R = A ⧸ ϖ ^ (e + 1) A` of Yuan, §1.4. In this case `A` is
+for `r = e = v_ϖ(p)` this is the ring `R = A ⧸ ϖ ^ (e + 1) A` of Yuan, §1.5. In this case `A` is
 a local ring, complete for its maximal ideal `𝔪 A`, with residue field `κ((T))`, and if `O` is a
 discrete valuation ring then so is `A`, with uniformizer `ϖ`. These facts are the description of
-`A` in Definition 1.1; the proofs of Proposition 1.3 and Theorem A do not use them.
+`A` in Definition 1.1; the proofs of Proposition 1.4 and Theorem A do not use them.
 
 Let `O` be a discrete valuation ring and `R_r = (O ⧸ 𝔪 ^ (r + 1))((T))`. The ideals
 `𝔪 ^ j R_r = ϖ ^ j R_r` of Laurent series with coefficients in `𝔪 ^ j` decrease from `R_r` for
 `j = 0` to `0` for `j = r + 1`. For `j ≤ r`, multiplication by `ϖ ^ j` induces an isomorphism of
 `O`-modules `Λ_j : κ((T)) ≃ ϖ ^ j R_r ⧸ ϖ ^ (j + 1) R_r` (Yuan, §2.2). For `X ∈ ϖ ^ j R_r`, the
 series `ϖ⁻ʲ X ∈ κ((T))` is the preimage of `X mod ϖ ^ (j + 1) R_r` under `Λ_j`. It is computed
-coefficientwise, it satisfies `ϖ⁻ʲ (X Z) = ϖ⁻ʲ X · Z̄`, where `Z̄` is the reduction of `Z` to
-`κ((T))`, and it commutes with every algebra endomorphism of `R_r` that reduces to an
-endomorphism of `κ((T))`.
+coefficientwise, it satisfies $\varpi^{-j}(XZ) = \varpi^{-j}X \cdot \bar{Z}$, where $\bar{Z}$ is the
+reduction of `Z` to `κ((T))`. It commutes with every algebra endomorphism of `R_r` that reduces
+to an endomorphism of `κ((T))`.
 
 ## Main definitions
 
@@ -67,7 +67,7 @@ endomorphism of `κ((T))`.
   Definition 1.1).
 * `Truncation.layer_eq_zero_iff`: for `X ∈ ϖ ^ j R_r`, `ϖ⁻ʲ X = 0` if and only if
   `X ∈ ϖ ^ (j + 1) R_r`.
-* `Truncation.layer_mul`: `ϖ⁻ʲ (X Z) = ϖ⁻ʲ X · Z̄`.
+* `Truncation.layer_mul`: $\varpi^{-j}(XZ) = \varpi^{-j}X \cdot \bar{Z}$.
 * `Truncation.coeff_layer_eq_zero_iff`, `Truncation.coeff_layer_eq_of_coeff_eq_mul`: the
   coefficients of `ϖ⁻ʲ X`.
 * `Truncation.layer_algHom`: `ϖ⁻ʲ (E X) = E' (ϖ⁻ʲ X)` if `E` reduces to `E'`.
@@ -75,7 +75,7 @@ endomorphism of `κ((T))`.
 ## Implementation notes
 
 * The truncation is indexed so that `Truncation O r = O ⧸ 𝔪 ^ (r + 1)` is a nonzero ring for every
-  `r : ℕ`; the ring `R` of Yuan, §1.4, is `LaurentSeries (Truncation O e)`, and its layers
+  `r : ℕ`; the ring `R` of Yuan, §1.5, is `LaurentSeries (Truncation O e)`, and its layers
   `ϖ ^ j R` are `layerIdeal O e j` with `0 ≤ j ≤ e + 1`.
 * The instances `Truncation.isLocalRing`, `Truncation.isArtinianRing` and
   `Truncation.isPrincipalIdealRing` place the truncations in the class of coefficient rings of
@@ -89,7 +89,7 @@ endomorphism of `κ((T))`.
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  Definition 1.1, §1.4 and §2.2.
+  Definition 1.1, §1.5 and §2.2.
 * L. Berger, *Lifting the field of norms*, J. Éc. polytech. Math. 1 (2014), 29–38.
 -/
 
@@ -956,8 +956,8 @@ theorem layer_ne_zero_iff {r j : ℕ} {X : LaurentSeries (Truncation O r)}
     (hX : X ∈ layerIdeal O r j) : layer j X ≠ 0 ↔ X ∉ layerIdeal O r (j + 1) :=
   (layer_eq_zero_iff hX).not
 
-/-- For `X ∈ ϖ ^ j R_r`, `ϖ⁻ʲ (X Z) = ϖ⁻ʲ X · Z̄`, where `Z̄` is the reduction of `Z` to
-`κ((T))`. -/
+/-- For `X ∈ ϖ ^ j R_r`, $\varpi^{-j}(XZ) = \varpi^{-j}X \cdot \bar{Z}$, where $\bar{Z}$ is the
+reduction of `Z` to `κ((T))`. -/
 theorem layer_mul {r j : ℕ} {X : LaurentSeries (Truncation O r)} (hX : X ∈ layerIdeal O r j)
     (Z : LaurentSeries (Truncation O r)) :
     layer j (X * Z) = layer j X * mapRingHom (residue O r) Z := by
@@ -978,7 +978,8 @@ theorem coeff_layer_eq_zero_iff {r j : ℕ} {X : LaurentSeries (Truncation O r)}
     simp only [layer_zero, HahnSeries.coeff_zero, Submodule.zero_mem]
 
 /-- If `X ∈ ϖ ^ j R_r` and the `n`-th coefficient of `X` is `a b` with `a ∈ 𝔪 ^ j`, then the
-`n`-th coefficient of `ϖ⁻ʲ X` is `ϖ⁻ʲ a · b̄`, where `b̄` is the residue of `b`. -/
+`n`-th coefficient of `ϖ⁻ʲ X` is $\varpi^{-j}a \cdot \bar{b}$, where $\bar{b}$ is the residue of
+`b`. -/
 theorem coeff_layer_eq_of_coeff_eq_mul {r j : ℕ} {X : LaurentSeries (Truncation O r)}
     (hX : X ∈ layerIdeal O r j) {n : ℤ} {a b : Truncation O r}
     (ha : a ∈ maximalIdeal (Truncation O r) ^ j) (h : X.coeff n = a * b) :

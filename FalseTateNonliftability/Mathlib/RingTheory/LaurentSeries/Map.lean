@@ -39,7 +39,7 @@ This file is a candidate for upstreaming to Mathlib (`Mathlib.RingTheory.Laurent
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  §1.4 (`A ⧸ ϖ_F ^ (e + 1) A ≃ (𝒪_F ⧸ ϖ_F ^ (e + 1))((T))` and the reduction of its elements to
+  §1.5 (`A ⧸ ϖ_F ^ (e + 1) A ≃ (𝒪_F ⧸ ϖ_F ^ (e + 1))((T))` and the reduction of its elements to
   `𝔽_p((T))`).
 -/
 
@@ -66,7 +66,6 @@ theorem mapRingHom_coeff (f : R →+* S) (x : LaurentSeries R) (n : ℤ) :
     (mapRingHom f x).coeff n = f (x.coeff n) := rfl
 
 /-- A coefficient map sends the constant `a` to the constant `f a`. -/
-@[simp]
 theorem mapRingHom_C (f : R →+* S) (a : R) :
     mapRingHom f (HahnSeries.C a) = HahnSeries.C (f a) :=
   HahnSeries.map_C a f

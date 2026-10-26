@@ -21,8 +21,9 @@ positive integers tending to `∞`. The group `⟨σ⟩` acts on differentials b
 a nonzero exact differential `ω`, then `b = -ord_T(ω) - 1 ∈ ℤ`.
 
 The primitive `U` of `ω` can be chosen with `p ∤ v_T(U)`. Since `d(σ(U) - U) = 0`, one has
-`σ(U) - U = B ^ p` for some `B ∈ κ((T))`, and the orbit sums `x_n = ∑_{j < p ^ n} σ ^ j (B)`
-satisfy `x_n ^ p = σ ^ (p ^ n) (U) - U` and `σ(x_n) - x_n = σ ^ (p ^ n) (B) - B`. Hence
+`σ(U) - U = B ^ p` for some `B ∈ κ((T))`. The orbit sums `x_n = ∑_{j < p ^ n} σ ^ j (B)` of
+(4.4) satisfy `x_n ^ p = σ ^ (p ^ n) (U) - U` by (4.5), and
+`σ(x_n) - x_n = σ ^ (p ^ n) (B) - B`. Hence
 `p v_T(x_n) = v_T(U) + d_n` (Lemma 3.2), the `x_n` are approximate invariants of `σ`, and Lemma 4.2
 gives `(v_T(U) + b) / p = 0`.
 

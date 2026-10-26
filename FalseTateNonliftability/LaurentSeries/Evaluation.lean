@@ -365,8 +365,8 @@ theorem isUnit_nilpotent_perturbation (δ : R) (U Y : LaurentSeries R)
   have hCY := (Commute.all (HahnSeries.C δ) Y).isNilpotent_mul_right hC
   exact hCY.isUnit_add_left_of_commute hUunit (Commute.all _ _)
 
--- The localization API uses the scalar actions of these algebras; their algebra maps agree
--- definitionally.
+/-- The natural scalar actions on `R⟦X⟧` and `R((T))` form a tower.
+The algebra maps used by the localization API agree definitionally. -/
 local instance : @IsScalarTower R (PowerSeries R) (LaurentSeries R)
     (inferInstance : Algebra R (PowerSeries R)).toSMul
     (inferInstance : Algebra (PowerSeries R) (LaurentSeries R)).toSMul
@@ -396,7 +396,6 @@ theorem nilpotentLaurentEval_ofPowerSeries (f : PowerSeries R) :
   exact IsLocalization.Away.lift_eq _ _ f
 
 /-- A constant `b` evaluates to `b`. -/
-@[simp]
 theorem nilpotentLaurentEval_C (b : R) :
     nilpotentLaurentEval δ U Y r hr hδ a c ha hc hU hY hUunit (HahnSeries.C b) =
       HahnSeries.C b := by

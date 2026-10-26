@@ -23,13 +23,13 @@ generator `τ` on the field of norms of the false Tate curve extension has ramif
 
 Let `O` be a discrete valuation ring with residue field `κ = 𝔽_p`, `p ≠ 0` in `O`, and
 `e = v_ϖ(p)`, and let `P, G ∈ (O ⧸ 𝔪 ^ (e + 1))((T))` with `G ∘ P = P ∘ G`, where `P` reduces to
-`T ^ p`. The two cases of the proof of Yuan, Proposition 1.3, in §6 show that no such `P`, `G`
+`T ^ p`. The two cases of the proof of Yuan, Proposition 1.4, in §6 show that no such `P`, `G`
 and `D` below exist if `f` has ramification limit `b ∉ ℤ`; for the coordinate series of `τ` and
-of the tame generator `δ` (Lemma 5.3) this is Proposition 1.3.
+of the tame generator `δ` (Lemma 5.3) this is Proposition 1.4.
 
 1. If `G` reduces to a power series `f` with ramification growth at `p`, then `s(P) < e`: if
-   `s(P) = e`, then Theorem 3.4 puts `f^{∘p^k}` in normal form after a coordinate change, and
-   Theorem 3.1 and Lemma 2.4 (2) give `v_T(h_P) ≤ p - 1 - d_k` for all `k`, while `d_k → ∞`.
+   `s(P) = e`, then Proposition 3.4 puts `f^{∘p^k}` in normal form after a coordinate change, and
+   Proposition 3.1 and Lemma 2.4 (2) give `v_T(h_P) ≤ p - 1 - d_k` for all `k`, while `d_k → ∞`.
 2. If `G` reduces to `f ∈ T + T ^ 2 κ⟦T⟧` such that `σ` has infinite order and `d_k → b ∉ ℤ` in
    `ℤ_p`, and `D ∈ (O ⧸ 𝔪 ^ (e + 1))((T))` with `D ∘ P = P ∘ D` reduces to `g ∈ T κ⟦T⟧` whose
    linear coefficient has multiplicative order `p - 1`, then `s(P) ≥ e`: if `s(P) < e`, then `σ`
@@ -51,7 +51,7 @@ of the tame generator `δ` (Lemma 5.3) this is Proposition 1.3.
 * `FalseTateNonliftability.Truncation.absoluteRamificationIdx_le_derivativeLevel`: `s(P) ≥ e`
   (Yuan, §6, case 2).
 * `FalseTateNonliftability.Truncation.false_of_commute`: there are no `P, G, D` as above if `f`
-  has ramification limit `b ∉ ℤ` (Yuan, Proposition 1.3, for an abstract discrete valuation ring
+  has ramification limit `b ∉ ℤ` (Yuan, Proposition 1.4, for an abstract discrete valuation ring
   `O`).
 
 ## Implementation notes
@@ -68,8 +68,8 @@ is no separate hypothesis `f(0) = 0`.
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  Lemma 2.4, Theorem 3.1, Theorem 3.4, Lemma 4.1, Proposition 4.3, Proposition 5.1 and §6
-  (proof of Proposition 1.3).
+  Lemma 2.4, Proposition 3.1, Proposition 3.4, Lemma 4.1, Proposition 4.3, Proposition 5.1 and §6
+  (proof of Proposition 1.4).
 * J.-P. Serre, *Local Fields*, Chapter IV, §1 (the ramification numbers `i(σ)`).
 -/
 
@@ -150,7 +150,7 @@ open LaurentSeries
 variable {O : Type*} [CommRing O] [IsDomain O] [IsDiscreteValuationRing O]
   (p : ℕ) [Fact p.Prime] [Fact (Nat.card (ResidueField O) = p)] [NeZero (p : O)]
 
-/-- Yuan, §6, proof of Proposition 1.3, case 1: let `p ≠ 0` in `O`, `κ = 𝔽_p` and `e = v_ϖ(p)`.
+/-- Yuan, §6, proof of Proposition 1.4, case 1: let `p ≠ 0` in `O`, `κ = 𝔽_p` and `e = v_ϖ(p)`.
 Let `P, G ∈ (O ⧸ 𝔪 ^ (e + 1))((T))` with `G ∘ P = P ∘ G`, where `P` reduces to `T ^ p` and `G`
 reduces to a power series `f` with ramification growth at `p`. Then the derivative level of `P`
 satisfies `s(P) < e`. -/
@@ -244,7 +244,7 @@ private theorem substEquiv_normalizedDerivative_of_commute {r : ℕ}
 
 variable [NeZero (p : O)]
 
-/-- Yuan, §6, proof of Proposition 1.3, case 2: let `p ≠ 0` in `O`, `κ = 𝔽_p` and `e = v_ϖ(p)`.
+/-- Yuan, §6, proof of Proposition 1.4, case 2: let `p ≠ 0` in `O`, `κ = 𝔽_p` and `e = v_ϖ(p)`.
 Let `P, G, D ∈ (O ⧸ 𝔪 ^ (e + 1))((T))` with `G ∘ P = P ∘ G` and `D ∘ P = P ∘ D`, where `P`
 reduces to `T ^ p`, `G` reduces to `f ∈ T + T ^ 2 κ⟦T⟧` such that `a ↦ a ∘ f` has infinite order
 and the ramification numbers `d_k = v_T(f^{∘p^k} - T) - 1` converge in `ℤ_p` to some `b ∉ ℤ`, and
@@ -280,7 +280,7 @@ theorem absoluteRamificationIdx_le_derivativeLevel
   rw [padic_ramification_limit_eq_of_invariant_exact_differential p hf1 hf hlimit ha ⟨B, hB⟩ hinv,
     Int.cast_neg]
 
-/-- Yuan, Proposition 1.3, over a discrete valuation ring: let `p ≠ 0` in `O`, `κ = 𝔽_p` and
+/-- Yuan, Proposition 1.4, over a discrete valuation ring: let `p ≠ 0` in `O`, `κ = 𝔽_p` and
 `e = v_ϖ(p)`. Let `f ∈ κ⟦T⟧` have ramification limit `b ∉ ℤ` at `p`, and let `g ∈ T κ⟦T⟧` have
 linear coefficient of multiplicative order `p - 1`. Then there are no
 `P, G, D ∈ (O ⧸ 𝔪 ^ (e + 1))((T))` reducing to `T ^ p`, `f` and `g` with `G ∘ P = P ∘ G` and

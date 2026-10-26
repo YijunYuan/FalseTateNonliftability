@@ -19,12 +19,12 @@ automorphism `σ : x ↦ x(f)` of `κ((T))` has infinite order, and let `U ∈ �
 satisfies `(f / T) ^ m (U ∘ f) = U`, then `(f^{∘n} / T) ^ m (U ∘ f^{∘n}) = U` for every `n`, and
 `m = 0`. Here `f / T ∈ 1 + T κ⟦T⟧` is the principal unit `PowerSeries.divXPowOrder f`, and its
 `p`-adic power `(f / T) ^ m` is `PowerSeries.principalUnitPow (f / T) m`. This is the last step
-of the proof of Yuan, Lemma 4.2: the limiting functional equation (4.4) forces `m = 0`.
+of the proof of Yuan, Lemma 4.2: the limiting functional equation (4.2) forces `m = 0`.
 
 ## Main results
 
 * `PowerSeries.principalUnitPow_mul_subst_iterate_eq`: `(f^{∘n} / T) ^ m (U ∘ f^{∘n}) = U` (Yuan,
-  proof of Lemma 4.2, (4.5)).
+  proof of Lemma 4.2, (4.3)).
 * `PowerSeries.exists_pow_eq_of_derivative_eq_zero`: over a perfect field of characteristic `p`,
   a power series with zero derivative is a `p`-th power.
 * `PowerSeries.eq_zero_of_principalUnitPow_mul_subst_eq`: `(f / T) ^ m (U ∘ f) = U` implies
@@ -41,7 +41,7 @@ hypothesis `f(0) = 0`.
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  proof of Lemma 4.2, equations (4.4) and (4.5).
+  proof of Lemma 4.2, equations (4.2) and (4.3).
 -/
 
 @[expose] public section
@@ -90,7 +90,7 @@ private theorem divXPowOrder_iterate_succ {f : κ⟦X⟧} (hf : f.constantCoeff 
   rw [subst_mul (.of_constantCoeff_zero' hf), subst_X (.of_constantCoeff_zero' hf)]
 
 /-- If `f = T + O(T ^ 2)` and `(f / T) ^ m (U ∘ f) = U`, then `(f^{∘n} / T) ^ m (U ∘ f^{∘n}) = U`
-for every `n` (Yuan, proof of Lemma 4.2, (4.5)). -/
+for every `n` (Yuan, proof of Lemma 4.2, (4.3)). -/
 theorem principalUnitPow_mul_subst_iterate_eq {f U : κ⟦X⟧} (hf : f.constantCoeff = 0)
     (hf1 : f.coeff 1 = 1) {m : ℤ_[p]} (h : principalUnitPow f.divXPowOrder m * U.subst f = U)
     (n : ℕ) : principalUnitPow (iterate f n).divXPowOrder m * U.subst (iterate f n) = U := by

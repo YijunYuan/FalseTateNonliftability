@@ -18,7 +18,7 @@ enters the proof of Theorem A, and the proof itself. The ramification numbers of
 `d_k = (2 p^{2k+2} + p - 1)/(p + 1)`, which tend to `∞` and to `(p - 1)/(p + 1) ∉ ℤ` in `ℤ_p`
 (Yuan, Proposition 5.1). The linear coefficient of the coordinate series of the tame generator
 `δ` has multiplicative order `p - 1` (Yuan, Lemma 5.3). Together with the obstructions of Yuan, §6
-these give Proposition 1.3 and Theorem A.
+these give Proposition 1.4 and Theorem A.
 
 ## Main definitions
 
@@ -32,15 +32,15 @@ these give Proposition 1.3 and Theorem A.
   `FalseTateNonliftability.kummerRamificationBreak_tendsto_padic`: Yuan, Proposition 5.1
   (`FalseTate/RamificationNumbers`).
 * `FalseTateNonliftability.tameGenerator_mul_kummerGenerator`: `δ τ = τ^{χ(δ)} δ` (Yuan,
-  Lemma 1.2 (3), `FalseTate/TameGenerator`).
+  Lemma 1.3 (3), `FalseTate/TameGenerator`).
 * `FalseTateNonliftability.orderOf_coeff_one_coordinateSeries_tameGenerator`: Yuan, Lemma 5.3
   (`FalseTate/TameGenerator`).
-* `FalseTateNonliftability.not_finiteLiftable_falseTate`: Yuan, Proposition 1.3
+* `FalseTateNonliftability.not_finiteLiftable_falseTate`: Yuan, Proposition 1.4
   (`FalseTate/Main`).
 * `FalseTateNonliftability.not_isLiftable_falseTate`: Yuan, Theorem A (`FalseTate/Main`).
 
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  Proposition 1.3, Proposition 5.1, Lemma 5.3, §6 and Theorem A.
+  Proposition 1.4, Proposition 5.1, Lemma 5.3, §6 and Theorem A.
 -/

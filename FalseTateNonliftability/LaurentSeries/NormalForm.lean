@@ -23,7 +23,7 @@ Let `k` have characteristic `p`. If `σ T = T + α T ^ (d + 1) + β T ^ ℓ + O(
 which is smaller than `(p + 1) d` (Yuan, Lemma 3.3). Consequently, if `d = i(σ) ≡ -1 (mod p)` and
 `i(σ ^ p) ≥ (p + 1) d`, the coefficients of `σ T` in degrees `d + 2, …, 2 d` can be removed one
 by one by the coordinate changes `T' = T + t T ^ q`, and in a suitable uniformizer
-`σ T = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ≠ 0` (Yuan, Theorem 3.4).
+`σ T = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ≠ 0` (Yuan, Proposition 3.4).
 
 For every `f = T + O(T ^ 2)` in characteristic `p`, `i(σ ^ p) ≥ p i(σ)`. If `σ` has infinite
 order, then `σ ^ n ≠ 1` for every `n > 0`, so the ramification numbers `d_n = i(σ ^ (p ^ n))` are
@@ -49,7 +49,7 @@ positive integers; they satisfy `d_(n+1) ≥ p d_n`, hence strictly increase and
 * `PowerSeries.ramificationNumber_iterate_eq_of_resonant`: a nonzero resonant coefficient
   determines `i(σ ^ p)` (Yuan, Lemma 3.3).
 * `PowerSeries.exists_normalForm`: the normal form `T + α T ^ (d + 1) + O(T ^ (2 d + 1))`
-  (Yuan, Theorem 3.4).
+  (Yuan, Proposition 3.4).
 * `PowerSeries.mul_ramificationNumber_le_ramificationNumber_iterate`: `p i(σ) ≤ i(σ ^ p)`.
 * `PowerSeries.one_le_ramificationNumber_iterate`: `i(σ ^ n) ≥ 1` for `n > 0` if `σ` has infinite
   order.
@@ -65,15 +65,15 @@ positive integers; they satisfy `d_(n+1) ≥ p d_n`, hence strictly increase and
 and `f'(0) ≠ 1`. It is positive exactly for `f ≠ T` in `T + T ^ 2 k⟦T⟧`
 (`PowerSeries.one_le_ramificationNumber_iff`).
 
-Theorem 3.4 (`PowerSeries.exists_normalForm`) is stated without the hypothesis `d < ∞` of the
-paper. The congruence `d ≡ -1 (mod p)` excludes `d = 0`, and for `d = -1` (that is, `f = T` or
-`f(0) ≠ 0`) the conclusion holds trivially with `w = T`, so the content of the statement is the
-case `d ≥ 1` of the paper.
+In Proposition 3.4 the ramification number `d` is an integer. The formal statement
+`PowerSeries.exists_normalForm` also covers the exceptional value `d = -1` of the definition
+above: its conclusion then holds trivially with `w = T`. The congruence `d ≡ -1 (mod p)` excludes
+`d = 0`, so the substantive case is `d ≥ 1`, as in the paper.
 
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  §3.2 (the ramification number), Lemma 3.3, Theorem 3.4 and the proof of Lemma 4.2 (the growth
+  §3.2 (the ramification number), Lemma 3.3, Proposition 3.4 and the proof of Lemma 4.2 (the growth
   of `d_j`).
 -/
 
@@ -385,7 +385,7 @@ private theorem substSubOne_single_mem_of_dvd (p : ℕ) [Fact p.Prime] [CharP k 
   rw [hsingle, map_smul]
   exact hp.trans (HahnSeries.orderTop_le_orderTop_smul α _)
 
-private theorem prod_ne_zero_of_resonant (p : ℕ) [Fact p.Prime] [CharP k p] {d ℓ : ℤ}
+private theorem prod_ne_zero_of_resonant (p : ℕ) [CharP k p] {d ℓ : ℤ}
     (hd : (p : ℤ) ∣ d + 1) (hℓ : (p : ℤ) ∣ ℓ + 1) {α : k} (hα : α ≠ 0) :
     ∏ i ∈ Finset.range (p - 1), ((ℓ + i * d : ℤ) : k) * α ≠ 0 := by
   have hcast (m : ℤ) (hm : (p : ℤ) ∣ m + 1) : (m : k) = -1 := by
@@ -523,7 +523,7 @@ private theorem ofPowerSeries_X_add_monomial (q : ℕ) (t : k) :
 /-- Removal of a nonresonant coefficient: for `g = T + α T ^ (d + 1) + β T ^ (d + q) +
 O(T ^ (d + q + 1))` with `p ∣ d + 1` and `p ∤ q`, the coordinate change `w = T + t T ^ q` with a
 suitable `t` gives `w ∘ g ∘ w^{∘-1} = T + α T ^ (d + 1) + O(T ^ (d + q + 1))`. -/
-private theorem exists_conj_sub_mem (p : ℕ) [Fact p.Prime] [CharP k p] {g : k⟦X⟧}
+private theorem exists_conj_sub_mem (p : ℕ) [CharP k p] {g : k⟦X⟧}
     (hg0 : g.constantCoeff = 0) (hg1 : g.coeff 1 = 1) {d : ℤ} (hd : 1 ≤ d)
     (hdp : (p : ℤ) ∣ d + 1) {q : ℕ} (hq : 2 ≤ q) (hpq : ¬ p ∣ q) {α β : k} (hα : α ≠ 0)
     (hg : HahnSeries.ofPowerSeries ℤ k g - HahnSeries.single (1 : ℤ) 1 -
@@ -532,13 +532,12 @@ private theorem exists_conj_sub_mem (p : ℕ) [Fact p.Prime] [CharP k p] {g : k�
     ∃ w : k⟦X⟧, w.constantCoeff = 0 ∧ IsUnit (w.coeff 1) ∧
       HahnSeries.ofPowerSeries ℤ k (conj w g) - HahnSeries.single (1 : ℤ) 1 -
         HahnSeries.single (d + 1) α ∈ orderAddSubgroup (d + q + 1) := by
-  have hdk : ((d + 1 : ℤ) : k) = 0 := by
-    obtain ⟨n, hn⟩ := hdp
-    rw [hn, Int.cast_mul, Int.cast_natCast, CharP.cast_eq_zero k p, zero_mul]
+  have hdk : ((d + 1 : ℤ) : k) = 0 := (CharP.intCast_eq_zero_iff k p _).mpr hdp
   have hqk : (q : k) ≠ 0 := (CharP.cast_eq_zero_iff k p q).not.mpr hpq
   obtain ⟨t, ht⟩ : ∃ t : k, β + (q : k) * α * t = 0 :=
     ⟨-β / ((q : k) * α), by field_simp; ring⟩
-  obtain ⟨w, hw⟩ : ∃ w : k⟦X⟧, w = X + monomial q t := ⟨_, rfl⟩
+  -- Here `q = ℓ - d`; since `p ∣ d + 1`, the coefficient `q` equals `ℓ - 2 d - 1` in `k`.
+  set w : k⟦X⟧ := X + monomial q t with hw
   have hw0 : w.constantCoeff = 0 := by
     rw [hw, map_add, constantCoeff_X, zero_add, ← coeff_zero_eq_constantCoeff_apply,
       coeff_monomial, ite_eq_right_iff]
@@ -588,7 +587,7 @@ private theorem exists_conj_sub_mem (p : ℕ) [Fact p.Prime] [CharP k p] {g : k�
   rw [sub_sub_sub_cancel_right] at hmem
   rwa [hconj, mem_orderAddSubgroup, orderTop_substEquiv_symm hw0 hw', ← mem_orderAddSubgroup]
 
-/-- **Theorem 3.4** (Yuan). Let `k` have characteristic `p`, and let `f ∈ k⟦T⟧` have
+/-- **Proposition 3.4** (Yuan). Let `k` have characteristic `p`, and let `f ∈ k⟦T⟧` have
 ramification number `d ≡ -1 (mod p)` such that `f^{∘p}` has ramification number at least
 `(p + 1) d`. Then there are a uniformizer `w ∈ T k⟦T⟧` (`w(0) = 0`, `w'(0) ≠ 0`) and `α ≠ 0`
 with `w ∘ f ∘ w^{∘-1} = T + α T ^ (d + 1) + O(T ^ (2 d + 1))`. -/

@@ -5,8 +5,8 @@ Authors: Yijun Yuan
 -/
 module
 
-public import FontaineWintenberger.Ramification.Lower.Degree
 public import FontaineWintenberger.APF.Tower.AlgebraicResidue
+public import FontaineWintenberger.Ramification.Lower.Degree
 
 /-!
 # Totally ramified extensions and intermediate fields with the same residue field
@@ -76,6 +76,7 @@ variable (K : Type*) [NontriviallyNormedField K] [IsCompleteDiscreteValuedField 
 /-- An algebraic extension `L/K`, possibly infinite, is totally ramified if the residue field of
 the integral closure of `𝒪[K]` in `L` is `𝓀[K]`: the residue map `𝓀[K] → 𝓀_L` is surjective. -/
 class IsTotallyRamified (L : Type*) [Field L] [Algebra K L] [Algebra.IsAlgebraic K L] : Prop where
+  /-- Every residue class in the extension comes from the residue field of the base. -/
   algebraMap_surjective : Function.Surjective (algebraMap 𝓀[K] (integralClosureResidueField K L))
 
 section Algebraic
@@ -215,6 +216,7 @@ field if the residue fields of the integral closures of `𝒪[K₀]` in `E` and 
 image in the residue field of the integral closure of `𝒪[K₀]` in `Ω`. This is Berger's condition
 "`F` has the same residue field as `E`". -/
 class HasSameResidueField (E F : IntermediateField K₀ Ω) : Prop where
+  /-- The residue fields of `E` and `F` have the same image in the residue field of `Ω`. -/
   range_eq : (integralClosureResidueInclusion K₀ E.val).range =
     (integralClosureResidueInclusion K₀ F.val).range
 
@@ -222,12 +224,15 @@ namespace HasSameResidueField
 
 variable {E F G : IntermediateField K₀ Ω}
 
+/-- An intermediate field has the same residue field as itself. -/
 instance refl (E : IntermediateField K₀ Ω) : HasSameResidueField E E :=
   ⟨rfl⟩
 
+/-- Having the same residue field is symmetric. -/
 theorem symm [HasSameResidueField E F] : HasSameResidueField F E :=
   ⟨range_eq.symm⟩
 
+/-- Having the same residue field is transitive. -/
 theorem trans [HasSameResidueField E F] [HasSameResidueField F G] : HasSameResidueField E G :=
   ⟨(range_eq (E := E) (F := F)).trans range_eq⟩
 
@@ -252,6 +257,8 @@ theorem integralClosureResidueInclusion_residueFieldEquiv [HasSameResidueField E
       (Subalgebra.equivOfEq _ _ (range_eq (E := E) (F := F))
         (AlgEquiv.ofInjective _ (integralClosureResidueInclusion K₀ E.val).injective z)))
 
+/-- Composing the residue field isomorphism from `E` to `F` with the inclusion for `F` gives
+the inclusion for `E` into the residue field of `Ω`. -/
 theorem integralClosureResidueInclusion_comp_residueFieldEquiv [HasSameResidueField E F] :
     (integralClosureResidueInclusion K₀ F.val).comp (residueFieldEquiv E F).toAlgHom =
       integralClosureResidueInclusion K₀ E.val :=
@@ -259,6 +266,7 @@ theorem integralClosureResidueInclusion_comp_residueFieldEquiv [HasSameResidueFi
 
 end HasSameResidueField
 
+/-- Two intermediate fields have the same residue field in either order. -/
 theorem hasSameResidueField_comm {E F : IntermediateField K₀ Ω} :
     HasSameResidueField E F ↔ HasSameResidueField F E :=
   ⟨fun _ ↦ .symm, fun _ ↦ .symm⟩
@@ -278,10 +286,12 @@ theorem hasSameResidueField_bot_right_iff (F : IntermediateField K₀ Ω) :
     HasSameResidueField F ⊥ ↔ IsTotallyRamified K₀ F :=
   hasSameResidueField_comm.trans (hasSameResidueField_bot_iff F)
 
+/-- The base field has the same residue field as every totally ramified intermediate extension. -/
 instance hasSameResidueField_bot (F : IntermediateField K₀ Ω) [IsTotallyRamified K₀ F] :
     HasSameResidueField ⊥ F :=
   (hasSameResidueField_bot_iff F).mpr ‹_›
 
+/-- A totally ramified intermediate extension has the same residue field as the base field. -/
 instance hasSameResidueField_bot_right (F : IntermediateField K₀ Ω) [IsTotallyRamified K₀ F] :
     HasSameResidueField F ⊥ :=
   (hasSameResidueField_bot_right_iff F).mpr ‹_›

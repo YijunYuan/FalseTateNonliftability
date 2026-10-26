@@ -37,6 +37,11 @@ The condition `f ∈ T + T ^ 2 κ⟦T⟧` is stated as `f'(0) = 1` together with
 (`LaurentSeries.constantCoeff_eq_zero_and_isUnit_of_not_isOfFinOrder`), so there is no separate
 hypothesis `f(0) = 0`.
 
+The approximate-invariance hypothesis uses `LaurentSeries.orderAddSubgroup` to express
+`v_T(σ(x_n) / x_n - 1) → ∞`, including terms for which `σ(x_n) = x_n`. We keep the unit factors
+`U_n` without normalizing their constant coefficients: compactness gives a unit limit, and the
+rigidity theorem applies to every unit. The resulting identity is equation (4.2) of the paper.
+
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,

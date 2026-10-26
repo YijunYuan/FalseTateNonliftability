@@ -35,10 +35,12 @@ uniformizer (Yuan, Proposition 2.3).
   `A` if and only if `f` has one (Yuan, Proposition 2.3).
 * `FalseTateNonliftability.CoordinateFamily.finiteLiftable_conj_iff`: `w ∘ f ∘ w^{∘-1}` has a
   finite lift modulo `𝔪 ^ (r + 1)` on `S` if and only if `f` has one (Yuan, Proposition 2.3).
+* `FalseTateNonliftability.CoordinateFamily.truncatedLiftable_conj_iff`: the same equivalence
+  for lifts of all elements of `Γ` satisfying the composition law (Yuan, Proposition 2.3).
 
 ## Implementation notes
 
-The two equivalences are stated for every power series `w`: `f.conj w = f` unless `w(0) = 0` and
+The equivalences are stated for every power series `w`: `f.conj w = f` unless `w(0) = 0` and
 `w'(0)` is a unit.
 
 ## References
@@ -110,6 +112,24 @@ theorem liftable_conj_iff (w : PowerSeries (ResidueField O)) :
 
 variable {S : Set Γ} {r : ℕ}
 
+/-- Conjugating a finite lift by `H` transports it to the coordinate family conjugated by the
+reduction of `H`. -/
+def FiniteLift.conj (L : f.FiniteLift S r) (H : PowerSeries (Truncation O r))
+    (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) :
+    (f.conj (H.map (Truncation.residue O r))).FiniteLift S r where
+  frobenius := LaurentSeries.conj H L.frobenius
+  lift g := LaurentSeries.conj H (L.lift g)
+  residue_frobenius := by
+    rw [mapRingHom_conj _ hH hl, L.residue_frobenius,
+      LaurentSeries.conj_single_natCard (PowerSeries.constantCoeff_map_eq_zero _ hH)
+        (PowerSeries.isUnit_coeff_one_map _ hl)]
+  residue_lift g := by
+    rw [conj_series f (PowerSeries.constantCoeff_map_eq_zero _ hH)
+      (PowerSeries.isUnit_coeff_one_map _ hl), mapRingHom_conj_of_mapRingHom_eq _ hH hl
+      (L.isAdmissible_lift g) (f.constantCoeff_series g) (L.residue_lift g)]
+  commute g := (LaurentSeries.conj_commute_iff hH hl L.isAdmissible_frobenius
+    (L.isAdmissible_lift g)).mpr (L.commute g)
+
 /-- If `f` has a finite lift modulo `𝔪 ^ (r + 1)` on `S`, so has the coordinate family
 `w ∘ f ∘ w^{∘-1}` obtained by the change of variable `T' = w(T)`. -/
 theorem FiniteLiftable.conj (hf : f.FiniteLiftable S r) (w : PowerSeries (ResidueField O)) :
@@ -119,23 +139,44 @@ theorem FiniteLiftable.conj (hf : f.FiniteLiftable S r) (w : PowerSeries (Residu
   · rwa [conj_of_not f hw]
   obtain ⟨H, hH, hl, rfl⟩ := Truncation.exists_map_residue_eq r w hw.1 hw.2
   obtain ⟨L⟩ := hf
-  exact ⟨{
-    frobenius := LaurentSeries.conj H L.frobenius
-    lift g := LaurentSeries.conj H (L.lift g)
-    residue_frobenius := by
-      rw [mapRingHom_conj _ hH hl, L.residue_frobenius,
-        LaurentSeries.conj_single_natCard hw.1 hw.2]
-    residue_lift g := by
-      rw [conj_series f hw.1 hw.2, mapRingHom_conj_of_mapRingHom_eq _ hH hl
-        (L.isAdmissible_lift g) (f.constantCoeff_series g) (L.residue_lift g)]
-    commute g := (LaurentSeries.conj_commute_iff hH hl L.isAdmissible_frobenius
-      (L.isAdmissible_lift g)).mpr (L.commute g) }⟩
+  exact ⟨L.conj H hH hl⟩
 
 /-- Yuan, Proposition 2.3 modulo `𝔪 ^ (r + 1)`: the coordinate family `w ∘ f ∘ w^{∘-1}` obtained
 by the change of variable `T' = w(T)` has a finite lift modulo `𝔪 ^ (r + 1)` on `S` if and only
 if `f` has one. -/
 theorem finiteLiftable_conj_iff (w : PowerSeries (ResidueField O)) :
     (f.conj w).FiniteLiftable S r ↔ f.FiniteLiftable S r := by
+  refine ⟨fun h ↦ ?_, fun h ↦ h.conj w⟩
+  by_cases hw : w.constantCoeff = 0 ∧ IsUnit (w.coeff 1)
+  · simpa only [conj_compInv_conj f hw.1 hw.2] using h.conj w.compInv
+  · rwa [conj_of_not f hw] at h
+
+/-- Conjugating a lift modulo `𝔪 ^ (r + 1)` preserves the composition law. -/
+def TruncatedLift.conj (L : f.TruncatedLift r) (H : PowerSeries (Truncation O r))
+    (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) :
+    (f.conj (H.map (Truncation.residue O r))).TruncatedLift r where
+  toFiniteLift := L.toFiniteLift.conj H hH hl
+  lift_mul g h := by
+    change LaurentSeries.subst (LaurentSeries.conj H _) (LaurentSeries.conj H _) =
+      LaurentSeries.conj H _
+    rw [← LaurentSeries.conj_subst hH hl
+      (L.toFiniteLift.isAdmissible_lift ⟨g, Set.mem_univ g⟩)
+      (L.toFiniteLift.isAdmissible_lift ⟨h, Set.mem_univ h⟩), L.lift_mul]
+
+/-- A change of coordinate transports a lift modulo `𝔪 ^ (r + 1)` satisfying the composition
+law to another such lift. -/
+theorem TruncatedLiftable.conj (hf : f.TruncatedLiftable r)
+    (w : PowerSeries (ResidueField O)) : (f.conj w).TruncatedLiftable r := by
+  by_cases hw : w.constantCoeff = 0 ∧ IsUnit (w.coeff 1)
+  swap
+  · rwa [conj_of_not f hw]
+  obtain ⟨H, hH, hl, rfl⟩ := Truncation.exists_map_residue_eq r w hw.1 hw.2
+  exact hf.map fun L ↦ L.conj H hH hl
+
+/-- Yuan, Proposition 2.3 modulo `𝔪 ^ (r + 1)`, including the composition law: liftability is
+unchanged by a change of coordinate. -/
+theorem truncatedLiftable_conj_iff (w : PowerSeries (ResidueField O)) :
+    (f.conj w).TruncatedLiftable r ↔ f.TruncatedLiftable r := by
   refine ⟨fun h ↦ ?_, fun h ↦ h.conj w⟩
   by_cases hw : w.constantCoeff = 0 ∧ IsUnit (w.coeff 1)
   · simpa only [conj_compInv_conj f hw.1 hw.2] using h.conj w.compInv

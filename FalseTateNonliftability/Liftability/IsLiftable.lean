@@ -5,11 +5,11 @@ Authors: Yijun Yuan
 -/
 module
 
+public import FalseTateExtension.Padic.Basic
 public import FalseTateNonliftability.LaurentSeries.NormalForm
-public import FalseTateNonliftability.PowerSeries.PrincipalUnits
 public import FalseTateNonliftability.Liftability.CoordinateChange
 public import FalseTateNonliftability.Liftability.FieldOfNorms
-public import FalseTateExtension.Padic.Basic
+public import FalseTateNonliftability.PowerSeries.PrincipalUnits
 
 /-!
 # `F`-liftability of the action on the field of norms
@@ -20,10 +20,11 @@ a finite extension of `ℚ_p` with the same residue field as `K`, with ring of i
 maximal ideal `𝔪_F` and residue field `κ_F` with `q` elements, and let `A_K` be the `𝔪_F`-adic
 completion of `𝒪_F((T))`. As `L/K` is totally ramified, the residue field `κ_L` of `X_K(L)` is the
 residue field of `K`, hence isomorphic to `κ_F`. For a uniformizer `u` of `X_K(L)`, the coordinate
-series `f_{g,u}` of the elements `g ∈ Aut(L/K)` (`ev_u(f_{g,u}) = g(u)`, Yuan, §1.4) thus form a
+series `f_{g,u}` of the elements `g ∈ Aut(L/K)` (`ev_u(f_{g,u}) = g(u)`, Yuan, §1.5) thus form a
 coordinate family over `κ_F`. The action of `Aut(L/K)` on `X_K(L)` is `F`-liftable (Berger;
 Yuan, Definition 1.1) if this family has a lift to `A_K`: there exist `P` and
-`(F_g)_{g ∈ Aut(L/K)}` in `A_K` with `P̄ = T^q`, `ev_u(F̄_g) = g(u)`, `F_g ∘ P = P ∘ F_g` and
+`(F_g)_{g ∈ Aut(L/K)}` in `A_K` with $\bar{P} = T^q$ and
+$\operatorname{ev}_u(\bar{F}_g) = g(u)$, satisfying `F_g ∘ P = P ∘ F_g` and
 `F_h ∘ F_g = F_{gh}` for all `g, h ∈ Aut(L/K)`.
 
 A change of uniformizer conjugates the coordinate family by a change of variable
@@ -53,8 +54,10 @@ and `κ_F` has `p` elements.
   `FalseTateNonliftability.isLiftable_iff_exists_uniformizer`,
   `FalseTateNonliftability.isLiftable_iff_forall_uniformizer`,
   `FalseTateNonliftability.IsLiftable.liftable_coordinateFamily_iff`,
+  `FalseTateNonliftability.IsLiftable.truncatedLiftable_coordinateFamily_iff`,
   `FalseTateNonliftability.IsLiftable.finiteLiftable_coordinateFamily_iff`: `F`-liftability and
-  finite liftability do not depend on the uniformizer (Yuan, Proposition 2.3).
+  liftability modulo every `𝔪_F ^ (r + 1)`, with the composition law or on a prescribed subset,
+  do not depend on the uniformizer (Yuan, Proposition 2.3).
 * `FalseTateNonliftability.IsLiftable.finiteLiftable`: an `F`-liftable action has finite lifts
   modulo every `𝔪_F ^ (r + 1)` on every subset of `Aut(L/K)`, in every uniformizer.
 * `FalseTateNonliftability.hasSameResidueField_baseField_padic`: a totally ramified extension of
@@ -82,16 +85,15 @@ and `κ_F` has `p` elements.
   the instance `Fact (¬ Module.Finite K L)`, as required by the field of norms construction.
 * `IsLiftable p K L F` uses the uniformizer `FieldOfNorms.uniformizer K L` of FontaineWintenberger;
   `isLiftable_iff_uniformizer` replaces it by any other uniformizer.
-* Proposition 2.3 also states that liftability modulo every power of `ϖ_F`, with the composition
-  law `F_h ∘ F_g = F_{gh}`, does not depend on the uniformizer. Of the statements modulo
-  `𝔪_F ^ (r + 1)`, only the one for finite lifts (`CoordinateFamily.FiniteLift`: a lift of
-  Frobenius commuting with lifts of the elements of a subset, without composition law) is
-  formalized, `finiteLiftable_coordinateFamily_iff`; this is the form of Proposition 1.3.
+* At finite precision, `CoordinateFamily.TruncatedLift` includes the composition law on all
+  Galois elements, whereas `CoordinateFamily.FiniteLift` only requires a lift of Frobenius
+  commuting with lifts of a prescribed subset, as in Proposition 1.4. Proposition 2.3 is proved
+  for both notions.
 
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  §1.4, Definition 1.1, Lemma 2.2 and Proposition 2.3.
+  §1.5, Definition 1.1, Lemma 2.2 and Proposition 2.3.
 * L. Berger, *Lifting the field of norms*, J. Éc. polytech. Math. 1 (2014), 29–38.
 -/
 
@@ -282,9 +284,10 @@ end CoordinateFamily
 
 /-- Yuan, Definition 1.1 (Berger 2014): the action of `Aut(L/K)` on the field of norms `X_K(L)` is
 `F`-liftable, that is, there exist `P` and `(F_g)_{g ∈ Aut(L/K)}` in the `𝔪_F`-adic completion
-`A_K` of `𝒪_F((T))` with `P̄ = T^q`, `ev_u(F̄_g) = g(u)`, `F_g ∘ P = P ∘ F_g` and
-`F_h ∘ F_g = F_{gh}` for all `g, h ∈ Aut(L/K)`. Here `q` is the cardinality of the residue field
-`κ_F` of `F`, `u` is a fixed uniformizer of `X_K(L)` and `ev_u : κ_F((T)) ≅ X_K(L)` sends `T` to
+`A_K` of `𝒪_F((T))` with $\bar{P} = T^q$ and $\operatorname{ev}_u(\bar{F}_g) = g(u)$, satisfying
+`F_g ∘ P = P ∘ F_g` and `F_h ∘ F_g = F_{gh}` for all `g, h ∈ Aut(L/K)`.
+Here `q` is the cardinality of the residue field `κ_F` of `F`, `u` is a fixed uniformizer of
+`X_K(L)` and `ev_u : κ_F((T)) ≅ X_K(L)` sends `T` to
 `u`, through `κ_F ≅ κ_L`. This does not depend on `u` (Yuan, Proposition 2.3). -/
 def IsLiftable : Prop :=
   (IsLiftable.coordinateFamily p K L F (FieldOfNorms.uniformizer K L)
@@ -307,8 +310,8 @@ theorem liftable_coordinateFamily_iff :
 /-- Yuan, Proposition 2.3 modulo `𝔪_F ^ (r + 1)`, for a lift of Frobenius commuting with lifts of
 a prescribed collection of elements: for two uniformizers `u` and `u'` of `X_K(L)` and a subset
 `S ⊆ Aut(L/K)`, the coordinate family in `u'` has a finite lift modulo `𝔪_F ^ (r + 1)` on `S`
-(elements `P` and `F_g`, `g ∈ S`, with `P̄ = T^q`, `F̄_g = f_{g,u'}` and `F_g ∘ P = P ∘ F_g`) if and
-only if the coordinate family in `u` has one. -/
+(elements `P` and `F_g`, `g ∈ S`, with $\bar{P} = T^q$, $\bar{F}_g = f_{g,u'}$ and
+`F_g ∘ P = P ∘ F_g`) if and only if the coordinate family in `u` has one. -/
 theorem finiteLiftable_coordinateFamily_iff (S : Set (L ≃ₐ[K] L)) (r : ℕ) :
     (coordinateFamily p K L F u' hu').FiniteLiftable S r ↔
       (coordinateFamily p K L F u hu).FiniteLiftable S r := by
@@ -316,6 +319,17 @@ theorem finiteLiftable_coordinateFamily_iff (S : Set (L ≃ₐ[K] L)) (r : ℕ) 
   rw [coordinateFamily, coordinateFamily, FieldOfNorms.coordinateFamily_eq_conj K L u hu hu' hV,
     CoordinateFamily.map_conj _ _ hV0 hV1]
   exact CoordinateFamily.finiteLiftable_conj_iff _
+
+/-- Yuan, Proposition 2.3 modulo `𝔪_F ^ (r + 1)`, including the composition law: the existence
+of lifts of all Galois elements commuting with Frobenius and satisfying `F_h ∘ F_g = F_{gh}` is
+independent of the uniformizer. -/
+theorem truncatedLiftable_coordinateFamily_iff (r : ℕ) :
+    (coordinateFamily p K L F u' hu').TruncatedLiftable r ↔
+      (coordinateFamily p K L F u hu).TruncatedLiftable r := by
+  obtain ⟨V, hV0, hV1, hV⟩ := FieldOfNorms.exists_laurentEquiv_eq K L u hu hu'
+  rw [coordinateFamily, coordinateFamily, FieldOfNorms.coordinateFamily_eq_conj K L u hu hu' hV,
+    CoordinateFamily.map_conj _ _ hV0 hV1]
+  exact CoordinateFamily.truncatedLiftable_conj_iff _
 
 end IsLiftable
 
@@ -349,5 +363,12 @@ variable {p K L F} in
 theorem IsLiftable.finiteLiftable (h : IsLiftable p K L F) (S : Set (L ≃ₐ[K] L)) (r : ℕ) :
     (IsLiftable.coordinateFamily p K L F u hu).FiniteLiftable S r :=
   ((isLiftable_iff_uniformizer p K L F hu).mp h).finiteLiftable S r
+
+variable {p K L F} in
+/-- An `F`-liftable action has, in every uniformizer, lifts modulo `𝔪_F ^ (r + 1)` satisfying
+the composition law. -/
+theorem IsLiftable.truncatedLiftable (h : IsLiftable p K L F) (r : ℕ) :
+    (IsLiftable.coordinateFamily p K L F u hu).TruncatedLiftable r :=
+  ((isLiftable_iff_uniformizer p K L F hu).mp h).truncatedLiftable r
 
 end FalseTateNonliftability

@@ -16,14 +16,15 @@ public import FalseTateNonliftability.Liftability.IsLiftable
 Let `p` be an odd prime, `π` a uniformizer of `ℚ_p`, `K_FT = ℚ_p(π^{1/p^∞}, ζ_{p^∞})` the false
 Tate curve extension and `X = X_{ℚ_p}(K_FT)` its field of norms, with residue field `𝔽_p`. Let
 `τ` be the generator of `Gal(K_FT/ℚ_p(ζ_{p^∞}))` with Kummer exponent `1` and `δ` the tame
-generator of `Gal(K_FT/ℚ_p(π^{1/p^∞}))` (Yuan, Lemma 1.2). Let `F/ℚ_p` be a finite totally
+generator of `Gal(K_FT/ℚ_p(π^{1/p^∞}))` (Yuan, Lemma 1.3). Let `F/ℚ_p` be a finite totally
 ramified extension with ring of integers `𝒪_F`, maximal ideal `𝔪_F` and absolute ramification
 index `e = v_F(p)`, which is `[F : ℚ_p]`. For a uniformizer `u` of `X` and `g ∈ Gal(K_FT/ℚ_p)`
 let `f_{g,u} ∈ 𝔽_p⟦T⟧` be the coordinate series with `ev_u(f_{g,u}) = g(u)`.
 
-Yuan, Proposition 1.3: there are no `P, F_τ, F_δ ∈ (𝒪_F ⧸ 𝔪_F ^ (e + 1))((T))` with reductions
-`P̄ = T^p`, `F̄_τ = f_{τ,u}` and `F̄_δ = f_{δ,u}` such that `F_τ ∘ P = P ∘ F_τ` and
-`F_δ ∘ P = P ∘ F_δ`. Reducing a lift modulo `𝔪_F ^ (e + 1)` gives Theorem A: the action of
+Yuan, Proposition 1.4: there are no `P, F_τ, F_δ ∈ (𝒪_F ⧸ 𝔪_F ^ (e + 1))((T))` with reductions
+$\bar{P} = T^p$, $\overline{F_\tau} = f_{\tau,u}$ and $\overline{F_\delta} = f_{\delta,u}$ such that
+`F_τ ∘ P = P ∘ F_τ` and `F_δ ∘ P = P ∘ F_δ`. Reducing a lift modulo `𝔪_F ^ (e + 1)` gives
+Theorem A: the action of
 `Gal(K_FT/ℚ_p)` on `X` is not `F`-liftable (Yuan, Definition 1.1). For `F = ℚ_p` (so `e = 1`)
 a lift of Frobenius and a lift of `f_{τ,u}` commuting with it do not exist modulo `p ^ 2`.
 
@@ -39,10 +40,10 @@ ramification numbers of the iterates `τ^{p^k}` (Yuan, Proposition 5.1) exclude 
   coordinate series of `τ` over the residue field of `F` has ramification limit
   `(p - 1)/(p + 1)` at `p` (Yuan, Proposition 5.1).
 * `FalseTateNonliftability.not_finiteLiftable_falseTateExtension`,
-  `FalseTateNonliftability.not_finiteLiftable_falseTate`: Yuan, Proposition 1.3, for every
+  `FalseTateNonliftability.not_finiteLiftable_falseTate`: Yuan, Proposition 1.4, for every
   uniformizer `π` of `ℚ_p` and for `π = p`.
 * `FalseTateNonliftability.not_finiteLiftable_falseTateExtension_of_orderOf`: Yuan,
-  Proposition 1.3 with `δ` replaced by any `σ ∈ Gal(K_FT/ℚ_p(π^{1/p^∞}))` such that `χ(σ) mod p`
+  Proposition 1.4 with `δ` replaced by any `σ ∈ Gal(K_FT/ℚ_p(π^{1/p^∞}))` such that `χ(σ) mod p`
   has order `p - 1`, which includes every generator of the torsion subgroup of this group.
 * `FalseTateNonliftability.not_isLiftable_falseTateExtension`,
   `FalseTateNonliftability.not_isLiftable_falseTate`: Yuan, Theorem A, for every uniformizer `π`
@@ -63,7 +64,7 @@ ramification numbers of the iterates `τ^{p^k}` (Yuan, Proposition 5.1) exclude 
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  Definition 1.1, Lemma 1.2, Proposition 1.3, Proposition 5.1, Lemma 5.3, §6 and Theorem A.
+  Definition 1.1, Lemma 1.3, Proposition 1.4, Proposition 5.1, Lemma 5.3, §6 and Theorem A.
 * L. Berger, *Lifting the field of norms*, J. Éc. polytech. Math. 1 (2014), 29–38.
 -/
 
@@ -134,13 +135,14 @@ theorem hasRamificationLimit_coordinateFamily_series_kummerGenerator :
   · simp_rw [hd, Int.cast_natCast]
     exact kummerRamificationBreak_tendsto_padic p
 
-/-- Yuan, Proposition 1.3, for a uniformizer `π` of `ℚ_p` and every `σ ∈ Gal(K_FT/K_Kum)` such
+/-- Yuan, Proposition 1.4, for a uniformizer `π` of `ℚ_p` and every `σ ∈ Gal(K_FT/K_Kum)` such
 that `χ(σ) mod p` has order `p - 1` in `𝔽_pˣ`, for instance every generator of the torsion
-subgroup of `Gal(K_FT/K_Kum)` (the elements `δ` of Yuan, Lemma 1.2 (3)): let `F/ℚ_p` be a finite
+subgroup of `Gal(K_FT/K_Kum)` (the elements `δ` of Yuan, Lemma 1.3 (3)): let `F/ℚ_p` be a finite
 totally ramified extension with absolute ramification index `e`, and let `u` be a uniformizer of
 `X_{ℚ_p}(K_FT)`, `K_FT = ℚ_p(π^{1/p^∞}, ζ_{p^∞})`. There are no
-`P, F_τ, F_σ ∈ (𝒪_F ⧸ 𝔪_F ^ (e + 1))((T))` with reductions `P̄ = T^p`, `F̄_τ = f_{τ,u}` and
-`F̄_σ = f_{σ,u}` such that `F_τ ∘ P = P ∘ F_τ` and `F_σ ∘ P = P ∘ F_σ`. -/
+`P, F_τ, F_σ ∈ (𝒪_F ⧸ 𝔪_F ^ (e + 1))((T))` with reductions
+$\bar{P} = T^p$, $\overline{F_\tau} = f_{\tau,u}$ and
+$\overline{F_\sigma} = f_{\sigma,u}$ such that `F_τ ∘ P = P ∘ F_τ` and `F_σ ∘ P = P ∘ F_σ`. -/
 theorem not_finiteLiftable_falseTateExtension_of_orderOf
     {σ : falseTateKummerFixing p (π : ℚ_[p])}
     (hσ : orderOf (Units.map (PadicInt.toZMod : ℤ_[p] →+* ZMod p).toMonoidHom
@@ -161,11 +163,12 @@ theorem not_finiteLiftable_falseTateExtension_of_orderOf
   rw [IsLiftable.orderOf_coeff_one_coordinateFamily_series]
   exact orderOf_coeff_one_coordinateSeries_falseTateKummerFixing u hu hσ
 
-/-- **Yuan, Proposition 1.3**, for a uniformizer `π` of `ℚ_p`: let `F/ℚ_p` be a finite totally
+/-- **Yuan, Proposition 1.4**, for a uniformizer `π` of `ℚ_p`: let `F/ℚ_p` be a finite totally
 ramified extension with absolute ramification index `e`, and let `u` be a uniformizer of
 `X_{ℚ_p}(K_FT)`, `K_FT = ℚ_p(π^{1/p^∞}, ζ_{p^∞})`. There are no
-`P, F_τ, F_δ ∈ (𝒪_F ⧸ 𝔪_F ^ (e + 1))((T))` with reductions `P̄ = T^p`, `F̄_τ = f_{τ,u}` and
-`F̄_δ = f_{δ,u}` such that `F_τ ∘ P = P ∘ F_τ` and `F_δ ∘ P = P ∘ F_δ`. -/
+`P, F_τ, F_δ ∈ (𝒪_F ⧸ 𝔪_F ^ (e + 1))((T))` with reductions
+$\bar{P} = T^p$, $\overline{F_\tau} = f_{\tau,u}$ and
+$\overline{F_\delta} = f_{\delta,u}$ such that `F_τ ∘ P = P ∘ F_τ` and `F_δ ∘ P = P ∘ F_δ`. -/
 theorem not_finiteLiftable_falseTateExtension :
     ¬ CoordinateFamily.FiniteLiftable
       (IsLiftable.coordinateFamily p ℚ_[p] (falseTateExtension p (π : ℚ_[p])) F u hu)
@@ -181,9 +184,9 @@ theorem not_isLiftable_falseTateExtension :
   not_finiteLiftable_falseTateExtension p π F (FieldOfNorms.valuation_uniformizer _ _)
     (h.finiteLiftable _ _ _)
 
-/-- Yuan, §6 (proof of Proposition 1.3, case 1): over `F = ℚ_p`, for a uniformizer `u` of
-`X_{ℚ_p}(K_FT)`, there are no `P, F_τ ∈ (ℤ_p ⧸ p ^ 2)((T))` with reductions `P̄ = T^p` and
-`F̄_τ = f_{τ,u}` such that `F_τ ∘ P = P ∘ F_τ`. -/
+/-- A consequence of the case `s(P) = e` in Yuan, §6: over `F = ℚ_p`, for a uniformizer `u` of
+`X_{ℚ_p}(K_FT)`, there are no `P, F_τ ∈ (ℤ_p ⧸ p ^ 2)((T))` with reductions $\bar{P} = T^p$ and
+$\overline{F_\tau} = f_{\tau,u}$ such that `F_τ ∘ P = P ∘ F_τ`. -/
 theorem not_finiteLiftable_kummerGenerator_bot :
     ¬ CoordinateFamily.FiniteLiftable
       (IsLiftable.coordinateFamily p ℚ_[p] (falseTateExtension p (π : ℚ_[p])) ⊥ u hu)
@@ -209,11 +212,12 @@ end Uniformizer
 variable (F : IntermediateField ℚ_[p] (AlgebraicClosure ℚ_[p])) [FiniteDimensional ℚ_[p] F]
   [IsTotallyRamified ℚ_[p] F]
 
-/-- **Yuan, Proposition 1.3**: let `F/ℚ_p` be a finite totally ramified extension with absolute
+/-- **Yuan, Proposition 1.4**: let `F/ℚ_p` be a finite totally ramified extension with absolute
 ramification index `e`, and let `u` be a uniformizer of the field of norms `X_{ℚ_p}(ℚ_p^FT)` of
 the false Tate curve extension `ℚ_p^FT = ℚ_p(p^{1/p^∞}, ζ_{p^∞})`. There are no
-`P, F_τ, F_δ ∈ (𝒪_F ⧸ 𝔪_F ^ (e + 1))((T))` with reductions `P̄ = T^p`, `F̄_τ = f_{τ,u}` and
-`F̄_δ = f_{δ,u}` such that `F_τ ∘ P = P ∘ F_τ` and `F_δ ∘ P = P ∘ F_δ`. -/
+`P, F_τ, F_δ ∈ (𝒪_F ⧸ 𝔪_F ^ (e + 1))((T))` with reductions
+$\bar{P} = T^p$, $\overline{F_\tau} = f_{\tau,u}$ and
+$\overline{F_\delta} = f_{\delta,u}$ such that `F_τ ∘ P = P ∘ F_τ` and `F_δ ∘ P = P ∘ F_δ`. -/
 theorem not_finiteLiftable_falseTate
     {u : FieldOfNorms ℚ_[p] (falseTateExtension p ((p : 𝒪[ℚ_[p]]) : ℚ_[p]))}
     (hu : FieldOfNorms.valuation ℚ_[p] (falseTateExtension p ((p : 𝒪[ℚ_[p]]) : ℚ_[p])) u =

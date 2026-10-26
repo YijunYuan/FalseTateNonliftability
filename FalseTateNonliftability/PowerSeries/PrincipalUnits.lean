@@ -32,7 +32,7 @@ For a principal unit `z ∈ 1 + T κ⟦T⟧` and `c ∈ ℤ_p`, the power
 `κ⟦X⟧` of the binomial series `(1 + X) ^ c ∈ ℤ_p⟦X⟧`. It agrees with the power `z ^ n` for
 `n ∈ ℤ`, depends continuously on `c`, satisfies the exponent laws and commutes with substitution,
 and `v_T(z ^ c - 1) = v_T(z - 1)` for `c ∈ ℤ_pˣ`. Together with the first paragraph this gives
-`v_T(z ^ c - 1) = p ^ (v_p(c)) v_T(z - 1)` for `c ≠ 0` (Yuan, proof of Lemma 4.2, (4.3)).
+`v_T(z ^ c - 1) = p ^ (v_p(c)) v_T(z - 1)` for `c ≠ 0` (Yuan, proof of Lemma 4.2).
 
 Let `κ` carry the discrete topology and let `κ⟦T⟧` carry the topology of coefficientwise
 convergence. If `κ` is finite, then for nonzero `x_n ∈ κ((T))` the units `T ^ (-v_T(x_n)) x_n` of
@@ -71,8 +71,8 @@ in `ℤ_p` and `U_i → V`.
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  proof of Lemma 4.1 (`(p - 1)`-st roots of principal units) and proof of Lemma 4.2 ((4.3) and the
-  limit (4.4)).
+  proof of Lemma 4.1 (`(p - 1)`-st roots of principal units) and proof of Lemma 4.2 (the limit
+  (4.2) and the valuation of `z ^ c - 1`).
 -/
 
 @[expose] public section
@@ -153,8 +153,9 @@ theorem padicBinomialSeries_add (c d : ℤ_[p]) :
     padicBinomialSeries κ (c + d) = padicBinomialSeries κ c * padicBinomialSeries κ d := by
   simp [padicBinomialSeries]
 
-/-- `c ↦ (1 + X) ^ c` is continuous from `ℤ_p` to `κ⟦X⟧` for the discrete topology on `κ`. -/
-theorem continuous_padicBinomialSeries [TopologicalSpace κ] [DiscreteTopology κ] :
+/-- `c ↦ (1 + X) ^ c` is continuous from `ℤ_p` to `κ⟦X⟧` with the topology of coefficientwise
+convergence, for any topology on `κ`. -/
+theorem continuous_padicBinomialSeries [TopologicalSpace κ] :
     Continuous (padicBinomialSeries κ : ℤ_[p] → PowerSeries κ) := by
   apply continuous_iff_continuousAt.mpr
   intro c

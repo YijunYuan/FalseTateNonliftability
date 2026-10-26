@@ -5,12 +5,12 @@ Authors: Yijun Yuan
 -/
 module
 
-public import FalseTateNonliftability.Liftability.FieldOfNorms
 public import FalseTateExtension.Cyclotomic.InfiniteCharacter
 public import FalseTateExtension.FalseTate.StrictAPF
 public import FalseTateExtension.FalseTate.TotalRamification
 public import FalseTateExtension.FalseTate.Viviani.TauRamification
 public import FalseTateExtension.Layers.Galois
+public import FalseTateNonliftability.Liftability.FieldOfNorms
 
 /-!
 # Ramification numbers of the Kummer iterates
@@ -29,9 +29,11 @@ Proposition 3.3.2), which is `d_k` for `N ≥ k + 2` (Viviani, Corollary 6.10). 
 every uniformizer `u` of `X`, `v_T(f_{τ^{p^k},u} - T) = d_k + 1`, `f_{τ,u} = T + O(T²)`, and `τ`
 acts on `X` with infinite order. Moreover `d_k → ∞`, and `d_k → (p - 1)/(p + 1)` in `ℤ_p`, a limit
 which is not an integer. The integers `d_k` are `FalseTateExtension.kummerRamificationBreak p k`;
-the identities `d_0 = 2p - 1`, `p ∣ d_k + 1` and `(p + 1) d_k ≤ d_{k+1}` are
+the identities `d_0 = 2p - 1`, `p ∣ d_k + 1`, `d_{k+1} + (p - 1)² = p² d_k` and
+`(p + 1) d_k ≤ d_{k+1}` in Proposition 5.1 (1) are
 `FalseTateExtension.kummerRamificationBreak_zero`,
-`FalseTateExtension.kummerRamificationBreak_succ_dvd` and
+`FalseTateExtension.kummerRamificationBreak_succ_dvd`,
+`FalseTateExtension.kummerRamificationBreak_recurrence` and
 `FalseTateExtension.kummerRamificationBreak_growth`.
 
 ## Main definitions
@@ -307,9 +309,8 @@ theorem kummerRamificationBreak_tendsto_atTop :
   (kummerRamificationBreak_strictMono p (Fact.out : p.Prime).two_le).tendsto_atTop
 
 /-- `|p|_p < 1`. -/
-private theorem norm_natCast_lt_one : ‖(p : ℤ_[p])‖ < 1 := by
-  rw [PadicInt.norm_p]
-  exact inv_lt_one_of_one_lt₀ (by exact_mod_cast (Fact.out : p.Prime).one_lt)
+private theorem norm_natCast_lt_one : ‖(p : ℤ_[p])‖ < 1 :=
+  PadicInt.norm_natCast_lt_one_iff.mpr dvd_rfl
 
 /-- `p + 1` is a unit of `ℤ_p`. -/
 private theorem isUnit_natCast_add_one : IsUnit ((p : ℤ_[p]) + 1) := by

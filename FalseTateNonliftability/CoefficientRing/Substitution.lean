@@ -15,8 +15,9 @@ Let `O` be a local principal ideal ring with maximal ideal `𝔪` and residue fi
 ring of integers of a finite extension `F` of `ℚ_p`), and let `A` be the `𝔪`-adic completion of
 `O((T))` (`FalseTateNonliftability.CoefficientRing O`, Yuan, Definition 1.1). For Laurent series
 `Q` and `G`, write `Q ∘ G = Q(G)` for the substitution of `G` for the variable. An element `G ∈ A`
-is admissible if its reduction `Ḡ ∈ κ((T))` is nonzero with `v_T(Ḡ) ≥ 1`. Yuan, Lemma 2.1 over
-`A`: for admissible `G`, the substitutions `Q ↦ Q(G)` on the rings `(O ⧸ 𝔪 ^ (r + 1))((T))`
+is admissible if its reduction $\bar{G} \in \kappa((T))$ is nonzero with $v_T(\bar{G}) \ge 1$. Yuan,
+Lemma 2.1 over `A`: for admissible `G`, the substitutions `Q ↦ Q(G)` on the rings
+`(O ⧸ 𝔪 ^ (r + 1))((T))`
 (`LaurentSeries.subst`) are compatible, and their inverse limit is the unique `O`-algebra
 endomorphism `Q ↦ Q(G)` of `A` sending `T` to `G` that is `T`-adically continuous modulo every
 `𝔪 ^ (r + 1)`; moreover `(Q ∘ G) ∘ H = Q ∘ (G ∘ H)`.
@@ -111,8 +112,8 @@ theorem residue_algebraMap_powerSeries (P : PowerSeries O) :
   rw [IsScalarTower.algebraMap_apply (PowerSeries O) (LaurentSeries O),
     residue_algebraMap_laurentSeries, coe_algebraMap, mapRingHom_ofPowerSeries]
 
-/-- An element `G` of `A` is admissible if its reduction `Ḡ ∈ κ((T))` is nonzero with
-`v_T(Ḡ) ≥ 1`. -/
+/-- An element `G` of `A` is admissible if its reduction $\bar{G} \in \kappa((T))$ is nonzero with
+$v_T(\bar{G}) \ge 1$. -/
 @[expose] def IsAdmissible (G : CoefficientRing O) : Prop :=
   LaurentSeries.IsAdmissible (residue O G)
 

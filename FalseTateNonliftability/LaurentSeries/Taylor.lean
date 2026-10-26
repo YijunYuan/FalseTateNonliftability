@@ -25,7 +25,7 @@ times a power series, so `v_T(U(g) - U) = v_T(g - T) + v_T(U')` whenever `U' ≠
 If `σ` is an automorphism of a field of norms with residue field `𝔽_q` and `g = f_σ` is its series
 in a uniformizer `T`, then `x(g) = σ x` (Yuan, Lemma 2.2 (2)), and `g = T + O(T ^ (d + 1))` means
 that `σ` has ramification number at least `d`. In this setting the results above are Yuan,
-Lemma 3.2, and the expansions in the proofs of Yuan, Theorem 3.1 and Lemma 4.2.
+Lemma 3.2, and the expansions in the proofs of Yuan, Proposition 3.1 and Lemma 4.2.
 
 ## Main results
 
@@ -33,10 +33,10 @@ Lemma 3.2, and the expansions in the proofs of Yuan, Theorem 3.1 and Lemma 4.2.
 * `LaurentSeries.subst_sub_leadingTerm_mem`: `x(g) - x = m α b T ^ (m + d) + O(T ^ (m + d + 1))`
   (Yuan, Lemma 3.2).
 * `LaurentSeries.subst_taylor_mem_orderAddSubgroup`: `f(g) - f - (g - T) f' = O(T ^ (m + 2 d))`,
-  the expansion in the proof of Yuan, Theorem 3.1.
+  the expansion in the proof of Yuan, Proposition 3.1.
 * `LaurentSeries.subst_ofPowerSeries_sub_mem`, `LaurentSeries.subst_ofPowerSeries_taylor_mem`:
   `U(g) - U = O(T ^ (d + 1))` and `U(g) - U - (g - T) U' = O(T ^ (2 d + 2))` for a power series
-  `U` (Yuan, proof of Lemma 4.2, (4.2)).
+  `U` (Yuan, proof of Lemma 4.2).
 * `LaurentSeries.exists_powerSeries_taylor_remainder`: over a field,
   `U(g) - U - (g - T) U' ∈ (g - T) ^ 2 k⟦T⟧`.
 * `LaurentSeries.order_subst_ofPowerSeries_sub_eq`: `v_T(U(g) - U) = v_T(g - T) + v_T(U')` when
@@ -45,7 +45,7 @@ Lemma 3.2, and the expansions in the proofs of Yuan, Theorem 3.1 and Lemma 4.2.
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  Lemma 3.2, proof of Theorem 3.1 and proof of Lemma 4.2.
+  Lemma 3.2, proof of Proposition 3.1 and proof of Lemma 4.2.
 -/
 
 @[expose] public section
@@ -319,7 +319,7 @@ theorem subst_sub_leadingTerm_mem {g : LaurentSeries R} {d : ℤ} (hd : 1 ≤ d)
   exact add_mem hTaylor (add_mem hfirst hsecond)
 
 /-- For `g = T + O(T ^ (d + 1))` with `d ≥ 1` and a power series `U`,
-`U(g) - U = O(T ^ (d + 1))` (Yuan, proof of Lemma 4.2, (4.2)). -/
+`U(g) - U = O(T ^ (d + 1))` (Yuan, proof of Lemma 4.2). -/
 theorem subst_ofPowerSeries_sub_mem {g : LaurentSeries R} {d : ℤ} (hd : 1 ≤ d)
     (hg : g - HahnSeries.single (1 : ℤ) 1 ∈ orderAddSubgroup (d + 1)) (U : PowerSeries R) :
     subst g (HahnSeries.ofPowerSeries ℤ R U) - HahnSeries.ofPowerSeries ℤ R U ∈

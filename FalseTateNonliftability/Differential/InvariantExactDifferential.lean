@@ -34,6 +34,14 @@ by `σ_f`, and `ω = d(b⁻¹ a ^ p A)`.
 * `LaurentSeries.exists_exact_invariant_of_weighted_identities`: `σ_f` fixes a nonzero exact
   differential (Yuan, Lemma 4.1).
 
+## Implementation notes
+
+The paper obtains the `(p - 1)`-st root of the inverse principal unit by Hensel's lemma. Here it
+is constructed as its `-1 / (p - 1)` power using `PowerSeries.principalUnitPow`; the exponent
+laws give the same normalized root. Differentials are represented by their Laurent-series
+coefficients, so exactness and invariance are stated using `LaurentSeries.derivative` and
+`LaurentSeries.substEquiv`.
+
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
@@ -55,20 +63,15 @@ private def leadingCoeffHom : LaurentSeries κ →*₀ κ where
   map_one' := HahnSeries.leadingCoeff_one
   map_mul' x y := HahnSeries.leadingCoeff_mul x y
 
-/-- `leadingCoeffHom x` is the leading coefficient of `x`. -/
-private theorem leadingCoeffHom_apply (x : LaurentSeries κ) :
-    leadingCoeffHom x = x.leadingCoeff :=
-  rfl
-
 /-- The leading coefficient of `x ^ n` is the `n`-th power of that of `x`. -/
 private theorem leadingCoeff_pow (x : LaurentSeries κ) (n : ℕ) :
-    (x ^ n).leadingCoeff = x.leadingCoeff ^ n := by
-  rw [← leadingCoeffHom_apply, map_pow, leadingCoeffHom_apply]
+    (x ^ n).leadingCoeff = x.leadingCoeff ^ n :=
+  map_pow leadingCoeffHom x n
 
 /-- The leading coefficient of `x ^ m`, `m ∈ ℤ`, is the `m`-th power of that of `x`. -/
 private theorem leadingCoeff_zpow (x : LaurentSeries κ) (m : ℤ) :
-    (x ^ m).leadingCoeff = x.leadingCoeff ^ m := by
-  rw [← leadingCoeffHom_apply, map_zpow₀, leadingCoeffHom_apply]
+    (x ^ m).leadingCoeff = x.leadingCoeff ^ m :=
+  map_zpow₀ leadingCoeffHom x m
 
 /-- The leading coefficient of a power series with nonzero constant coefficient is its constant
 coefficient. -/

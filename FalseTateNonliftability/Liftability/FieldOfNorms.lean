@@ -23,11 +23,12 @@ of the integral closure of `𝒪[K]` in `L`; it is the residue field of `X_K(L)`
 `X_K(L)` as the field of constants. For a uniformizer `u` of `X_K(L)` let
 `ev_u : κ_L((T)) ≃ X_K(L)` be the isomorphism over `κ_L` sending `T` to `u`. The coordinate series
 of `g ∈ Aut(L/K)` is the power series `f_{g,u} ∈ κ_L⟦T⟧` with `ev_u(f_{g,u}) = g(u)`
-(Yuan, §1.4).
+(Yuan, §1.5).
 
 Since `g(u)` is again a uniformizer, `f_{g,u}(0) = 0` and `f_{g,u}'(0) ≠ 0` (Yuan, Lemma 2.2 (1)).
 If `L/K` is totally ramified, then `Aut(L/K)` fixes the constants `κ_L ⊆ X_K(L)`, and
 (Yuan, Lemma 2.2 (2)–(4)):
+
 * `g(ev_u(a)) = ev_u(a ∘ f_{g,u})` for every `a ∈ κ_L((T))`;
 * `f_{gh,u} = f_{h,u} ∘ f_{g,u}`, so the `f_{g,u}` form a coordinate family indexed by `Aut(L/K)`;
 * if `u' = ev_u(V)` is another uniformizer, then `f_{g,u'} = V ∘ f_{g,u} ∘ V^{∘-1}`.
@@ -68,7 +69,7 @@ coordinate series take the same two arguments.
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  §1.4 and Lemma 2.2.
+  §1.5 and Lemma 2.2.
 * J.-P. Wintenberger, *Le corps des normes de certaines extensions infinies de corps locaux;
   applications*, Ann. Sci. École Norm. Sup. (4) 16 (1983), 59–89.
 -/
@@ -158,7 +159,7 @@ theorem aut_residueConstants [IsTotallyRamified K L] (g : L ≃ₐ[K] L)
 variable (u : FieldOfNorms K L) (hu : FieldOfNorms.valuation K L u = exp (-1 : ℤ))
 
 /-- The coordinate series `f_{g,u} ∈ κ_L⟦T⟧` of `g ∈ Aut(L/K)` in the uniformizer `u` of
-`X_K(L)`: the power series with `ev_u(f_{g,u}) = g(u)` (Yuan, §1.4). -/
+`X_K(L)`: the power series with `ev_u(f_{g,u}) = g(u)` (Yuan, §1.5). -/
 def coordinateSeries (g : L ≃ₐ[K] L) : PowerSeries (integralClosureResidueField K L) :=
   PowerSeries.mk fun n ↦
     ((FieldOfNorms.laurentEquiv K L u hu).symm (FieldOfNorms.aut K L g u)).coeff n

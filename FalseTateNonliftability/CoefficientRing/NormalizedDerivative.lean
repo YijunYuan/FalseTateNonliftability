@@ -16,7 +16,7 @@ public import FalseTateNonliftability.Mathlib.RingTheory.LaurentSeries.Derivativ
 Let `O` be a discrete valuation ring with maximal ideal `𝔪`, uniformizer `ϖ` and residue field
 `κ = 𝔽_p`, where `p` is a prime with `p ≠ 0` in `O`, and let `e = v_ϖ(p)` be the absolute
 ramification index of `O`; in Yuan, `O = 𝒪_F` for a finite totally ramified extension `F/ℚ_p`. Let
-`R_r = (O ⧸ 𝔪 ^ (r + 1))((T))`, so that `R_e` is the ring `R` of Yuan, §1.4, and let `P ∈ R_e`
+`R_r = (O ⧸ 𝔪 ^ (r + 1))((T))`, so that `R_e` is the ring `R` of Yuan, §1.5, and let `P ∈ R_e`
 reduce to `T ^ p`. By Yuan, Lemma 2.4, `P' ≠ 0`, and there is a unique `s = s(P) ∈ {1, …, e}`
 with `P' ∈ ϖ ^ s R_e ∖ ϖ ^ (s + 1) R_e`; `s(P)` is the derivative level of `P` and
 `h_P = ϖ⁻ˢ P' ∈ κ((T))ˣ` (see `Truncation.layer`) its normalized derivative (Yuan,
@@ -24,14 +24,15 @@ Definition 2.5). Moreover:
 
 1. if `G ∈ R_e` commutes with `P`, `G ∘ P = P ∘ G`, and its reduction `f` lies in `T κ⟦T⟧` with
    nonzero linear coefficient, then `h_P ∘ f = (f')^(p - 1) h_P` (equation (2.2));
-2. if `H ∈ T (O ⧸ 𝔪 ^ (e + 1))⟦T⟧` has invertible linear coefficient and reduction `H̄`, then
-   `P_H = H ∘ P ∘ H^{∘-1}` reduces to `T ^ p`, `s(P_H) = s(P)`, `h_{P_H} ∘ H̄ = (H̄')^(p - 1) h_P`
+2. if `H ∈ T (O ⧸ 𝔪 ^ (e + 1))⟦T⟧` has invertible linear coefficient and reduction $\bar{H}$, then
+   `P_H = H ∘ P ∘ H^{∘-1}` reduces to `T ^ p`, `s(P_H) = s(P)`, $h_{P_H} \circ \bar{H} =
+   (\bar{H}')^{p-1} h_P$
    (equation (2.3)) and `v_T(h_{P_H}) = v_T(h_P)`;
 3. if `s < e`, then `h_P = A'` for some `A ∈ κ((T))`; if `s = e`, then `h_P = c T^(p - 1) + A'`
    with `A ∈ κ((T))`, where `c = p / ϖ ^ e mod 𝔪 ∈ κˣ` does not depend on `P`, hence `h_P' ≠ 0`
    and `v_T(h_P') ≤ p - 2`.
 
-Yuan, Theorem 3.1: if `G ∘ P = P ∘ G`, `s(P) = e`, and the reduction `f` of `G` satisfies
+Yuan, Proposition 3.1: if `G ∘ P = P ∘ G`, `s(P) = e`, and the reduction `f` of `G` satisfies
 `f = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ∈ κˣ`, `d ≥ 1` and `d ≡ -1 (mod p)`, then
 `v_T(h_P) ≤ p - 1 - d`. Its core holds over every field `k` of characteristic `p`: if
 `h ∈ k((T))` satisfies `h ∘ f = (f')^(p - 1) h`, `h' ≠ 0` and `v_T(h') ≤ p - 2`, then
@@ -60,21 +61,21 @@ In the namespace `FalseTateNonliftability.Truncation`:
   `exists_normalizedDerivative_eq_single_add_derivative`, `coeff_layer_C_natCast_ne_zero`,
   `derivative_normalizedDerivative_ne_zero`, `order_derivative_normalizedDerivative_le`: Yuan,
   Lemma 2.4 (3), with the constant `c = p / ϖ ^ e mod 𝔪 ≠ 0`.
-* `order_normalizedDerivative_le`: `v_T(h_P) ≤ p - 1 - d` (Yuan, Theorem 3.1).
+* `order_normalizedDerivative_le`: `v_T(h_P) ≤ p - 1 - d` (Yuan, Proposition 3.1).
 
 Over a field `k` of characteristic `p`:
 
 * `LaurentSeries.order_le_of_subst_eq_derivative_pow_mul`: `v_T(h) ≤ p - 1 - d` (Yuan, proof of
-  Theorem 3.1).
+  Proposition 3.1).
 
 ## Implementation notes
 
 * `derivativeLevel P` is the least `s` with `P' ∉ 𝔪 ^ (s + 1) R_r`; it is defined for every
   `P ∈ R_r` and every `r`, with value `0` if `P' = 0`. Similarly `absoluteRamificationIdx p O` is
-  `0` if `p = 0` in `O`. Except for `P' ≠ 0` and `1 ≤ s(P)`, which need `r = e`, the statements of
-  Lemma 2.4 and Theorem 3.1 hold over every `R_r`.
+  `0` if `p = 0` in `O`. Nonvanishing of `P'` and `1 ≤ s(P)` are proved at `r = e`; covariance,
+  the level dichotomy of Lemma 2.4 and the bound of Proposition 3.1 are stated over arbitrary `R_r`.
 * `h_P` depends on the uniformizer `ϖ` fixed in `Truncation.gradedLayerEquiv`: another uniformizer
-  multiplies `h_P` by a nonzero constant. Lemma 2.4 and Theorem 3.1 are unaffected.
+  multiplies `h_P` by a nonzero constant. Lemma 2.4 and Proposition 3.1 are unaffected.
 * The residue field hypothesis `κ = 𝔽_p` is the instance argument
   `[Fact (Nat.card (ResidueField O) = p)]`, and `p ≠ 0` in `O` is `[NeZero (p : O)]`, following
   the convention that Prop-valued hypotheses on the types are instances. From `κ = 𝔽_p` one gets
@@ -84,7 +85,7 @@ Over a field `k` of characteristic `p`:
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  §1.4, Lemma 2.4, Definition 2.5 and Theorem 3.1.
+  §1.5, Lemma 2.4, Definition 2.5 and Proposition 3.1.
 -/
 
 @[expose] public section
@@ -352,8 +353,8 @@ theorem mapRingHom_residue_conj {P : LaurentSeries (Truncation O r)}
     subst_X (isAdmissible_ofPowerSeries hH' hl')]
 
 /-- Yuan, Lemma 2.4 (2), equation (2.3): if `P` reduces to `T ^ p` and `H` is a power series with
-`H(0) = 0` and `H'(0)` a unit and reduction `H̄`, then `P_H = H ∘ P ∘ H^{∘-1}` satisfies
-`h_{P_H} ∘ H̄ = (H̄')^(p - 1) h_P`. -/
+`H(0) = 0` and `H'(0)` a unit and reduction $\bar{H}$, then `P_H = H ∘ P ∘ H^{∘-1}` satisfies
+$h_{P_H} \circ \bar{H} = (\bar{H}')^{p-1} h_P$. -/
 theorem subst_normalizedDerivative_conj {P : LaurentSeries (Truncation O r)}
     (hP : mapRingHom (residue O r) P = HahnSeries.single (p : ℤ) 1)
     {H : PowerSeries (Truncation O r)} (hH : H.constantCoeff = 0) (hl : IsUnit (H.coeff 1)) :
@@ -398,7 +399,7 @@ theorem order_normalizedDerivative_conj {P : LaurentSeries (Truncation O r)}
       HahnSeries.order_mul (pow_ne_zero _ (isUnit_derivative_ofPowerSeries _ hl').ne_zero) h0,
       HahnSeries.order_pow, order_derivative_ofPowerSeries hl', smul_zero, zero_add]
 
-/-- Yuan, Lemma 2.4 (3): if `κ = 𝔽_p` and `s(P) < e`, then `h_P = A'` for some `A ∈ κ((T))`. -/
+/-- Yuan, Lemma 2.4 (3a): if `κ = 𝔽_p` and `s(P) < e`, then `h_P = A'` for some `A ∈ κ((T))`. -/
 theorem exists_normalizedDerivative_eq_derivative {P : LaurentSeries (Truncation O r)}
     (hs : derivativeLevel P < absoluteRamificationIdx p O) :
     ∃ A : LaurentSeries (ResidueField O),
@@ -411,7 +412,7 @@ theorem exists_normalizedDerivative_eq_derivative {P : LaurentSeries (Truncation
       (Nat.succ_le_succ (derivativeLevel_le P)))
   exact ⟨A, hA.symm⟩
 
-/-- Yuan, Lemma 2.4 (3): if `P` reduces to `T ^ p` and `s(P) = e`, then `h_P = c T^(p - 1) + A'`
+/-- Yuan, Lemma 2.4 (3b): if `P` reduces to `T ^ p` and `s(P) = e`, then `h_P = c T^(p - 1) + A'`
 for some `A ∈ κ((T))`, where `c = p / ϖ ^ e mod 𝔪 ∈ κ`, the constant coefficient of the layer
 `ϖ⁻ᵉ p` of `p`, does not depend on `P`. If `p ≠ 0` in `O`, then `c ≠ 0`
 (`coeff_layer_C_natCast_ne_zero`). -/
@@ -450,7 +451,7 @@ private theorem coeff_derivative_normalizedDerivative_ne_zero [NeZero (p : O)]
     CharP.cast_eq_zero, Int.cast_one, zero_sub, neg_one_mul, neg_ne_zero]
   exact coeff_layer_C_natCast_ne_zero p (hs ▸ derivativeLevel_le P)
 
-/-- Yuan, Lemma 2.4 (3): if `p ≠ 0` in `O`, `P` reduces to `T ^ p` and `s(P) = e`, then
+/-- Yuan, Lemma 2.4 (3b): if `p ≠ 0` in `O`, `P` reduces to `T ^ p` and `s(P) = e`, then
 `h_P' ≠ 0`. -/
 theorem derivative_normalizedDerivative_ne_zero [NeZero (p : O)]
     {P : LaurentSeries (Truncation O r)}
@@ -459,7 +460,7 @@ theorem derivative_normalizedDerivative_ne_zero [NeZero (p : O)]
     derivative (ResidueField O) (normalizedDerivative P) ≠ 0 :=
   HahnSeries.ne_zero_of_coeff_ne_zero (coeff_derivative_normalizedDerivative_ne_zero p hP hs)
 
-/-- Yuan, Lemma 2.4 (3): if `p ≠ 0` in `O`, `P` reduces to `T ^ p` and `s(P) = e`, then
+/-- Yuan, Lemma 2.4 (3b): if `p ≠ 0` in `O`, `P` reduces to `T ^ p` and `s(P) = e`, then
 `v_T(h_P') ≤ p - 2`. -/
 theorem order_derivative_normalizedDerivative_le [NeZero (p : O)]
     {P : LaurentSeries (Truncation O r)}
@@ -524,7 +525,7 @@ variable {k : Type*} [Field k]
 
 /-- Let `k` be a field of characteristic `p`, let `g = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with
 `α ≠ 0`, `d ≥ 1` and `d ≡ -1 (mod p)`, and let `h ∈ k((T))` satisfy `h ∘ g = (g')^(p - 1) h`,
-`h' ≠ 0` and `v_T(h') ≤ p - 2`. Then `v_T(h) ≤ p - 1 - d` (Yuan, proof of Theorem 3.1). -/
+`h' ≠ 0` and `v_T(h') ≤ p - 2`. Then `v_T(h) ≤ p - 1 - d` (Yuan, proof of Proposition 3.1). -/
 theorem order_le_of_subst_eq_derivative_pow_mul (p : ℕ) [CharP k p] {g : LaurentSeries k}
     {d : ℤ} (hd : 1 ≤ d) (hdiv : (p : ℤ) ∣ d + 1) {α : k} (hα : α ≠ 0)
     (hg : g - HahnSeries.single (1 : ℤ) 1 - HahnSeries.single (d + 1) α ∈
@@ -564,7 +565,7 @@ open LaurentSeries
 variable {O : Type*} [CommRing O] [IsDomain O] [IsDiscreteValuationRing O] {r : ℕ}
   (p : ℕ) [Fact p.Prime] [Fact (Nat.card (ResidueField O) = p)] [NeZero (p : O)]
 
-/-- **Valuation bound at level `e`** (Yuan, Theorem 3.1). Let `p ≠ 0` in `O`, let `κ = 𝔽_p` and
+/-- **Valuation bound at level `e`** (Yuan, Proposition 3.1). Let `p ≠ 0` in `O`, let `κ = 𝔽_p` and
 `e = v_ϖ(p)`. Let `P, G ∈ R_r = (O ⧸ 𝔪 ^ (r + 1))((T))`, where `P` reduces to `T ^ p`,
 `G ∘ P = P ∘ G` and `s(P) = e`, and let the reduction `f` of `G` satisfy
 `f = T + α T ^ (d + 1) + O(T ^ (2 d + 1))` with `α ≠ 0`, `d ≥ 1` and `d ≡ -1 (mod p)`. Then

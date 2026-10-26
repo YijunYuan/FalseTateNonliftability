@@ -73,13 +73,11 @@ theorem coeff_derivative (f : LaurentSeries R) (j : ℤ) :
   simp [derivative, hasseDeriv_coeff, zsmul_eq_mul]
 
 /-- `(b T ^ j)' = j b T ^ (j - 1)`. -/
-@[simp]
 theorem derivative_single (j : ℤ) (b : R) :
     derivative R (HahnSeries.single j b) = HahnSeries.single (j - 1) ((j : R) * b) := by
   simp [derivative, hasseDeriv_single, zsmul_eq_mul]
 
 /-- The derivative of a constant is `0`. -/
-@[simp]
 theorem derivative_C (b : R) : derivative R (HahnSeries.C b) = 0 := by
   rw [HahnSeries.C_apply, derivative_single]
   simp
@@ -147,7 +145,6 @@ theorem derivative_mul (f g : LaurentSeries R) :
   rw [← one_mul (derivative R (f * g)), ← hT, mul_assoc, h, ← mul_assoc, hT, one_mul]
 
 /-- `1' = 0`. -/
-@[simp]
 theorem derivative_one : derivative R (1 : LaurentSeries R) = 0 := by
   simpa only [HahnSeries.C_one] using derivative_C (R := R) 1
 
@@ -290,22 +287,11 @@ divisible by `p`. -/
 theorem coeff_pow_prime_eq_zero_of_not_dvd (p : ℕ) [Fact p.Prime] [CharP κ p]
     (B : LaurentSeries κ) (n : ℤ) (hn : ¬ (p : ℤ) ∣ n) :
     (B ^ p).coeff n = 0 := by
-  have hp := (Fact.out : p.Prime).ne_zero
-  conv_lhs => rw [← single_order_mul_powerSeriesPart B]
-  rw [mul_pow, HahnSeries.single_pow, ← PowerSeries.coe_pow,
-    ← PowerSeries.map_frobenius_expand p hp]
-  simp only [one_pow, nsmul_eq_mul, HahnSeries.coeff_single_mul, one_mul,
-    PowerSeries.coeff_coe]
-  split_ifs with hneg
-  · rfl
-  · rw [PowerSeries.coeff_map, PowerSeries.coeff_expand_of_not_dvd, map_zero]
-    intro hd
-    have hcast : (p : ℤ) ∣ (((n - (p : ℤ) * B.order).natAbs : ℕ) : ℤ) := by
-      exact_mod_cast hd
-    rw [Int.natCast_natAbs, abs_of_nonneg (le_of_not_gt hneg)] at hcast
-    apply hn
-    simpa only [sub_add_cancel] using
-      dvd_add hcast (show (p : ℤ) ∣ (p : ℤ) * B.order from ⟨B.order, rfl⟩)
+  have h := derivative_pow_succ B (p - 1)
+  have hp : (p : LaurentSeries κ) = 0 := by
+    rw [← map_natCast (HahnSeries.C : κ →+* LaurentSeries κ), CharP.cast_eq_zero, map_zero]
+  simp only [Nat.sub_add_cancel (Fact.out : p.Prime).pos, hp, zero_mul] at h
+  exact (derivative_eq_zero_iff p _).mp h n hn
 
 /-- Over a perfect field of characteristic `p`, the kernel of differentiation on `κ((T))` is
 `κ((T)) ^ p`. -/

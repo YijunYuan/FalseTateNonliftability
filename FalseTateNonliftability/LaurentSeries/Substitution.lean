@@ -303,7 +303,6 @@ theorem subst_X {G : LaurentSeries R} (hG : IsAdmissible G) :
   (subst_spec hG).2.1
 
 /-- Substitution fixes the constants. -/
-@[simp]
 theorem subst_C (G : LaurentSeries R) (b : R) : subst G (HahnSeries.C b) = HahnSeries.C b := by
   simpa only [HahnSeries.algebraMap_apply', PowerSeries.algebraMap_eq,
     HahnSeries.ofPowerSeries_C] using (subst G).commutes b
@@ -640,9 +639,8 @@ theorem order_substEquiv {H : PowerSeries k} (hzero : H.constantCoeff = 0)
     simpa only [← PowerSeries.coeff_zero_eq_constantCoeff_apply, powerSeriesPart_coeff,
       Nat.cast_zero, add_zero] using (HahnSeries.coeff_order_eq_zero.not.mpr hf)
   have hsubst : PowerSeries.constantCoeff (f.powerSeriesPart.subst H) =
-      f.powerSeriesPart.constantCoeff := by
-    simpa only [PowerSeries.constantCoeff_eq, Algebra.algebraMap_self_apply] using
-      PowerSeries.constantCoeff_subst_of_constantCoeff_zero hzero f.powerSeriesPart
+      f.powerSeriesPart.constantCoeff :=
+    PowerSeries.constantCoeff_subst_of_constantCoeff_zero' hzero f.powerSeriesPart
   have hpartOrder : (E (HahnSeries.ofPowerSeries ℤ k f.powerSeriesPart)).order = 0 := by
     rw [substEquiv_ofPowerSeries hzero hlinear]
     exact order_ofPowerSeries_of_constantCoeff_ne_zero (by rwa [hsubst])

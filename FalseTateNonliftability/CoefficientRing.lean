@@ -19,8 +19,8 @@ constructs the coefficient ring `A` of Definition 1.1, the `𝔪`-adic completio
 truncations `R_r = (O ⧸ 𝔪 ^ (r + 1))((T))`, substitution in `A` (Lemma 2.1 over `A`) and the
 coordinate changes `P ↦ H ∘ P ∘ H^{∘-1}` used in Proposition 2.3. For `κ = 𝔽_p` and `e = v_ϖ(p)`,
 it defines the derivative level `s(P)` and the normalized derivative `h_P = ϖ⁻ˢ P'` of a lift
-`P ∈ R_e` of `T ^ p` (Definition 2.5), proves Lemma 2.4 and Theorem 3.1, and combines them with
-§3 and §4 into the two cases of the proof of Proposition 1.3 in §6.
+`P ∈ R_e` of `T ^ p` (Definition 2.5), proves Lemma 2.4 and Proposition 3.1, and combines them with
+§3 and §4 into the two cases of the proof of Proposition 1.4 in §6.
 
 ## Main definitions
 
@@ -41,7 +41,7 @@ it defines the derivative level `s(P)` and the normalized derivative `h_P = ϖ�
   `FalseTateNonliftability.Truncation.exists_normalizedDerivative_eq_derivative` and
   `FalseTateNonliftability.Truncation.exists_normalizedDerivative_eq_single_add_derivative` (3)
   (`CoefficientRing/NormalizedDerivative`).
-* Yuan, Theorem 3.1: `FalseTateNonliftability.Truncation.order_normalizedDerivative_le`
+* Yuan, Proposition 3.1: `FalseTateNonliftability.Truncation.order_normalizedDerivative_le`
   (`CoefficientRing/NormalizedDerivative`).
 * Yuan, §6, case 1 (`s(P) = e` is impossible):
   `FalseTateNonliftability.Truncation.derivativeLevel_lt_absoluteRamificationIdx`; case 2
@@ -52,6 +52,6 @@ it defines the derivative level `s(P)` and the normalized derivative `h_P = ϖ�
 ## References
 
 * Y. Yuan, *Non-liftability of the field of norms of the p-adic false Tate curve extension*,
-  Definition 1.1, §2, Theorem 3.1 and §6.
+  Definition 1.1, §2, Proposition 3.1 and §6.
 * L. Berger, *Lifting the field of norms*, J. Éc. polytech. Math. 1 (2014), 29–38.
 -/

@@ -12,7 +12,7 @@ public import FalseTateNonliftability.PowerSeries.UnitRigidity
 # Principal units of power series
 
 `p`-adic powers `z ^ c`, `c ∈ ℤ_p`, of principal units `z` of `κ⟦T⟧` in characteristic `p`
-(Yuan, proofs of Lemma 4.1 and Lemma 4.2, (4.3)), and the rigidity of the identity
+(Yuan, proofs of Lemma 4.1 and Lemma 4.2), and the rigidity of the identity
 `(f / T) ^ m (U ∘ f) = U` for a substitution `f` of infinite order, which forces `m = 0` (Yuan,
 proof of Lemma 4.2).
 

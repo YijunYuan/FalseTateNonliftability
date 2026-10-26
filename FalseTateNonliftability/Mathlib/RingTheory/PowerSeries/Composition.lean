@@ -84,7 +84,10 @@ protected theorem HasSubst.subst {f g : R⟦X⟧} (hg : HasSubst g) (hf : HasSub
     HasSubst (g.subst f) := by
   simpa only [coe_substAlgHom] using hg.comp hf
 
-/-- If `f(0) = 0`, then `(g ∘ f)(0) = g(0)`. -/
+/-- If `f(0) = 0`, then `(g ∘ f)(0) = g(0)`.
+
+This restates `PowerSeries.constantCoeff_subst_of_constantCoeff_zero` with
+`PowerSeries.constantCoeff` on the left, so that `rw` can match power series expressions. -/
 theorem constantCoeff_subst_of_constantCoeff_zero' {f : R⟦X⟧} (hf : f.constantCoeff = 0)
     (g : R⟦X⟧) : constantCoeff (g.subst f) = g.constantCoeff :=
   constantCoeff_subst_of_constantCoeff_zero hf g
